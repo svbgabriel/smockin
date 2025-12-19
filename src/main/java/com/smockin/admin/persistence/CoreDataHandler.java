@@ -110,10 +110,15 @@ public class CoreDataHandler {
 
     void applyAppVersioning() {
 
-        final String appVersionArg = System.getProperty("app.version");
+        final String appVersionArg;
+        if (System.getProperty("app.version") != null) {
+            appVersionArg = System.getProperty("app.version");
+        } else {
+            appVersionArg = System.getenv("APP_VERSION");
+        }
 
         if (appVersionArg == null) {
-            logger.error("Invalid application version arg (-Dapp.version): " + appVersionArg);
+            logger.error("Invalid application version arg (-Dapp.version): null");
             return;
         }
 
@@ -123,7 +128,7 @@ public class CoreDataHandler {
 
         final String currentVersion = appConfig.getAppCurrentVersion();
 
-        // Save if new install or version has changed
+        // Save if is a new install or the version has changed
         if (!appVersionArg.equals(currentVersion)) {
 
             appConfig.setAppCurrentVersion(appVersionArg);

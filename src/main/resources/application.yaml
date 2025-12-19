@@ -8,6 +8,8 @@ spring.main.allow-circular-references: true
 smockin:
   auth.exclusions: '{"*.html":["GET"],"*.js":["GET"],"*.css":["GET"],"*.woff2":["GET"],"*.png":["GET"],"*.gif":["GET"],"*.ico":["GET"],"/auth":["POST"],"/user/mode":["GET"],"/mockedserver/rest/status":["GET"],"/mockedserver/jms/status":["GET"],"/mockedserver/ftp/status":["GET"],"/password/reset/token/*":["GET","POST"]}'
 
+multi.user.mode: false
+
 spring:
   servlet:
     multipart:
@@ -29,11 +31,11 @@ spring:
       ddl-auto: update
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url:
-    driver-class-name:
-    username:
-    password:
-    maximumPoolSize: 10
+    url: jdbc:h2:file:/app/db/data/smockin_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE;MODE=PostgreSQL;
+    username: ${DB_USERNAME:smockin}
+    password: ${DB_PASSWORD:smockin}
     hikari:
       poolName: smockinpool
       idle-timeout: 10000
+      maximum-pool-size: 10
+      minimum-idle: 10
