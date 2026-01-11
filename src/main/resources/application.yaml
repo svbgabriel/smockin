@@ -33,7 +33,7 @@ spring:
     username: ${DB_USERNAME:smockin}
     password: ${DB_PASSWORD:smockin}
     hikari:
-      poolName: smockinpool
+      poolName: smockin-pool
       idle-timeout: 10000
       maximum-pool-size: 10
       minimum-idle: 10
