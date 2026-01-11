@@ -35,7 +35,7 @@
         <java-jwt.version>3.4.0</java-jwt.version>
         <spring-boot-maven-plugin.version>2.7.18</spring-boot-maven-plugin.version>
         <owasp.plugin.version>5.3.0</owasp.plugin.version>
-        <lombok.version>1.18.12</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
         <s3mock.version>2.2.2</s3mock.version>
         <aws-java-sdk-s3.version>1.12.261</aws-java-sdk-s3.version>
         <s3proxy.version>1.7.1</s3proxy.version>
