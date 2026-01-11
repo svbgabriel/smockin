@@ -113,8 +113,10 @@ public class CoreDataHandler {
         final String appVersionArg;
         if (System.getProperty("app.version") != null) {
             appVersionArg = System.getProperty("app.version");
-        } else {
+        } else if (System.getenv("APP_VERSION") != null) {
             appVersionArg = System.getenv("APP_VERSION");
+        } else {
+            appVersionArg = "2.21.0";
         }
 
         if (appVersionArg == null) {

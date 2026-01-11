@@ -1,22 +1,33 @@
-# Dockerfile
+FROM bellsoft/liberica-runtime-container:jdk-11-musl AS builder
 
-#
-# docker build -t smockin-2201 .
-# docker tag smockin-2201 mgallina/smockin:2201
-# docker push mgallina/smockin:2201
-# docker run --name smockin -d -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8003:8003 mgallina/smockin:2201
-#
-
-FROM bellsoft/liberica-runtime-container:jre-11-slim-musl
 WORKDIR /app
 
-ENV APP_VERSION='2.20.2'
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+COPY src src
 
-RUN mkdir -p /app/db/data && mkdir -p /app/db/driver && mkdir -p /app/log
+RUN ./mvnw clean package -DskipTests
 
-COPY install/smockin_db.mv.db /app/db/data/smockin_db.mv.db
-COPY target/smockin.jar /app/smockin.jar
+FROM bellsoft/liberica-runtime-container:jre-11-slim-musl AS optimizer
+
+WORKDIR /app
+
+COPY --from=builder /app/target/smockin.jar smockin.jar
+
+RUN java -Djarmode=layertools -jar smockin.jar extract
+
+FROM bellsoft/liberica-runtime-container:jre-11-slim-musl
+
+WORKDIR /app
+
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
 
 EXPOSE 8000-8003
 
-CMD ["java", "-jar", "smockin.jar"]
+COPY --from=optimizer /app/dependencies/ ./
+COPY --from=optimizer /app/snapshot-dependencies/ ./
+COPY --from=optimizer /app/spring-boot-loader/ ./
+COPY --from=optimizer /app/application/ ./
+
+CMD ["java", "org.springframework.boot.loader.JarLauncher"]
