@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-runtime-container:jdk-11-musl AS builder
+FROM bellsoft/liberica-runtime-container:jdk-17-musl AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ COPY src src
 
 RUN ./mvnw clean package -DskipTests
 
-FROM bellsoft/liberica-runtime-container:jre-11-slim-musl AS optimizer
+FROM bellsoft/liberica-runtime-container:jre-17-slim-musl AS optimizer
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY --from=builder /app/target/smockin.jar smockin.jar
 
 RUN java -Djarmode=layertools -jar smockin.jar extract
 
-FROM bellsoft/liberica-runtime-container:jre-11-slim-musl
+FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
 
 WORKDIR /app
 
