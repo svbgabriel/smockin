@@ -31,14 +31,14 @@ public class RestfulMockDefinitionRuleGroupCondition extends Identifier {
     private RuleComparatorEnum comparator;
 
     // TODO May need to make this a CLOB instead...
-    @Column(name="MATCH_VALUE", nullable = true, length = 5000)
+    @Column(name="MATCH_VALUE", length = 5000)
     private String matchValue;
 
     @Enumerated(EnumType.STRING)
     @Column(name="MATCH_ON", nullable = false, length = 22)
     private RuleMatchingTypeEnum ruleMatchingType;
 
-    @Column(name="IS_CASE_STIV", nullable = true)
+    @Column(name="IS_CASE_STIV")
     private Boolean caseSensitive;
 
     public RestfulMockDefinitionRuleGroupCondition() {

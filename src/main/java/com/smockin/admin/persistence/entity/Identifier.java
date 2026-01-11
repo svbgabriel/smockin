@@ -13,8 +13,6 @@ import java.util.Date;
 @Data
 public abstract class Identifier {
 
-    final transient int VARCHAR_MAX_VALUE = 10485760;
-
     @Id
     @Column(name = "ID", nullable = false, unique = true, updatable = false)
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -28,7 +26,7 @@ public abstract class Identifier {
     private Date dateCreated;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "LAST_UPDATED", nullable = true)
+    @Column(name = "LAST_UPDATED")
     private Date lastUpdated;
 
 

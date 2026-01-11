@@ -24,7 +24,7 @@ public class MailMockMessageAttachment extends Identifier {
     @Column(name = "MIME_TYPE", nullable = false, length = 50)
     private String mimeType;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "mailMockMessageAttachment", orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "mailMockMessageAttachment", orphanRemoval = true)
     private MailMockMessageAttachmentContent mailMockMessageAttachmentContent;
 
     @ManyToOne(fetch = FetchType.LAZY)

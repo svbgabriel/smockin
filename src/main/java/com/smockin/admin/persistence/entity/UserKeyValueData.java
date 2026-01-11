@@ -17,7 +17,7 @@ public class UserKeyValueData extends Identifier {
     @Column(name = "USER_KEY", nullable = false, length = 50)
     private String key;
 
-    @Column(name = "USER_VALUE", nullable = false, length = VARCHAR_MAX_VALUE)
+    @Column(name = "USER_VALUE", nullable = false, columnDefinition = "TEXT")
     private String value;
 
     @ManyToOne(fetch = FetchType.LAZY)

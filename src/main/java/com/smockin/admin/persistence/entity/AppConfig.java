@@ -31,7 +31,7 @@ public class AppConfig {
     private String appCurrentVersion;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "LAST_VERSION_UPDATE", nullable = true)
+    @Column(name = "LAST_VERSION_UPDATE")
     private Date lastVersionUpdate;
 
     public AppConfig() {

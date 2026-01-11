@@ -22,7 +22,7 @@ public class S3MockFile extends Identifier {
     @Column(name = "MIME_TYPE", nullable = false, length = 50)
     private String mimeType;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "s3MockFile", orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "s3MockFile", orphanRemoval = true)
     private S3MockFileContent fileContent;
 
     @ManyToOne(fetch = FetchType.LAZY)

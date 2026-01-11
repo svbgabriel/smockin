@@ -26,7 +26,7 @@ public class RestfulMockDefinitionRuleGroup extends Identifier {
 
     // Conditions within this group are always chained by 'AND', so having an order is not necessary.
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "group", orphanRemoval = true)
-    private List<RestfulMockDefinitionRuleGroupCondition> conditions = new ArrayList<RestfulMockDefinitionRuleGroupCondition>();
+    private List<RestfulMockDefinitionRuleGroupCondition> conditions = new ArrayList<>();
 
     public RestfulMockDefinitionRuleGroup() {
     }

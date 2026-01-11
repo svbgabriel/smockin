@@ -29,7 +29,7 @@ public class SmockinUser extends Identifier {
     private String fullName;
 
     @Column(name = "CTX_PATH", nullable = false, length = 50, unique = true)
-    private String ctxPath; // just copy username to here for now.
+    private String ctxPath; // just copy the username to here for now.
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ROLE", nullable = false, length = 10)

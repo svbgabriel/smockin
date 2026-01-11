@@ -30,7 +30,7 @@ public class RestfulMockDefinitionRule extends Identifier {
     @Column(name = "RESPONSE_CONTENT_TYPE", nullable = false, length = 100)
     private String responseContentType;
 
-    @Column(name = "RESPONSE_BODY", length = VARCHAR_MAX_VALUE)
+    @Column(name = "RESPONSE_BODY", columnDefinition = "TEXT")
     private String responseBody;
 
     @Column(name = "SLEEP_IN_MILLIS", nullable = false)
@@ -42,9 +42,9 @@ public class RestfulMockDefinitionRule extends Identifier {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name="REST_MOCK_RULE_RES_HDR")
-    private Map<String, String> responseHeaders = new HashMap<String, String>();
+    private Map<String, String> responseHeaders = new HashMap<>();
 
-    // Each 'rule group' is associated by 'OR'
+    // Each 'rule group' is associated with 'OR'
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "rule", orphanRemoval = true)
     @OrderBy("orderNo ASC")
     private List<RestfulMockDefinitionRuleGroup> conditionGroups = new ArrayList<>();

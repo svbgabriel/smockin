@@ -75,11 +75,11 @@ public class RestfulMock extends Identifier {
     @OrderBy("orderNo ASC")
     private List<RestfulMockDefinitionOrder> definitions = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "restfulMock", orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "restfulMock", orphanRemoval = true)
     private RestfulMockJavaScriptHandler javaScriptHandler;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="PROJ_ID", nullable = true)
+    @JoinColumn(name="PROJ_ID")
     private RestfulProject project;
 
     @Deprecated
@@ -88,17 +88,17 @@ public class RestfulMock extends Identifier {
     private boolean proxyForwardWhenNoRuleMatch;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="CREATED_BY", nullable = true)
+    @JoinColumn(name="CREATED_BY")
     private SmockinUser createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="STATEFUL_PARENT", nullable = true)
+    @JoinColumn(name="STATEFUL_PARENT")
     private RestfulMock statefulParent;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "statefulParent", orphanRemoval = true)
     private List<RestfulMock> statefulChildren = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "restfulMock", orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "restfulMock", orphanRemoval = true)
     private RestfulMockStatefulMeta restfulMockStatefulMeta;
 
     public RestfulMock() {
