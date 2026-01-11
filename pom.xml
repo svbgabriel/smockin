@@ -42,6 +42,7 @@
         <greenmail.version>1.6.5</greenmail.version>
         <jackson-databind.version>2.14.2</jackson-databind.version>
         <java-ngrok.version>2.1.0</java-ngrok.version>
+        <nashorn.version>15.7</nashorn.version>
     </properties>
 
     <dependencies>
@@ -203,6 +204,13 @@
             <groupId>com.github.alexdlaird</groupId>
             <artifactId>java-ngrok</artifactId>
             <version>${java-ngrok.version}</version>
+        </dependency>
+
+        <!-- Nashorn -->
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>${nashorn.version}</version>
         </dependency>
 
         <!-- Testing Related -->
