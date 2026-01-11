@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    image: smockin:latest
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/smockin
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+      - "8003:8003"
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: smockin
+      POSTGRES_USER: smockin
+      POSTGRES_DB: smockin
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5400:5432"
+
+volumes:
+  db-data:
