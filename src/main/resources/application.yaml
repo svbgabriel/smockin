@@ -37,3 +37,5 @@ spring:
       idle-timeout: 10000
       maximum-pool-size: 10
       minimum-idle: 10
+  main:
+    banner-mode: off
