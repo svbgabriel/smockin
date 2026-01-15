@@ -8,32 +8,32 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.service.AuthService;
 import com.smockin.admin.service.SmockinUserService;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Created by mgallina.
  */
-@Controller
+@RestController
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+    private final SmockinUserService smockinUserService;
 
-    @Autowired
-    private SmockinUserService smockinUserService;
-
-    @RequestMapping(path="/auth", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<SimpleMessageResponseDTO> authenticate(@RequestBody final AuthDTO dto)
-                                                                                throws ValidationException, AuthException {
-        return ResponseEntity.ok(new SimpleMessageResponseDTO(authService.authenticate(dto)));
+    public AuthController(AuthService authService, SmockinUserService smockinUserService) {
+        this.authService = authService;
+        this.smockinUserService = smockinUserService;
     }
 
-    @RequestMapping(path="/logout", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> logout(@RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+    @PostMapping(path="/auth", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SimpleMessageResponseDTO<String>> authenticate(@RequestBody final AuthDTO dto)
+                                                                                throws ValidationException, AuthException {
+        return ResponseEntity.ok(new SimpleMessageResponseDTO<>(authService.authenticate(dto)));
+    }
+
+    @PostMapping(path="/logout", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> logout(@RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
             throws RecordNotFoundException {
 
         smockinUserService.resetToken(GeneralUtils.extractOAuthToken(bearerToken));

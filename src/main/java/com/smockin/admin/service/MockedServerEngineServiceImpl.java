@@ -542,7 +542,7 @@ public class MockedServerEngineServiceImpl implements MockedServerEngineService 
         mockedRestServerEngine.removePathFromLiveBlocking(method, amendedPath, user.getExtId());
 
         if (mockedRestServerEngine.countLiveBlockingPathsForUser(method, amendedPath, user.getExtId()) == 0) {
-            mockedRestServerEngine.notifyBlockedLiveLoggingCalls(Optional.of(method), amendedPath);
+            mockedRestServerEngine.notifyBlockedLiveLoggingCalls(method, amendedPath);
         }
 
     }
@@ -610,7 +610,7 @@ public class MockedServerEngineServiceImpl implements MockedServerEngineService 
 
             final ByteArrayInputStream stream = new ByteArrayInputStream(file.getBytes());
             final String content = IOUtils.toString(stream, Charset.defaultCharset().displayName());
-            List<ProxyForwardMappingDTO> proxyForwardMappingDTOs = GeneralUtils.deserialiseJson(content, new TypeReference<List<ProxyForwardMappingDTO>>() {});
+            List<ProxyForwardMappingDTO> proxyForwardMappingDTOs = GeneralUtils.deserializeJson(content, new TypeReference<List<ProxyForwardMappingDTO>>() {});
 
             if (proxyForwardMappingDTOs == null) {
                 throw new ValidationException("Error reading import file: invalid json structure");

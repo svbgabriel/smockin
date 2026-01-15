@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public final class LiveLoggingUtils {
 
+    private LiveLoggingUtils() {}
+
     private static final String NOT_AVAILABLE = "n/a";
 
     public static LiveLoggingDTO buildLiveLogInterceptedResponseDTO(final String reqId,

@@ -607,7 +607,7 @@ public class StatefulServiceImpl implements StatefulService {
             final String initialBody = parent.getRestfulMockStatefulMeta().getInitialResponseBody();
 
             return (initialBody != null)
-                    ? GeneralUtils.deserialiseJson(initialBody, new TypeReference<List<Map<String, Object>>>() {})
+                    ? GeneralUtils.deserializeJson(initialBody, new TypeReference<List<Map<String, Object>>>() {})
                     : new ArrayList<>();
         });
 

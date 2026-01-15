@@ -6,37 +6,30 @@ import com.smockin.admin.exception.AuthException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.service.TunnelService;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 public class TunnelController {
 
-    static final String PATH = "/tunnel";
+    private final TunnelService tunnelService;
 
-    @Autowired
-    private TunnelService tunnelService;
+    public TunnelController(TunnelService tunnelService) {
+        this.tunnelService = tunnelService;
+    }
 
-
-    @RequestMapping(path=PATH,
-                    method = RequestMethod.GET,
-                    produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody
-    ResponseEntity<TunnelResponseDTO> get(@RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken) {
+    @GetMapping(path = "/tunnel", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TunnelResponseDTO> get(@RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken) {
 
         return ResponseEntity.ok(tunnelService.load(GeneralUtils.extractOAuthToken(bearerToken)));
     }
 
-    @RequestMapping(path=PATH,
-                    method = RequestMethod.PUT,
-                    consumes = MediaType.APPLICATION_JSON_VALUE,
-                    produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody
-    ResponseEntity<TunnelResponseDTO> update(@RequestBody final TunnelRequestDTO dto,
-                                             @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+    @PutMapping(path = "/tunnel",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TunnelResponseDTO> update(@RequestBody final TunnelRequestDTO dto,
+                                                    @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
             throws AuthException, ValidationException {
 
         return ResponseEntity.ok(tunnelService.update(dto, GeneralUtils.extractOAuthToken(bearerToken)));

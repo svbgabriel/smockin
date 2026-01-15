@@ -10,37 +10,35 @@ import com.smockin.mockserver.dto.MailServerMessageInboxAttachmentDTO;
 import com.smockin.mockserver.dto.MailServerMessageInboxAttachmentLiteDTO;
 import com.smockin.mockserver.dto.MailServerMessageInboxDTO;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@Controller
+@RestController
 public class MailMockMessageController {
 
-    @Autowired
-    private MailMockService mailMockService;
+    private final MailMockService mailMockService;
+    private final MailMockMessageService mailMockMessageService;
 
-    @Autowired
-    private MailMockMessageService mailMockMessageService;
+    public MailMockMessageController(MailMockService mailMockService, MailMockMessageService mailMockMessageService) {
+        this.mailMockService = mailMockService;
+        this.mailMockMessageService = mailMockMessageService;
+    }
 
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/inbox",
-            method = RequestMethod.GET,
+    @GetMapping(
+            path = "/mailmock/{mailExtId}/inbox",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody
-    ResponseEntity<PagingResponseDTO<MailServerMessageInboxDTO>> getInboxMessages(
-                @PathVariable("mailExtId") final String mailExtId,
-                @RequestParam(value = "pageStart") final int pageStart,
-                @RequestParam(value = "search", required = false) final String search,
-                @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
-                    throws RecordNotFoundException, ValidationException {
+    public ResponseEntity<PagingResponseDTO<MailServerMessageInboxDTO>> getInboxMessages(
+            @PathVariable final String mailExtId,
+            @RequestParam(value = "pageStart") final int pageStart,
+            @RequestParam(value = "search", required = false) final String search,
+            @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+            throws RecordNotFoundException, ValidationException {
 
         return ResponseEntity.ok(mailMockService.loadMessagesFromMailServerInbox(
                 mailExtId,
@@ -49,16 +47,15 @@ public class MailMockMessageController {
                 GeneralUtils.extractOAuthToken(bearerToken)));
     }
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/inbox",
-            method = RequestMethod.POST,
+    @PostMapping(
+            path = "/mailmock/{mailExtId}/inbox",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<SimpleMessageResponseDTO> createInboxMessage(
-                @PathVariable("mailExtId") final String mailExtId,
-                @RequestBody final MailServerMessageInboxDTO dto,
-                @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
-                    throws RecordNotFoundException, ValidationException {
+    public ResponseEntity<SimpleMessageResponseDTO<String>> createInboxMessage(
+            @PathVariable final String mailExtId,
+            @RequestBody final MailServerMessageInboxDTO dto,
+            @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+            throws RecordNotFoundException, ValidationException {
 
         final String extId = mailMockMessageService.saveMailMessage(mailExtId,
                 dto.getFrom(),
@@ -67,30 +64,28 @@ public class MailMockMessageController {
                 dto.getDateReceived(),
                 Optional.of(GeneralUtils.extractOAuthToken(bearerToken)));
 
-        return new ResponseEntity(new SimpleMessageResponseDTO(extId), HttpStatus.CREATED);
+        return new ResponseEntity<>(new SimpleMessageResponseDTO<>(extId), HttpStatus.CREATED);
     }
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/inbox/{messageId}",
-            method = RequestMethod.DELETE,
+    @DeleteMapping(
+            path = "/mailmock/{mailExtId}/inbox/{messageId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> deleteInboxMessage(
-                @PathVariable("mailExtId") final String mailExtId,
-                @PathVariable("messageId") final String messageId,
-                @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
-                    throws RecordNotFoundException, ValidationException {
+    public ResponseEntity<Void> deleteInboxMessage(
+            @PathVariable final String mailExtId,
+            @PathVariable final String messageId,
+            @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+            throws RecordNotFoundException, ValidationException {
 
         mailMockMessageService.deleteMailMessage(mailExtId, messageId, GeneralUtils.extractOAuthToken(bearerToken));
 
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/inbox",
-            method = RequestMethod.DELETE,
+    @DeleteMapping(
+            path = "/mailmock/{mailExtId}/inbox",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> deleteAllInboxMessages(
-            @PathVariable("mailExtId") final String mailExtId,
+    public ResponseEntity<Void> deleteAllInboxMessages(
+            @PathVariable final String mailExtId,
             @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
             throws RecordNotFoundException, ValidationException {
 
@@ -99,12 +94,11 @@ public class MailMockMessageController {
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/server/inbox",
-            method = RequestMethod.DELETE,
+    @DeleteMapping(
+            path = "/mailmock/{mailExtId}/server/inbox",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> deleteAllInboxMessagesOnServer(
-            @PathVariable("mailExtId") final String mailExtId,
+    public ResponseEntity<Void> deleteAllInboxMessagesOnServer(
+            @PathVariable final String mailExtId,
             @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
             throws RecordNotFoundException, ValidationException {
 
@@ -113,28 +107,26 @@ public class MailMockMessageController {
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/message/{messageId}/attachments",
-            method = RequestMethod.GET,
+    @GetMapping(
+            path = "/mailmock/{mailExtId}/message/{messageId}/attachments",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<List<MailServerMessageInboxAttachmentLiteDTO>> getAllAttachments(
-                @PathVariable("mailExtId") final String mailExtId,
-                @PathVariable("messageId") final String messageId,
-                @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
-                    throws RecordNotFoundException, ValidationException {
+    public ResponseEntity<List<MailServerMessageInboxAttachmentLiteDTO>> getAllAttachments(
+            @PathVariable final String mailExtId,
+            @PathVariable final String messageId,
+            @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+            throws RecordNotFoundException, ValidationException {
 
         return ResponseEntity.ok(mailMockMessageService
                 .findAllMessageAttachments(mailExtId, messageId, GeneralUtils.extractOAuthToken(bearerToken)));
     }
 
-    @RequestMapping(
-            path="/mailmock/{mailExtId}/message/{messageId}/attachment/{attachmentIdOrName}",
-            method = RequestMethod.GET,
+    @GetMapping(
+            path = "/mailmock/{mailExtId}/message/{messageId}/attachment/{attachmentIdOrName}",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<MailServerMessageInboxAttachmentDTO> getAttachmentByIdOrName(
-            @PathVariable("mailExtId") final String mailExtId,
-            @PathVariable("messageId") final String messageId,
-            @PathVariable("attachmentIdOrName") final String attachmentIdOrName,
+    public ResponseEntity<MailServerMessageInboxAttachmentDTO> getAttachmentByIdOrName(
+            @PathVariable final String mailExtId,
+            @PathVariable final String messageId,
+            @PathVariable final String attachmentIdOrName,
             @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
             throws RecordNotFoundException, ValidationException {
 

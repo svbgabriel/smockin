@@ -1,6 +1,7 @@
 package com.smockin.utils;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.math.NumberUtils;
 import spark.Request;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class RuleEngineUtils {
+
+    private RuleEngineUtils() {}
 
     public static String matchOnPathVariable(final String fieldName, final Request req) {
 
@@ -28,7 +31,7 @@ public final class RuleEngineUtils {
             return null;
         }
 
-        final Object jsonRequestBody = (StringUtils.startsWith(reqBody, "["))
+        final Object jsonRequestBody = (Strings.CS.startsWith(reqBody, "["))
                 ? GeneralUtils.deserialiseJSONToList(reqBody)
                 : GeneralUtils.deserialiseJSONToMap(reqBody);
 
@@ -39,7 +42,7 @@ public final class RuleEngineUtils {
         // e.g.
         // person.name
         // person.pets[2].type
-        if (StringUtils.indexOf(fieldName, ".") > -1) {
+        if (Strings.CS.indexOf(fieldName, ".") > -1) {
 
             final String[] fields = StringUtils.split(fieldName,".");
 
@@ -99,7 +102,7 @@ public final class RuleEngineUtils {
 
     static boolean isJSONFieldAList(final String field) {
 
-        return field.indexOf("[") > -1 && field.endsWith("]");
+        return field.contains("[") && field.endsWith("]");
     }
 
     static Optional<String> extractJSONFieldListFieldName(final String field) {

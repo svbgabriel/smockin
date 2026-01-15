@@ -12,101 +12,103 @@ import com.smockin.admin.exception.RecordNotFoundException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.service.SmockinUserService;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
  * Created by mgallina.
  */
-@Controller
+@RestController
 public class SmockinUserController {
 
-    @Autowired
-    private SmockinUserService smockinUserService;
+    private final SmockinUserService smockinUserService;
 
-    @RequestMapping(path="/user", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<List<SmockinUserResponseDTO>> getUsers(@RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
-                                                                throws RecordNotFoundException, AuthException {
+    public SmockinUserController(SmockinUserService smockinUserService) {
+        this.smockinUserService = smockinUserService;
+    }
+
+    @GetMapping(path = "/user", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<SmockinUserResponseDTO>> getUsers(@RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+            throws RecordNotFoundException, AuthException {
 
         return ResponseEntity.ok(smockinUserService.loadAllUsers(GeneralUtils.extractOAuthToken(bearerToken)));
     }
 
-    @RequestMapping(path="/user", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> createUser(@RequestBody final SmockinNewUserDTO dto,
-                                                      @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
-                                                                throws ValidationException, RecordNotFoundException, AuthException {
+    @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> createUser(@RequestBody final SmockinNewUserDTO dto,
+                                           @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+            throws ValidationException, RecordNotFoundException, AuthException {
 
         smockinUserService.createUser(dto, GeneralUtils.extractOAuthToken(bearerToken));
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @RequestMapping(path="/user/{extId}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> updateUser(@PathVariable("extId") final String extId,
-                                                           @RequestBody final SmockinUserDTO dto,
-                                                           @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
-                                                                throws ValidationException, RecordNotFoundException, AuthException {
+    @PutMapping(path = "/user/{extId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateUser(@PathVariable final String extId,
+                                           @RequestBody final SmockinUserDTO dto,
+                                           @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+            throws ValidationException, RecordNotFoundException, AuthException {
 
         smockinUserService.updateUser(extId, dto, GeneralUtils.extractOAuthToken(bearerToken));
 
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(path="/user/{extId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> deleteUser(@PathVariable("extId") final String extId,
-                                                      @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
-                                                                throws ValidationException, RecordNotFoundException, AuthException {
+    @DeleteMapping(path = "/user/{extId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> deleteUser(@PathVariable final String extId,
+                                           @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+            throws ValidationException, RecordNotFoundException, AuthException {
 
         smockinUserService.deleteUser(extId, GeneralUtils.extractOAuthToken(bearerToken));
 
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(path="/user/password", method = RequestMethod.PATCH, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> updateUserPassword(@RequestBody final PasswordDTO dto,
-                                                              @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
-                                                                        throws ValidationException, RecordNotFoundException {
+    @PatchMapping(path = "/user/password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateUserPassword(@RequestBody final PasswordDTO dto,
+                                                   @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+            throws ValidationException, RecordNotFoundException {
 
         smockinUserService.updateUserPassword(dto, GeneralUtils.extractOAuthToken(bearerToken));
 
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(path="/user/{extId}/password/reset", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<SimpleMessageResponseDTO> createPasswordResetToken(@PathVariable("extId") final String extId,
-                                                                                           @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
-                                                                                                throws RecordNotFoundException, AuthException {
+    @GetMapping(path = "/user/{extId}/password/reset", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SimpleMessageResponseDTO<String>> createPasswordResetToken(@PathVariable final String extId,
+                                                                                     @RequestHeader(GeneralUtils.OAUTH_HEADER_NAME) final String bearerToken)
+            throws RecordNotFoundException, AuthException {
 
-        return ResponseEntity.ok(new SimpleMessageResponseDTO(smockinUserService.issuePasswordResetToken(extId, GeneralUtils.extractOAuthToken(bearerToken))));
+        return ResponseEntity.ok(new SimpleMessageResponseDTO<>(smockinUserService.issuePasswordResetToken(extId, GeneralUtils.extractOAuthToken(bearerToken))));
     }
 
-    @RequestMapping(path="/password/reset/token/{token}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> validatePasswordResetToken(@PathVariable("token") final String token)
-                                                                        throws RecordNotFoundException {
+    @GetMapping(path = "/password/reset/token/{token}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> validatePasswordResetToken(@PathVariable final String token)
+            throws RecordNotFoundException {
 
         smockinUserService.validatePasswordResetToken(token);
 
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(path="/password/reset/token/{token}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<?> applyPasswordResetToken(@PathVariable("token") final String token,
-                                                                   @RequestBody final PasswordResetDTO dto)
-                                                                        throws RecordNotFoundException, ValidationException {
+    @PostMapping(path = "/password/reset/token/{token}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> applyPasswordResetToken(@PathVariable final String token,
+                                                        @RequestBody final PasswordResetDTO dto)
+            throws RecordNotFoundException, ValidationException {
 
         smockinUserService.applyPasswordResetToken(token, dto.getNewPassword());
 
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(path="/user/mode", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<SimpleMessageResponseDTO> getUserMode() {
-        return ResponseEntity.ok(new SimpleMessageResponseDTO(smockinUserService.getUserMode()));
+    @GetMapping(path = "/user/mode", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SimpleMessageResponseDTO<UserModeEnum>> getUserMode() {
+        return ResponseEntity.ok(new SimpleMessageResponseDTO<>(smockinUserService.getUserMode()));
     }
 
 }

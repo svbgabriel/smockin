@@ -182,7 +182,7 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
             return mailMockMessage.getAttachments()
                     .stream()
                     .map(a ->
-                            new MailServerMessageInboxAttachmentLiteDTO(Optional.of(a.getExtId()), a.getName(), a.getMimeType()))
+                            new MailServerMessageInboxAttachmentLiteDTO(a.getExtId(), a.getName(), a.getMimeType()))
                     .collect(Collectors.toList());
 
         } else if (mockedServerEngineService.getMailServerState().isRunning()) {
@@ -222,7 +222,7 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
                             StringUtils.equalsIgnoreCase(a.getExtId(), attachmentIdOrName))
                     .map(a ->
                             new MailServerMessageInboxAttachmentDTO(
-                                    Optional.of(a.getExtId()),
+                                    a.getExtId(),
                                     a.getName(),
                                     a.getMimeType(),
                                     a.getMailMockMessageAttachmentContent().getContent()))

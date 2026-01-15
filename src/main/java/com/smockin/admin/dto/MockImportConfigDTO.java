@@ -1,7 +1,11 @@
 package com.smockin.admin.dto;
 
 import com.smockin.admin.enums.MockImportKeepStrategyEnum;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class MockImportConfigDTO {
 
     private boolean keepExisting;
@@ -13,20 +17,6 @@ public class MockImportConfigDTO {
 
     public MockImportConfigDTO(MockImportKeepStrategyEnum keepStrategy) {
         this.keepExisting = true;
-        this.keepStrategy = keepStrategy;
-    }
-
-    public boolean isKeepExisting() {
-        return keepExisting;
-    }
-    public void setKeepExisting(boolean keepExisting) {
-        this.keepExisting = keepExisting;
-    }
-
-    public MockImportKeepStrategyEnum getKeepStrategy() {
-        return keepStrategy;
-    }
-    public void setKeepStrategy(MockImportKeepStrategyEnum keepStrategy) {
         this.keepStrategy = keepStrategy;
     }
 

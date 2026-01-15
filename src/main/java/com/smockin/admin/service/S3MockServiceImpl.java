@@ -101,10 +101,9 @@ public class S3MockServiceImpl implements S3MockService {
             throw new ValidationException("Directory name is required");
         }
 
-        if (dto.getBucketExtId().isPresent()
-                && dto.getBucketExtId().get() != null) {
+        if (dto.getBucketExtId()!= null) {
 
-            final S3Mock parentBucket = findS3Mock(dto.getBucketExtId().get(), token);
+            final S3Mock parentBucket = findS3Mock(dto.getBucketExtId(), token);
 
             final String extId = s3MockDirDAO
                     .save(new S3MockDir(dto.getName(), parentBucket))
@@ -125,10 +124,9 @@ public class S3MockServiceImpl implements S3MockService {
             return extId;
         }
 
-        if (dto.getParentDirExtId().isPresent()
-                && dto.getParentDirExtId().get() != null) {
+        if (dto.getParentDirExtId() != null) {
 
-            final S3MockDir parentDir = findS3MockDir(dto.getParentDirExtId().get(), token);
+            final S3MockDir parentDir = findS3MockDir(dto.getParentDirExtId(), token);
 
             final S3MockDir newDir = s3MockDirDAO
                     .save(new S3MockDir(dto.getName(), parentDir));
@@ -556,11 +554,11 @@ public class S3MockServiceImpl implements S3MockService {
                 s3MockDir.getExtId(),
                 s3MockDir.getName(),
                 (s3MockDir.getS3Mock() != null)
-                        ? Optional.of(s3MockDir.getS3Mock().getExtId())
-                        : Optional.empty(),
+                        ? s3MockDir.getS3Mock().getExtId()
+                        : null,
                 (s3MockDir.getParent() != null)
-                        ? Optional.of(s3MockDir.getParent().getExtId())
-                        : Optional.empty());
+                        ? s3MockDir.getParent().getExtId()
+                        : null);
 
         dto.getFiles()
                 .addAll(s3MockDir

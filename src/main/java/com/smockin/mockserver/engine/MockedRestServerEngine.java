@@ -80,7 +80,7 @@ public class MockedRestServerEngine {
     // Live logging response blocker
     // TODO find a smarter way to do this (i.e BlockingQueue...)
     private final Object responseBlockingMonitor = new Object();
-    private Map<String, Optional<LiveloggingUserOverrideResponse>> responseAmendments = new HashMap<>();
+    private Map<String, Optional<LiveLoggingUserOverrideResponse>> responseAmendments = new HashMap<>();
     private List<BlockedPathToRelease> userCallsToRelease = new ArrayList<>();
     private AtomicBoolean liveBlockingModeEnabled = new AtomicBoolean();
     private AtomicReference<List<LiveBlockPath>> liveBlockPathsRef = new AtomicReference<>(new ArrayList<>());
@@ -368,9 +368,9 @@ public class MockedRestServerEngine {
                                 .stream()
                                 .anyMatch(p -> {
 
-                                    if (p.getMethod().isPresent()) {
+                                    if (p.getMethod() != null) {
 
-                                        return request.requestMethod().equalsIgnoreCase(p.getMethod().get().name())
+                                        return request.requestMethod().equalsIgnoreCase(p.getMethod().name())
                                                 && StringUtils.equals(request.pathInfo(), p.getPathPattern());
                                     }
 
@@ -399,7 +399,7 @@ public class MockedRestServerEngine {
                         logger.debug("Releasing blocked request with traceId: " + traceId + " as response provided");
                     }
 
-                    final Optional<LiveloggingUserOverrideResponse> responseAmendmentOpt
+                    final Optional<LiveLoggingUserOverrideResponse> responseAmendmentOpt
                             = responseAmendments.get(traceId);
 
                     // Could be no amendment is provided (in which case this request will default to the original response)
@@ -419,10 +419,10 @@ public class MockedRestServerEngine {
         return Optional.empty();
     }
 
-    private String amendResponse(final Optional<LiveloggingUserOverrideResponse> responseAmendmentOpt,
+    private String amendResponse(final Optional<LiveLoggingUserOverrideResponse> responseAmendmentOpt,
                                final Response response) {
 
-        final LiveloggingUserOverrideResponse responseAmendment = responseAmendmentOpt.get();
+        final LiveLoggingUserOverrideResponse responseAmendment = responseAmendmentOpt.get();
 
         if (!responseAmendment.getResponseHeaders().isEmpty()) {
 
@@ -556,7 +556,7 @@ public class MockedRestServerEngine {
     }
 
     public void releaseBlockedLiveLoggingResponse(final String traceId,
-                                                  final Optional<LiveloggingUserOverrideResponse> responseAmendmentOpt) {
+                                                  final Optional<LiveLoggingUserOverrideResponse> responseAmendmentOpt) {
 
         if (logger.isDebugEnabled())
             logger.debug("Adding amended response for blocked request with traceId " + traceId);
@@ -588,7 +588,7 @@ public class MockedRestServerEngine {
 
     }
 
-    public void notifyBlockedLiveLoggingCalls(final Optional<RestMethodEnum> method, final String userCtxOrFullPath) {
+    public void notifyBlockedLiveLoggingCalls(final RestMethodEnum method, final String userCtxOrFullPath) {
 
 
         if (logger.isDebugEnabled()) {

@@ -7,12 +7,12 @@ import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jetty.websocket.api.WebSocketBehavior;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -36,17 +36,17 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     private static final String URL = "/liveLoggingFeed/*/*";
 
-    @Autowired
-    private ServletContext servletContext;
+    private final ServletContext servletContext;
+    private final LiveLoggingHandler mockLogFeedHandler;
+    private final UserTokenServiceUtils userTokenServiceUtils;
+    private final SmockinUserService smockinUserService;
 
-    @Autowired
-    private LiveLoggingHandler mockLogFeedHandler;
-
-    @Autowired
-    private UserTokenServiceUtils userTokenServiceUtils;
-
-    @Autowired
-    private SmockinUserService smockinUserService;
+    public WebSocketConfig(ServletContext servletContext, LiveLoggingHandler mockLogFeedHandler, UserTokenServiceUtils userTokenServiceUtils, SmockinUserService smockinUserService) {
+        this.servletContext = servletContext;
+        this.mockLogFeedHandler = mockLogFeedHandler;
+        this.userTokenServiceUtils = userTokenServiceUtils;
+        this.smockinUserService = smockinUserService;
+    }
 
 
     @Override
@@ -70,7 +70,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
             public boolean beforeHandshake(final ServerHttpRequest request,
                                            final ServerHttpResponse response,
                                            final WebSocketHandler wsHandler,
-                                           final Map<String, Object> attributes) throws Exception {
+                                           final Map<String, Object> attributes) {
 
                 if (!UserModeEnum.ACTIVE.equals(smockinUserService.getUserMode())) {
                     return true;
@@ -79,10 +79,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 final String path = request.getURI().getPath();
 
                 if (logger.isDebugEnabled())
-                    logger.debug("Inbound WS path: " + path);
+                    logger.debug("Inbound WS path: {}", path);
 
                 // Extract Token param
-                final int tokenPosition = StringUtils.lastIndexOf(path, GeneralUtils.URL_PATH_SEPARATOR);
+                final int tokenPosition = Strings.CS.lastIndexOf(path, GeneralUtils.URL_PATH_SEPARATOR);
 
                 if (tokenPosition == -1) {
                     return false;
@@ -96,7 +96,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 // Extract showAll param
                 final String remainingPrecedingPath = StringUtils.substring(path, 0, tokenPosition);
-                final int showAllPosition = StringUtils.lastIndexOf(remainingPrecedingPath, GeneralUtils.URL_PATH_SEPARATOR);
+                final int showAllPosition = Strings.CS.lastIndexOf(remainingPrecedingPath, GeneralUtils.URL_PATH_SEPARATOR);
 
                 if (showAllPosition == -1) {
                     return false;
@@ -113,8 +113,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 final boolean showAllUserCalls = BooleanUtils.toBoolean(showAll);
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("showAllUserCalls: " + showAllUserCalls);
-                    logger.debug("User Ctx Path: " + smockinUser.getCtxPath());
+                    logger.debug("showAllUserCalls: {}", showAllUserCalls);
+                    logger.debug("User Ctx Path: {}", smockinUser.getCtxPath());
                 }
 
                 attributes.put(LiveLoggingHandler.WS_CONNECTED_USER_ADMIN_VIEW_ALL, showAllUserCalls);
@@ -127,6 +127,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
             public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                        WebSocketHandler wsHandler, Exception exception) {
+                // Not used
             }
         };
     }

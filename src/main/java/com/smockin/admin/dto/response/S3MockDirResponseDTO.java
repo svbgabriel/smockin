@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by mgallina.
@@ -21,8 +20,8 @@ public class S3MockDirResponseDTO extends S3MockDirDTO {
 
     public S3MockDirResponseDTO(final String extId,
                                 final String name,
-                                final Optional<String> bucketExtId,
-                                final Optional<String> parentDirExtId) {
+                                final String bucketExtId,
+                                final String parentDirExtId) {
         super(name, bucketExtId, parentDirExtId);
         this.extId = extId;
     }

@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Optional;
-
 /**
  * Created by mgallina.
  */
@@ -15,7 +13,7 @@ import java.util.Optional;
 public class S3MockDirDTO {
 
     private String name;
-    private Optional<String> bucketExtId;
-    private Optional<String> parentDirExtId;
+    private String bucketExtId;
+    private String parentDirExtId;
 
 }

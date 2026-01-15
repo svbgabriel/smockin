@@ -184,7 +184,7 @@ public class MockDefinitionImportExportServiceTest {
             try {
 
                 if (f.getName().indexOf(MockDefinitionImportExportService.restExportFileName) > -1) {
-                    Assert.assertEquals(allRestfulMocks.size(), ((List)GeneralUtils.deserialiseJson(readFileToString(f))).size());
+                    Assert.assertEquals(allRestfulMocks.size(), ((List)GeneralUtils.deserializeJson(readFileToString(f))).size());
                 } else {
                     Assert.fail();
                 }
@@ -212,7 +212,7 @@ public class MockDefinitionImportExportServiceTest {
             try {
 
                 if (f.getName().indexOf(MockDefinitionImportExportService.restExportFileName) > -1) {
-                    final List<RestfulMockResponseDTO> restfulMocks = GeneralUtils.deserialiseJson(readFileToString(f), new TypeReference<List<RestfulMockResponseDTO>>() {});
+                    final List<RestfulMockResponseDTO> restfulMocks = GeneralUtils.deserializeJson(readFileToString(f), new TypeReference<List<RestfulMockResponseDTO>>() {});
                     Assert.assertEquals(1, restfulMocks.size());
                     Assert.assertEquals(restfulDTO.getExtId(), restfulMocks.get(0).getExtId());
                 } else {

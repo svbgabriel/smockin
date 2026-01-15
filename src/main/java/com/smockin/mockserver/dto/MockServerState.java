@@ -1,8 +1,13 @@
 package com.smockin.mockserver.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Created by mgallina.
  */
+@Setter
+@Getter
 public class MockServerState {
 
     private boolean running;
@@ -13,20 +18,6 @@ public class MockServerState {
 
     public MockServerState(boolean running, int port) {
         this.running = running;
-        this.port = port;
-    }
-
-    public boolean isRunning() {
-        return running;
-    }
-    public void setRunning(boolean running) {
-        this.running = running;
-    }
-
-    public int getPort() {
-        return port;
-    }
-    public void setPort(int port) {
         this.port = port;
     }
 

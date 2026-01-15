@@ -27,7 +27,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"},\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "id" };
@@ -49,7 +49,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "id" };
@@ -71,7 +71,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Billy\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Sally\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Jennifer\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "id" };
@@ -93,7 +93,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Billy\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Mike\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "id" };
@@ -115,7 +115,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"foo1\":\"bar1\",\"foo2\":1,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"5\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"6\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]},{\"foo1\":\"bar2\",\"foo2\":2,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"7\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"8\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"9\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"10\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"11\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"12\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "data1", "id" };
@@ -137,7 +137,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"foo1\":\"bar1\",\"foo2\":1,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"5\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"6\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]},{\"foo1\":\"bar2\",\"foo2\":2,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"7\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"8\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"9\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"10\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"11\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"12\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "data1", "id" };
@@ -159,7 +159,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"foo1\":\"bar1\",\"foo2\":1,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"5\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"6\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]},{\"foo1\":\"bar2\",\"foo2\":2,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"7\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"8\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"9\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"10\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"11\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"12\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String[] pathArray = { "data", "data1", "id" };
@@ -214,7 +214,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Billy\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Sally\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Jennifer\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[0].data.[1].id=2";
@@ -245,7 +245,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"},\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[1].data.id=2";
@@ -269,7 +269,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[2].data.[0].id=3";
@@ -294,7 +294,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Billy\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Mike\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[0].data.[1].id=2";
@@ -319,7 +319,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"foo1\":\"bar1\",\"foo2\":1,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"5\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"6\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]},{\"foo1\":\"bar2\",\"foo2\":2,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"7\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"8\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"9\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"10\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"11\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"12\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[1].data.[2].data1.[0].id=11";
@@ -348,7 +348,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"foo1\":\"bar1\",\"foo2\":1,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"5\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"6\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]},{\"foo1\":\"bar2\",\"foo2\":2,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"7\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"8\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"9\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"10\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"11\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"12\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[1].data.[1].data1.[1].id=9";
@@ -377,7 +377,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"}],\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         final String jsonPath = "[2].data.[0].id=2";
@@ -396,7 +396,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"},\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         // Test
@@ -416,7 +416,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "[{\"version\":1,\"system\":\"Foo1\",\"active\":true,\"data\":[{\"type\":\"customers\",\"meta\":null,\"keys\":[{\"name\":\"Sian\"}]}],\"included\":[]},{\"version\":1,\"system\":\"Foo2\",\"active\":true,\"data\":[{\"type\":\"customers\",\"meta\":[\"A\",\"B\",\"C\"],\"keys\":[{\"name\":\"Sam\"}]}],\"included\":[]},{\"version\":1,\"system\":\"Foo3\",\"active\":true,\"data\":[{\"type\":\"customers\",\"meta\":[\"A\",\"C\"],\"keys\":[{\"name\":\"Will\"}]}],\"included\":[]},{\"version\":1,\"system\":\"Foo4\",\"active\":true,\"data\":[{\"type\":\"customers\",\"meta\":null,\"keys\":[{\"name\":\"Billy\"}]}],\"included\":[]}]";
 
-        final List<Map<String, Object>> allState = GeneralUtils.deserialiseJson(json,
+        final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
                 new TypeReference<List<Map<String, Object>>>() {});
 
         // Test
@@ -440,7 +440,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "{\"version\":1,\"system\":\"Foo2\",\"active\":true,\"data\":[{\"type\":\"customers\",\"meta\":[\"A\",\"B\",\"C\"],\"keys\":[{\"name\":\"Sam\"}]}],\"included\":[]}";
 
-        final Map<String, Object> newState = GeneralUtils.deserialiseJson(json,
+        final Map<String, Object> newState = GeneralUtils.deserializeJson(json,
                 new TypeReference<Map<String, Object>>() {});
         final RestfulMockStatefulMeta restfulMockStatefulMeta = new RestfulMockStatefulMeta();
         restfulMockStatefulMeta.setIdFieldName("id");
@@ -472,7 +472,7 @@ public class StatefulServiceTest {
         final String existingId = "12345";
         final String json = "{\"version\":1,\"system\":\"Foo2\",\"active\":true,\"data\":[{\"type\":\"customers\",\"meta\":[\"A\",\"B\",\"C\"],\"keys\":[{\"id\":\""+ existingId +"\",\"name\":\"Sam\"}]}],\"included\":[]}";
 
-        final Map<String, Object> newState = GeneralUtils.deserialiseJson(json,
+        final Map<String, Object> newState = GeneralUtils.deserializeJson(json,
                 new TypeReference<Map<String, Object>>() {});
         final RestfulMockStatefulMeta restfulMockStatefulMeta = new RestfulMockStatefulMeta();
         restfulMockStatefulMeta.setIdFieldName("id");
@@ -503,7 +503,7 @@ public class StatefulServiceTest {
         // Setup
         final String json = "{\"version\":1,\"system\":\"Foo2\",\"active\":true,\"name\":\"Sam\"}";
 
-        final Map<String, Object> newState = GeneralUtils.deserialiseJson(json,
+        final Map<String, Object> newState = GeneralUtils.deserializeJson(json,
                 new TypeReference<Map<String, Object>>() {});
         final RestfulMockStatefulMeta restfulMockStatefulMeta = new RestfulMockStatefulMeta();
         restfulMockStatefulMeta.setIdFieldName("id");
@@ -524,7 +524,7 @@ public class StatefulServiceTest {
         final String existingId = "12345";
         final String json = "{\"version\":1,\"system\":\"Foo2\",\"active\":true,\"id\":\""+existingId+"\",\"name\":\"Sam\"}";
 
-        final Map<String, Object> newState = GeneralUtils.deserialiseJson(json,
+        final Map<String, Object> newState = GeneralUtils.deserializeJson(json,
                 new TypeReference<Map<String, Object>>() {});
         final RestfulMockStatefulMeta restfulMockStatefulMeta = new RestfulMockStatefulMeta();
         restfulMockStatefulMeta.setIdFieldName("id");

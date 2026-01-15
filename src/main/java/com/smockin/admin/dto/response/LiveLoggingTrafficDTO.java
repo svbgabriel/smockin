@@ -2,9 +2,11 @@ package com.smockin.admin.dto.response;
 
 import com.smockin.admin.enums.LiveLoggingDirectionEnum;
 import com.smockin.utils.GeneralUtils;
+import lombok.Getter;
 
 import java.util.Date;
 
+@Getter
 public class LiveLoggingTrafficDTO implements LiveLoggingPayloadDTO {
 
     private final String id;
@@ -22,22 +24,6 @@ public class LiveLoggingTrafficDTO implements LiveLoggingPayloadDTO {
         this.date = GeneralUtils.getCurrentDate();
         this.proxied = proxied;
         this.content = content;
-    }
-
-    public String getId() {
-        return id;
-    }
-    public LiveLoggingDirectionEnum getDirection() {
-        return direction;
-    }
-    public Date getDate() {
-        return date;
-    }
-    public boolean isProxied() {
-        return proxied;
-    }
-    public LiveLoggingContentDTO getContent() {
-        return content;
     }
 
 }

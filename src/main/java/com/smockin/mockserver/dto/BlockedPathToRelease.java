@@ -6,15 +6,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Optional;
-
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode
 @ToString
 public class BlockedPathToRelease {
 
-    private Optional<RestMethodEnum> method;
+    private RestMethodEnum method;
     private String pathPattern;
 
 }

@@ -1,6 +1,6 @@
 package com.smockin.admin.persistence.enums;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 /**
  * Created by mgallina.
@@ -19,7 +19,7 @@ public enum ServerTypeEnum {
         }
 
         for (ServerTypeEnum st : values()) {
-            if (StringUtils.equals(st.name(), value)) {
+            if (Strings.CS.equals(st.name(), value)) {
                 return st;
             }
         }

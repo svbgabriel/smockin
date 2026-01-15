@@ -7,37 +7,26 @@ import com.smockin.admin.exception.MockImportException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.service.ApiImportRouter;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Created by mgallina.
  */
-@Controller
+@RestController
 public class ApiImportController {
 
-    @Autowired
-    private ApiImportRouter apiImportRouter;
+    private final ApiImportRouter apiImportRouter;
 
-    /*
-    @RequestMapping(path="/api/import", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<Void> create(@RequestBody final ApiImportDTO dto,
-                                                     @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
-                                                        throws ApiImportException, ValidationException {
-
-        apiImportRouter.route(dto, GeneralUtils.extractOAuthToken(bearerToken));
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ApiImportController(ApiImportRouter apiImportRouter) {
+        this.apiImportRouter = apiImportRouter;
     }
-    */
 
-    @RequestMapping(path="/api/{type}/import", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseBody ResponseEntity<Void> importApiFile(@PathVariable("type") final String importType,
+    @PostMapping(path="/api/{type}/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> importApiFile(@PathVariable("type") final String importType,
                                                             @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken,
                                                             @RequestHeader(value = GeneralUtils.KEEP_EXISTING_HEADER_NAME) final boolean keepExisting,
                                                             @RequestParam("file") final MultipartFile file)

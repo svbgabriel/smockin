@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.smockin.admin.enums.UserModeEnum;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
@@ -37,6 +39,8 @@ import java.util.zip.ZipOutputStream;
  * Created by mgallina.
  */
 public final class GeneralUtils {
+
+    private GeneralUtils() {}
 
     private static final Logger logger = LoggerFactory.getLogger(GeneralUtils.class);
 
@@ -70,28 +74,28 @@ public final class GeneralUtils {
     }
 
 
-    public final static String generateUUID() {
+    public static String generateUUID() {
         return UUID.randomUUID().toString();
     }
 
-    // Should be set to UTC from command line
-    public final static Date getCurrentDate() {
+    // Should be set to UTC from the command line
+    public static Date getCurrentDate() {
         return Date.from(getCurrentDateTime().atZone(ZoneId.systemDefault()).toInstant());
     }
 
-    public final static Date toDate(final LocalDateTime localDateTime) {
+    public static Date toDate(final LocalDateTime localDateTime) {
         return Date.from(localDateTime.toInstant(ZoneOffset.UTC));
     }
 
-    public final static LocalDateTime getCurrentDateTime() {
+    public static LocalDateTime getCurrentDateTime() {
         return LocalDateTime.now();
     }
 
-    public final static Instant getCurrentDateTimeInstant() {
+    public static Instant getCurrentDateTimeInstant() {
         return getCurrentDateTime().toInstant(ZoneOffset.UTC);
     }
 
-    public final static String createFileNameUniqueTimeStamp() {
+    public static String createFileNameUniqueTimeStamp() {
         return new SimpleDateFormat(UNIQUE_TIMESTAMP_FORMAT)
                 .format(getCurrentDate());
     }
@@ -145,8 +149,8 @@ public final class GeneralUtils {
                     && ("*".equals(segment)
                             || (segment.startsWith("{") && segment.endsWith("}")))) {
 
-                segment = StringUtils.remove(segment, "{");
-                segment = StringUtils.remove(segment, "}");
+                segment = Strings.CS.remove(segment, "{");
+                segment = Strings.CS.remove(segment, "}");
 
                 if ("*".equals(segment)) {
                     segment = "*" + index;
@@ -164,7 +168,7 @@ public final class GeneralUtils {
     public static String sanitizeMultiUserPath(final UserModeEnum usermode, final String pathInfo, final String ctxPath) {
 
         return ( UserModeEnum.ACTIVE.equals(usermode) && StringUtils.isNotBlank(ctxPath) )
-                    ? StringUtils.removeFirst(pathInfo, ctxPath)
+                    ? RegExUtils.removeFirst(pathInfo, ctxPath)
                     : pathInfo;
     }
 
@@ -174,7 +178,7 @@ public final class GeneralUtils {
             try {
                 Thread.sleep(sleepInMillis);
             } catch (InterruptedException ex) {
-                logger.error("Error pausing response for the specified period of " + sleepInMillis, ex);
+                logger.error("Error pausing response for the specified period of {}", sleepInMillis, ex);
             }
         }
     }
@@ -197,36 +201,36 @@ public final class GeneralUtils {
         if (versionNo == null)
             throw new IllegalArgumentException("versionNo is not defined");
 
-        versionNo = org.apache.commons.lang3.StringUtils.removeIgnoreCase(versionNo, "-SNAPSHOT");
-        versionNo = org.apache.commons.lang3.StringUtils.remove(versionNo, ".");
+        versionNo = Strings.CI.remove(versionNo, "-SNAPSHOT");
+        versionNo = Strings.CS.remove(versionNo, ".");
 
         if (!NumberUtils.isDigits(versionNo))
             throw new IllegalArgumentException("extracted versionNo is not a valid number: " + versionNo);
 
-        return Integer.valueOf(versionNo);
+        return Integer.parseInt(versionNo);
     }
 
     public static String removeAllLineBreaks(final String original) {
-        return StringUtils.replaceAll(original, System.getProperty("line.separator"), "");
+        return RegExUtils.replaceAll(original, System.lineSeparator(), "");
     }
 
     public static List<Map<String, ?>> deserialiseJSONToList(final String jsonStr) {
-        return deserialiseJson(jsonStr, false);
+        return deserializeJson(jsonStr, false);
     }
 
     public static Map<String, ?> deserialiseJSONToMap(final String jsonStr) {
-        return deserialiseJson(jsonStr, false);
+        return deserializeJson(jsonStr, false);
     }
 
-    public static <T> T deserialiseJson(final String jsonStr) {
-        return deserialiseJson(jsonStr, true);
+    public static <T> T deserializeJson(final String jsonStr) {
+        return deserializeJson(jsonStr, true);
     }
 
     public static Map<String, ?> deserialiseJSONToMap(final String jsonStr, final boolean logFailure) {
-        return deserialiseJson(jsonStr, logFailure);
+        return deserializeJson(jsonStr, logFailure);
     }
 
-    public static <T> T deserialiseJson(final String jsonStr, final boolean logFailure) {
+    public static <T> T deserializeJson(final String jsonStr, final boolean logFailure) {
 
         if (jsonStr != null) {
             try {
@@ -242,7 +246,7 @@ public final class GeneralUtils {
         return null;
     }
 
-    public static <T> T deserialiseJson(final String jsonStr, final TypeReference<T> type) {
+    public static <T> T deserializeJson(final String jsonStr, final TypeReference<T> type) {
 
         if (jsonStr != null) {
             try {
@@ -274,7 +278,7 @@ public final class GeneralUtils {
             return null;
         }
 
-        return StringUtils.replace(bearerToken, OAUTH_HEADER_VALUE_PREFIX, "").trim();
+        return Strings.CS.replace(bearerToken, OAUTH_HEADER_VALUE_PREFIX, "").trim();
     }
 
     public static String getFileTypeExtension(final String fileName) {
@@ -314,7 +318,7 @@ public final class GeneralUtils {
 
             return baos.toByteArray();
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             logger.error("Error creating zip archive", ex);
 
             closeOSQuietly(zos);
@@ -413,18 +417,17 @@ public final class GeneralUtils {
                 .entrySet()
                 .stream()
                 .filter(p ->
-                        StringUtils.equalsIgnoreCase(fieldName, p.getKey()))
-                .map(p ->
-                        p.getValue())
+                        Strings.CI.equals(fieldName, p.getKey()))
+                .map(Map.Entry::getValue)
                 .findFirst()
                 .orElse(null);
     }
 
     public static Map<String, String> extractAllRequestParams(final Request req) {
 
-        if (!StringUtils.equalsIgnoreCase(HttpMethod.POST.name(), req.requestMethod())
-                && !StringUtils.equalsIgnoreCase(HttpMethod.PUT.name(), req.requestMethod())
-                && !StringUtils.equalsIgnoreCase(HttpMethod.PATCH.name(), req.requestMethod())) {
+        if (!Strings.CI.equals(HttpMethod.POST.name(), req.requestMethod())
+                && !Strings.CI.equals(HttpMethod.PUT.name(), req.requestMethod())
+                && !Strings.CI.equals(HttpMethod.PATCH.name(), req.requestMethod())) {
 
             if (req.queryParams().isEmpty()) {
                 return new HashMap<>();
@@ -432,7 +435,7 @@ public final class GeneralUtils {
 
             return req.queryParams()
                     .stream()
-                    .collect(Collectors.toMap(k -> k, k -> req.queryParams(k)));
+                    .collect(Collectors.toMap(k -> k, req::queryParams));
         }
 
         final Map<String, String> allParams = req.queryMap()
@@ -447,14 +450,12 @@ public final class GeneralUtils {
 
         if (req.contentType() != null
                 && (req.contentType().contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                ||  req.contentType().contains(MediaType.MULTIPART_FORM_DATA_VALUE))) {
-
-            if (req.body() != null && req.body().contains("=")) {
+                ||  req.contentType().contains(MediaType.MULTIPART_FORM_DATA_VALUE)) && req.body() != null && req.body().contains("=")) {
                 allParams.putAll(URLEncodedUtils.parse(req.body(), Charset.defaultCharset())
                                     .stream()
                                     .collect(HashMap::new, (m,v) -> m.put(v.getName(), v.getValue()), HashMap::putAll));
             }
-        }
+
 
         return allParams;
     }
@@ -464,13 +465,13 @@ public final class GeneralUtils {
         final String comment = "//";
 
         if (jsSrc == null
-                || StringUtils.indexOf(jsSrc, comment) == -1) {
+                || Strings.CS.indexOf(jsSrc, comment) == -1) {
             return jsSrc;
         }
 
-        // i.e single line
-        if (StringUtils.indexOf(jsSrc, CARRIAGE) == -1) {
-            return StringUtils.substring(jsSrc, 0, StringUtils.indexOf(jsSrc, comment)).trim();
+        // i.e., single line
+        if (Strings.CS.indexOf(jsSrc, CARRIAGE) == -1) {
+            return StringUtils.substring(jsSrc, 0, Strings.CS.indexOf(jsSrc, comment)).trim();
         }
 
         final String[] lines = StringUtils.split(jsSrc, CARRIAGE);
@@ -480,7 +481,7 @@ public final class GeneralUtils {
                     !l.trim().startsWith(comment))
                 .map(l -> {
 
-                    final int commentInLine = StringUtils.indexOf(l, comment);
+                    final int commentInLine = Strings.CS.indexOf(l, comment);
 
                     return (commentInLine > -1)
                             ? StringUtils.substring(l, 0, commentInLine)
@@ -552,6 +553,7 @@ public final class GeneralUtils {
 
     public static void executeAfterTransactionCommits(final Runnable task) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
             public void afterCommit() {
                 task.run();
             }

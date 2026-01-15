@@ -496,7 +496,7 @@ public class MockedMailServerEngine {
                     if (Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
 
                         attachmentDTOs.add(new MailServerMessageInboxAttachmentDTO(
-                                Optional.empty(),
+                                null,
                                 mimeBodyPart.getFileName(),
                                 sanitizeContentType(mimeBodyPart.getContentType()),
                                 GeneralUtils.base64Encode(IOUtils.toByteArray(mimeBodyPart.getInputStream()))));

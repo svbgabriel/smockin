@@ -2,8 +2,13 @@ package com.smockin.admin.dto.response;
 
 import com.smockin.admin.dto.SmockinUserDTO;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Date;
 
+@Setter
+@Getter
 public class SmockinUserResponseDTO extends SmockinUserDTO {
 
     private String extId;
@@ -20,24 +25,4 @@ public class SmockinUserResponseDTO extends SmockinUserDTO {
         this.dateCreated = dateCreated;
     }
 
-    public String getExtId() {
-        return extId;
-    }
-    public void setExtId(String extId) {
-        this.extId = extId;
-    }
-
-    public String getPasswordResetToken() {
-        return passwordResetToken;
-    }
-    public void setPasswordResetToken(String passwordResetToken) {
-        this.passwordResetToken = passwordResetToken;
-    }
-
-    public Date getDateCreated() {
-        return dateCreated;
-    }
-    public void setDateCreated(Date dateCreated) {
-        this.dateCreated = dateCreated;
-    }
 }

@@ -3,18 +3,27 @@ package com.smockin.admin.dto;
 import com.smockin.admin.persistence.enums.RuleComparatorEnum;
 import com.smockin.admin.persistence.enums.RuleDataTypeEnum;
 import com.smockin.admin.persistence.enums.RuleMatchingTypeEnum;
+import lombok.Getter;
+import lombok.Setter;
 
 
 /**
  * Created by mgallina.
  */
+@Setter
 public class RuleConditionDTO {
 
+    @Getter
     private String extId;
+    @Getter
     private String field;
+    @Getter
     private RuleDataTypeEnum dataType;
+    @Getter
     private RuleComparatorEnum comparator;
+    @Getter
     private String value;
+    @Getter
     private RuleMatchingTypeEnum ruleMatchingType;
     private Boolean caseSensitive;
 
@@ -40,53 +49,8 @@ public class RuleConditionDTO {
         this.caseSensitive = caseSensitive;
     }
 
-    public String getExtId() {
-        return extId;
-    }
-    public void setExtId(String extId) {
-        this.extId = extId;
-    }
-
-    public String getField() {
-        return field;
-    }
-    public void setField(String field) {
-        this.field = field;
-    }
-
-    public RuleDataTypeEnum getDataType() {
-        return dataType;
-    }
-    public void setDataType(RuleDataTypeEnum dataType) {
-        this.dataType = dataType;
-    }
-
-    public RuleComparatorEnum getComparator() {
-        return comparator;
-    }
-    public void setComparator(RuleComparatorEnum comparator) {
-        this.comparator = comparator;
-    }
-
-    public String getValue() {
-        return value;
-    }
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public RuleMatchingTypeEnum getRuleMatchingType() {
-        return ruleMatchingType;
-    }
-    public void setRuleMatchingType(RuleMatchingTypeEnum ruleMatchingType) {
-        this.ruleMatchingType = ruleMatchingType;
-    }
-
     public Boolean isCaseSensitive() {
         return caseSensitive;
-    }
-    public void setCaseSensitive(Boolean caseSensitive) {
-        this.caseSensitive = caseSensitive;
     }
 
 }

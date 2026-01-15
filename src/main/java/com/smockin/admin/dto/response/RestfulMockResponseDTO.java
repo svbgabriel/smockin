@@ -5,6 +5,9 @@ import com.smockin.admin.dto.RuleDTO;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -12,6 +15,8 @@ import java.util.List;
 /**
  * Created by mgallina.
  */
+@Setter
+@Getter
 public class RestfulMockResponseDTO extends RestfulMockDTO {
 
     private String extId;
@@ -41,38 +46,4 @@ public class RestfulMockResponseDTO extends RestfulMockDTO {
         this.userCtxPath = userCtxPath;
     }
 
-    public String getExtId() {
-        return extId;
-    }
-    public void setExtId(String extId) {
-        this.extId = extId;
-    }
-
-    public Date getDateCreated() {
-        return dateCreated;
-    }
-    public void setDateCreated(Date dateCreated) {
-        this.dateCreated = dateCreated;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUserCtxPath() {
-        return userCtxPath;
-    }
-    public void setUserCtxPath(String userCtxPath) {
-        this.userCtxPath = userCtxPath;
-    }
-
-    public List<RuleDTO> getRules() {
-        return rules;
-    }
-    public void setRules(List<RuleDTO> rules) {
-        this.rules = rules;
-    }
 }

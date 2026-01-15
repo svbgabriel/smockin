@@ -6,11 +6,9 @@ import com.smockin.admin.exception.RecordNotFoundException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.service.UserKeyValueDataService;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,21 +16,24 @@ import java.util.List;
 /**
  * Created by mgallina.
  */
-@Controller
+@RestController
 public class UserKeyValueDataController {
 
-    @Autowired
-    private UserKeyValueDataService userKeyValueDataService;
+    private final UserKeyValueDataService userKeyValueDataService;
 
-    @RequestMapping(path="/keyvaluedata/{extId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<UserKeyValueDataDTO> get(@PathVariable("extId") final String extId,
+    public UserKeyValueDataController(UserKeyValueDataService userKeyValueDataService) {
+        this.userKeyValueDataService = userKeyValueDataService;
+    }
+
+    @GetMapping(path="/keyvaluedata/{extId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserKeyValueDataDTO> get(@PathVariable final String extId,
                                                                  @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
             throws RecordNotFoundException, ValidationException {
         return new ResponseEntity<>(userKeyValueDataService.loadById(extId, GeneralUtils.extractOAuthToken(bearerToken)), HttpStatus.OK);
     }
 
-    @RequestMapping(path="/keyvaluedata", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<SimpleMessageResponseDTO<String>> create(@RequestBody final List<UserKeyValueDataDTO> dtos,
+    @PostMapping(path="/keyvaluedata", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SimpleMessageResponseDTO<String>> create(@RequestBody final List<UserKeyValueDataDTO> dtos,
                                                                                  @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
                                                                                     throws RecordNotFoundException, ValidationException {
 
@@ -41,25 +42,25 @@ public class UserKeyValueDataController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @RequestMapping(path = "/keyvaluedata/{extId}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<Void> update(@PathVariable("extId") final String extId,
-                                                       @RequestBody final UserKeyValueDataDTO dto,
-                                                       @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+    @PutMapping(path = "/keyvaluedata/{extId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> update(@PathVariable final String extId,
+                                                     @RequestBody final UserKeyValueDataDTO dto,
+                                                     @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
             throws RecordNotFoundException, ValidationException {
         userKeyValueDataService.update(extId, dto, GeneralUtils.extractOAuthToken(bearerToken));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(path = "/keyvaluedata/{extId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<String> delete(@PathVariable("extId") final String extId,
+    @DeleteMapping(path = "/keyvaluedata/{extId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> delete(@PathVariable final String extId,
                                                        @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
                                                             throws RecordNotFoundException, ValidationException {
         userKeyValueDataService.delete(extId, GeneralUtils.extractOAuthToken(bearerToken));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(path="/keyvaluedata", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody ResponseEntity<List<UserKeyValueDataDTO>> getAll(@RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
+    @GetMapping(path="/keyvaluedata", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<UserKeyValueDataDTO>> getAll(@RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken)
                                                                                 throws RecordNotFoundException {
         return new ResponseEntity<>(userKeyValueDataService.loadAll(GeneralUtils.extractOAuthToken(bearerToken)), HttpStatus.OK);
     }

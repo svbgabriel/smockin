@@ -7,10 +7,9 @@ import com.smockin.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,17 +19,19 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class AuthInterceptor extends HandlerInterceptorAdapter {
+public class AuthInterceptor implements HandlerInterceptor {
 
     private final Logger logger = LoggerFactory.getLogger(AuthInterceptor.class);
 
-    @Autowired
-    private SmockinUserService smockinUserService;
+    private final SmockinUserService smockinUserService;
+    private final AuthService authService;
 
-    @Autowired
-    private AuthService authService;
+    public AuthInterceptor(SmockinUserService smockinUserService, AuthService authService) {
+        this.smockinUserService = smockinUserService;
+        this.authService = authService;
+    }
 
-    // Resorted to using json, in place of defining the list structure in yaml, due to a bug introduced
+    // Resorted to using JSON, in place of defining the list structure in YAML, due to a bug introduced
     // in Spring Boot v2 where forward slashes (& other characters) seem to be stripped out when injected in.
     @Value("${smockin.auth.exclusions:#{null}}")
     private String exclusionsJson;
@@ -66,10 +67,10 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         final String bearerToken = request.getHeader(GeneralUtils.OAUTH_HEADER_NAME);
         final String token = GeneralUtils.extractOAuthToken(bearerToken);
 
-        // Check token exists in DB
+        // Check if the token exists in DB
         smockinUserService.lookUpToken(token);
 
-        // Check token is valid
+        // Check if the token is valid
         authService.verifyToken(token);
 
         return true;
@@ -81,7 +82,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
         final int wildCardPathPos = exclusionKey.indexOf("*");
 
         if (wildCardFilePos > -1) {
-            return inboundUrl.endsWith(exclusionKey.substring(wildCardFilePos + 1, exclusionKey.length()));
+            return inboundUrl.endsWith(exclusionKey.substring(wildCardFilePos + 1));
         } else if (wildCardPathPos > -1) {
             return inboundUrl.startsWith(exclusionKey.substring(0, wildCardPathPos));
         }
@@ -94,15 +95,14 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 
         final Map<String, List<String>> exclusionsMap =
                 (StringUtils.isNotBlank(exclusionsJson))
-                        ? GeneralUtils.deserialiseJson(exclusionsJson)
+                        ? GeneralUtils.deserializeJson(exclusionsJson)
                         : new HashMap<>();
 
         exclusions = Collections.unmodifiableMap(exclusionsMap);
 
         if (logger.isDebugEnabled()) {
             logger.debug("Current Exclusions:");
-            exclusions.entrySet()
-                    .forEach(e -> logger.debug("exclusion path: " + e.getKey() + ", method: " + e.getValue()));
+            exclusions.forEach((key, value) -> logger.debug("exclusion path: {}, method: {}", key, value));
         }
 
     }
@@ -110,8 +110,8 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
     private void debugRequest(final HttpServletRequest request) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Request URI: " + request.getRequestURI());
-            logger.debug("Request Method: " + request.getMethod());
+            logger.debug("Request URI: {}", request.getRequestURI());
+            logger.debug("Request Method: {}", request.getMethod());
         }
 
     }

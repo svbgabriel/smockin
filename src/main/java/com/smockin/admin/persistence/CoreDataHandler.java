@@ -14,7 +14,6 @@ import com.smockin.admin.service.EncryptionService;
 import com.smockin.utils.GeneralUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,21 +28,22 @@ public class CoreDataHandler {
 
     private final Logger logger = LoggerFactory.getLogger(CoreDataHandler.class);
 
+    private static final String ADMIN = "ADMIN";
 
-    @Autowired
-    private ServerConfigDAO serverConfigDAO;
 
-    @Autowired
-    private AppConfigDAO appConfigDAO;
+    private final ServerConfigDAO serverConfigDAO;
+    private final AppConfigDAO appConfigDAO;
+    private final DataMigrationService dataMigrationService;
+    private final SmockinUserDAO smockinUserDAO;
+    private final EncryptionService encryptionService;
 
-    @Autowired
-    private DataMigrationService dataMigrationService;
-
-    @Autowired
-    private SmockinUserDAO smockinUserDAO;
-
-    @Autowired
-    private EncryptionService encryptionService;
+    public CoreDataHandler(ServerConfigDAO serverConfigDAO, AppConfigDAO appConfigDAO, DataMigrationService dataMigrationService, SmockinUserDAO smockinUserDAO, EncryptionService encryptionService) {
+        this.serverConfigDAO = serverConfigDAO;
+        this.appConfigDAO = appConfigDAO;
+        this.dataMigrationService = dataMigrationService;
+        this.smockinUserDAO = smockinUserDAO;
+        this.encryptionService = encryptionService;
+    }
 
     @Transactional
     public void exec() {
@@ -126,7 +126,7 @@ public class CoreDataHandler {
 
         final List<AppConfig> allAppConfig = appConfigDAO.findAll();
 
-        final AppConfig appConfig = ( !allAppConfig.isEmpty() ) ? allAppConfig.get(0) : new AppConfig(appVersionArg);
+        final AppConfig appConfig = (!allAppConfig.isEmpty()) ? allAppConfig.getFirst() : new AppConfig(appVersionArg);
 
         final String currentVersion = appConfig.getAppCurrentVersion();
 
@@ -148,8 +148,8 @@ public class CoreDataHandler {
         }
 
         smockinUserDAO.save(new SmockinUser(
-                "admin",
-                encryptionService.encrypt("admin"),
+                ADMIN,
+                encryptionService.encrypt(ADMIN),
                 "System Admin",
                 "",
                 SmockinUserRoleEnum.SYS_ADMIN,
@@ -174,7 +174,7 @@ public class CoreDataHandler {
 
         if (userOpt.isPresent()) {
             final SmockinUser user = userOpt.get();
-            user.setPassword(encryptionService.encrypt("admin"));
+            user.setPassword(encryptionService.encrypt(ADMIN));
             smockinUserDAO.save(user);
         }
 

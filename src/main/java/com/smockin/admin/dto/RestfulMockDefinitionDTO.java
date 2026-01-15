@@ -1,12 +1,16 @@
 package com.smockin.admin.dto;
 
-import javax.persistence.Column;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by mgallina.
  */
+@Setter
+@Getter
 public class RestfulMockDefinitionDTO {
 
     private String extId;
@@ -42,76 +46,6 @@ public class RestfulMockDefinitionDTO {
         this.responseContentType = responseContentType;
         this.responseBody = responseBody;
         this.frequencyCount = frequencyCount;
-    }
-
-    public String getExtId() {
-        return extId;
-    }
-    public void setExtId(String extId) {
-        this.extId = extId;
-    }
-
-    public int getOrderNo() {
-        return orderNo;
-    }
-    public void setOrderNo(int orderNo) {
-        this.orderNo = orderNo;
-    }
-
-    public int getHttpStatusCode() {
-        return httpStatusCode;
-    }
-    public void setHttpStatusCode(int httpStatusCode) {
-        this.httpStatusCode = httpStatusCode;
-    }
-
-    public String getResponseContentType() {
-        return responseContentType;
-    }
-    public void setResponseContentType(String responseContentType) {
-        this.responseContentType = responseContentType;
-    }
-
-    public String getResponseBody() {
-        return responseBody;
-    }
-    public void setResponseBody(String responseBody) {
-        this.responseBody = responseBody;
-    }
-
-    public long getSleepInMillis() {
-        return sleepInMillis;
-    }
-    public void setSleepInMillis(long sleepInMillis) {
-        this.sleepInMillis = sleepInMillis;
-    }
-
-    public boolean isSuspend() {
-        return suspend;
-    }
-    public void setSuspend(boolean suspend) {
-        this.suspend = suspend;
-    }
-
-    public int getFrequencyCount() {
-        return frequencyCount;
-    }
-    public void setFrequencyCount(int frequencyCount) {
-        this.frequencyCount = frequencyCount;
-    }
-
-    public int getFrequencyPercentage() {
-        return frequencyPercentage;
-    }
-    public void setFrequencyPercentage(int frequencyPercentage) {
-        this.frequencyPercentage = frequencyPercentage;
-    }
-
-    public Map<String, String> getResponseHeaders() {
-        return responseHeaders;
-    }
-    public void setResponseHeaders(Map<String, String> responseHeaders) {
-        this.responseHeaders = responseHeaders;
     }
 
 }

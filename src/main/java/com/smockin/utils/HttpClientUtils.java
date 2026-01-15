@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 
 public final class HttpClientUtils {
 
+    private HttpClientUtils() {}
+
     static String EQUALS = "=";
     static String AND = "&";
 

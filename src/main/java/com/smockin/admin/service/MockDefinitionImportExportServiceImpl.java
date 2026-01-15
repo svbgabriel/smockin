@@ -264,7 +264,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
 
         final StringBuilder outcome = new StringBuilder();
 
-        GeneralUtils.deserialiseJson(content, new TypeReference<List<RestfulMockResponseDTO>>() {})
+        GeneralUtils.deserializeJson(content, new TypeReference<List<RestfulMockResponseDTO>>() {})
                 .stream()
                 .forEach(rm ->
                     processRestImport(outcome, config, rm, currentUser, conflictCtxPath));
@@ -306,7 +306,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
         final StringBuilder outcome = new StringBuilder();
 
         final List<String> newBuckets =
-            GeneralUtils.deserialiseJson(content, new TypeReference<List<S3MockBucketResponseDTO>>() {})
+            GeneralUtils.deserializeJson(content, new TypeReference<List<S3MockBucketResponseDTO>>() {})
                 .stream()
                 .map(s3 ->
                         processS3Import(outcome, s3, config, currentUser))

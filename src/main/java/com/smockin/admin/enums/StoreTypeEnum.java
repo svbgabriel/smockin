@@ -1,6 +1,6 @@
 package com.smockin.admin.enums;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.util.Arrays;
 
@@ -11,7 +11,7 @@ public enum StoreTypeEnum {
 
         return Arrays.stream(values())
                 .filter(e ->
-                        StringUtils.equalsIgnoreCase(e.name(), value))
+                        Strings.CI.equals(e.name(), value))
                 .findFirst()
                 .orElse(null);
     }

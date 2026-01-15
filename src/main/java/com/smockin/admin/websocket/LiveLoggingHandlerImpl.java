@@ -11,14 +11,14 @@ import com.smockin.admin.enums.UserModeEnum;
 import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.admin.service.SmockinUserService;
-import com.smockin.mockserver.dto.LiveloggingUserOverrideResponse;
+import com.smockin.mockserver.dto.LiveLoggingUserOverrideResponse;
 import com.smockin.mockserver.engine.MockedRestServerEngine;
 import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -42,22 +42,21 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
     private final AtomicReference<List<WebSocketSession>> liveSessionsRef = new AtomicReference<>(new ArrayList<>());
 
+    private final MockedRestServerEngine mockedRestServerEngine;
+    private final MockedRestServerEngineUtils mockedRestServerEngineUtils;
+    private final SmockinUserService smockinUserService;
+    private final SmockinUserDAO smockinUserDAO;
 
-    @Autowired
-    private MockedRestServerEngine mockedRestServerEngine;
-
-    @Autowired
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
-
-    @Autowired
-    private SmockinUserService smockinUserService;
-
-    @Autowired
-    private SmockinUserDAO smockinUserDAO;
+    public LiveLoggingHandlerImpl(MockedRestServerEngine mockedRestServerEngine, MockedRestServerEngineUtils mockedRestServerEngineUtils, SmockinUserService smockinUserService, SmockinUserDAO smockinUserDAO) {
+        this.mockedRestServerEngine = mockedRestServerEngine;
+        this.mockedRestServerEngineUtils = mockedRestServerEngineUtils;
+        this.smockinUserService = smockinUserService;
+        this.smockinUserDAO = smockinUserDAO;
+    }
 
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(WebSocketSession session) {
 
         liveSessionsRef.get().add(session);
     }
@@ -78,14 +77,15 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
     @Override
     protected void handleTextMessage(final WebSocketSession session,
-                                     final TextMessage message) throws Exception {
+                                     final TextMessage message) {
 
         if (message == null || StringUtils.isBlank(message.getPayload())) {
             return;
         }
 
         final LiveLoggingAction clientAction
-                = GeneralUtils.deserialiseJson(message.getPayload(), new TypeReference<LiveLoggingAction<?>>() {});
+                = GeneralUtils.deserializeJson(message.getPayload(), new TypeReference<LiveLoggingAction<?>>() {
+        });
 
         if (clientAction == null) {
             return;
@@ -93,11 +93,11 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
         final String type = clientAction.getType();
 
-        if (StringUtils.equals(ENABLE_LIVE_LOG_BLOCKING, type)) {
+        if (Strings.CS.equals(ENABLE_LIVE_LOG_BLOCKING, type)) {
             mockedRestServerEngine.updateLiveBlockingMode(true);
-        } else if (StringUtils.equals(DISABLE_LIVE_LOG_BLOCKING, type)) {
+        } else if (Strings.CS.equals(DISABLE_LIVE_LOG_BLOCKING, type)) {
             stopLiveBlockingMode(session);
-        } else if (StringUtils.equals(LIVE_LOGGING_AMENDMENT, type)) {
+        } else if (Strings.CS.equals(LIVE_LOGGING_AMENDMENT, type)) {
             handleLiveLoggingResponseAmendment(message);
         }
 
@@ -112,9 +112,9 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
             return;
         }
 
-        sessions.stream()
+        sessions
                 .forEach(s ->
-                    handleBroadcast(dto, s));
+                        handleBroadcast(dto, s));
 
     }
 
@@ -128,25 +128,26 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
         }
 
         // Release blocked calls just for user
-        mockedRestServerEngine.notifyBlockedLiveLoggingCalls(Optional.empty(), GeneralUtils.URL_PATH_SEPARATOR + session.getAttributes().get(WS_CONNECTED_USER_CTX_PATH));
-        mockedRestServerEngine.clearAllPathsFromLiveBlockingForUser((String)session.getAttributes().get(WS_CONNECTED_USER_ID));
+        mockedRestServerEngine.notifyBlockedLiveLoggingCalls(null, GeneralUtils.URL_PATH_SEPARATOR + session.getAttributes().get(WS_CONNECTED_USER_CTX_PATH));
+        mockedRestServerEngine.clearAllPathsFromLiveBlockingForUser((String) session.getAttributes().get(WS_CONNECTED_USER_ID));
     }
 
     private void handleLiveLoggingResponseAmendment(final TextMessage message) {
 
         final LiveLoggingAction liveLoggingAction
-                = GeneralUtils.deserialiseJson(message.getPayload(),
-                    new TypeReference<LiveLoggingAction<LiveLoggingBlockedResponseAmendmentDTO>>() {});
+                = GeneralUtils.deserializeJson(message.getPayload(),
+                new TypeReference<LiveLoggingAction<LiveLoggingBlockedResponseAmendmentDTO>>() {
+                });
 
         final LiveLoggingBlockedResponseAmendmentDTO amendmentDTO
-                = (LiveLoggingBlockedResponseAmendmentDTO)liveLoggingAction.getPayload();
+                = (LiveLoggingBlockedResponseAmendmentDTO) liveLoggingAction.getPayload();
 
         mockedRestServerEngine.releaseBlockedLiveLoggingResponse(
                 amendmentDTO.getTraceId(),
-                Optional.of(new LiveloggingUserOverrideResponse(
-                                amendmentDTO.getStatus(),
-                                amendmentDTO.getHeaders(),
-                                amendmentDTO.getBody())));
+                Optional.of(new LiveLoggingUserOverrideResponse(
+                        amendmentDTO.getStatus(),
+                        amendmentDTO.getHeaders(),
+                        amendmentDTO.getBody())));
 
     }
 
@@ -159,20 +160,20 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
         try {
 
-            // Not in multi user mode, so just send to single user
+            // Not in multi-user mode, so just send it to the single user
             if (!UserModeEnum.ACTIVE.equals(smockinUserService.getUserMode())) {
                 session.sendMessage(serialiseMessage(dto));
                 return;
             }
 
-            final Boolean adminViewAll = (Boolean) session.getAttributes().get(WS_CONNECTED_USER_ADMIN_VIEW_ALL);
+            final boolean adminViewAll = (Boolean) session.getAttributes().get(WS_CONNECTED_USER_ADMIN_VIEW_ALL);
 
             if (LiveLoggingMessageTypeEnum.TRAFFIC.equals(dto.getType())
                     || LiveLoggingMessageTypeEnum.BLOCKED_RESPONSE.equals(dto.getType())) {
 
                 //
                 // Multi user mode logic...
-                final String inboundPath = ((LiveLoggingTrafficDTO)dto.getPayload()).getContent().getUrl();
+                final String inboundPath = ((LiveLoggingTrafficDTO) dto.getPayload()).getContent().getUrl();
                 final String userCtxPath = findUserCtxPath(session);
 
                 if (isSysAdmin(session)) {
@@ -194,7 +195,7 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
                     return;
                 }
 
-                if (StringUtils.startsWith(inboundPath, userCtxPath)) {
+                if (Strings.CS.startsWith(inboundPath, userCtxPath)) {
                     session.sendMessage(serialiseMessage(dto));
                 }
 
@@ -211,17 +212,16 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
                 final String connectedUserId = (String) session.getAttributes().get(WS_CONNECTED_USER_ID);
 
-                if (!StringUtils.equals(((LiveLoggingS3DTO)dto.getPayload()).getBucketOwnerId(), connectedUserId)) {
+                if (!Strings.CS.equals(((LiveLoggingS3DTO) dto.getPayload()).getBucketOwnerId(), connectedUserId)) {
                     return;
                 }
 
                 session.sendMessage(serialiseMessage(dto));
 
-                return;
             }
 
         } catch (IOException e) {
-            logger.error("Error pushing message to connected web socket: " + session.getId(), e);
+            logger.error("Error pushing message to connected web socket: {}", session.getId(), e);
         }
 
     }

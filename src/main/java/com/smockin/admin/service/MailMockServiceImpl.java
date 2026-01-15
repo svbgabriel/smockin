@@ -271,7 +271,7 @@ public class MailMockServiceImpl implements MailMockService {
     private Optional<MailMessageSearchDTO> toMailMessageSearchDTO(final String search) {
 
         return (StringUtils.isNotBlank(search))
-                ? Optional.of(GeneralUtils.deserialiseJson(search, new TypeReference<MailMessageSearchDTO>() {}))
+                ? Optional.of(GeneralUtils.deserializeJson(search, new TypeReference<MailMessageSearchDTO>() {}))
                 : Optional.empty();
     }
 

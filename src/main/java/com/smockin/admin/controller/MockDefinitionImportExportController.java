@@ -10,11 +10,9 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.enums.ServerTypeEnum;
 import com.smockin.admin.service.MockDefinitionImportExportService;
 import com.smockin.utils.GeneralUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
@@ -22,14 +20,17 @@ import java.util.List;
 /**
  * Created by mgallina.
  */
-@Controller
+@RestController
 public class MockDefinitionImportExportController {
 
-    @Autowired
-    private MockDefinitionImportExportService mockDefinitionImportExportService;
+    private final MockDefinitionImportExportService mockDefinitionImportExportService;
 
-    @RequestMapping(path="/mock/import", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseBody ResponseEntity<SimpleMessageResponseDTO> importMocks(@RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken,
+    public MockDefinitionImportExportController(final MockDefinitionImportExportService mockDefinitionImportExportService) {
+        this.mockDefinitionImportExportService = mockDefinitionImportExportService;
+    }
+
+    @PostMapping(path="/mock/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SimpleMessageResponseDTO<String>> importMocks(@RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken,
                                                                               @RequestHeader(value = GeneralUtils.KEEP_EXISTING_HEADER_NAME) final boolean keepExisting,
                                                                               @RequestParam("file") final MultipartFile file)
                                                             throws ValidationException, MockImportException, RecordNotFoundException {
@@ -41,14 +42,14 @@ public class MockDefinitionImportExportController {
                 : new MockImportConfigDTO();
 
         return ResponseEntity.ok(
-                new SimpleMessageResponseDTO(mockDefinitionImportExportService.importFile(file, configDTO, token)));
+                new SimpleMessageResponseDTO<>(mockDefinitionImportExportService.importFile(file, configDTO, token)));
     }
 
-    @RequestMapping(path="/mock/export/{serverType}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
+    @PostMapping(path="/mock/export/{serverType}", consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public @ResponseBody ResponseEntity<String> exportMocks(@PathVariable("serverType") final String serverType,
-                                                            @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken,
-                                                            @RequestBody final List<String> exports)
+    public ResponseEntity<String> exportMocks(@PathVariable final String serverType,
+                                              @RequestHeader(value = GeneralUtils.OAUTH_HEADER_NAME, required = false) final String bearerToken,
+                                              @RequestBody final List<String> exports)
                                                                 throws MockExportException, RecordNotFoundException, ValidationException {
 
         final String token = GeneralUtils.extractOAuthToken(bearerToken);
@@ -60,12 +61,12 @@ public class MockDefinitionImportExportController {
         }
 
         final String exportFilePrefix = (ServerTypeEnum.S3.equals(serverTypeEnum))
-                ? mockDefinitionImportExportService.exportS3ZipFileNamePrefix
-                : mockDefinitionImportExportService.exportZipFileNamePrefix;
+                ? MockDefinitionImportExportService.exportS3ZipFileNamePrefix
+                : MockDefinitionImportExportService.exportZipFileNamePrefix;
 
         final String exportFileName = exportFilePrefix
                 + GeneralUtils.createFileNameUniqueTimeStamp()
-                + mockDefinitionImportExportService.exportZipFileNameExt;
+                + MockDefinitionImportExportService.exportZipFileNameExt;
 
         // TODO do we need to set CONTENT_TYPE and CONTENT_DISPOSITION here, based on the handling of this in the front end...?
         return ResponseEntity.ok()

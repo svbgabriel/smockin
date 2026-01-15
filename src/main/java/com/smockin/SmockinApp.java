@@ -4,7 +4,6 @@ import com.smockin.admin.persistence.CoreDataHandler;
 import com.smockin.admin.service.MockedServerEngineService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -21,13 +20,15 @@ import javax.annotation.PostConstruct;
 @EntityScan("com.smockin.admin.persistence.entity")
 class SmockinConfig {
 
+    private final CoreDataHandler coreDataHandler;
+    private final MockedServerEngineService mockedServerEngineService;
+
+    public SmockinConfig(CoreDataHandler coreDataHandler, MockedServerEngineService mockedServerEngineService) {
+        this.coreDataHandler = coreDataHandler;
+        this.mockedServerEngineService = mockedServerEngineService;
+    }
+
     private final Logger logger = LoggerFactory.getLogger(SmockinConfig.class);
-
-    @Autowired
-    private CoreDataHandler coreDataHandler;
-
-    @Autowired
-    private MockedServerEngineService mockedServerEngineService;
 
     @PostConstruct
     public void after() {
@@ -36,7 +37,7 @@ class SmockinConfig {
 
         try {
             mockedServerEngineService.handleServerAutoStart();
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             logger.error("Error auto starting mock servers ", ex);
         }
 

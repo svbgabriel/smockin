@@ -1,7 +1,10 @@
 package com.smockin.admin.dto.response;
 
+import lombok.Getter;
+
 import java.util.Map;
 
+@Getter
 public class LiveLoggingInboundContentDTO extends LiveLoggingContentDTO {
 
     private final String method;
@@ -15,13 +18,6 @@ public class LiveLoggingInboundContentDTO extends LiveLoggingContentDTO {
         super(url, headers, body);
         this.method = method;
         this.requestParams = (requestParams != null && !requestParams.isEmpty()) ? requestParams : null;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-    public Map<String, String> getRequestParams() {
-        return requestParams;
     }
 
 }

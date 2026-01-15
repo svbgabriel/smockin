@@ -6,8 +6,4 @@ public class MockExportException extends RuntimeException {
         super(msg);
     }
 
-    public MockExportException(final String msg, Throwable cause) {
-        super(msg, cause);
-    }
-
 }
