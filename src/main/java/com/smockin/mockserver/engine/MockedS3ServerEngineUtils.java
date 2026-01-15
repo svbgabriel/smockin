@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -451,7 +452,7 @@ public class MockedS3ServerEngineUtils {
 
                 if (fromBucket != null
                         && StringUtils.equals(container, fromBucket.getBucketName())
-                        && StringUtils.equals(filePathTracer.toString() + s3MockFile.getName(), expectedPath)) {
+                        && StringUtils.equals(filePathTracer + s3MockFile.getName(), expectedPath)) {
 
                     return s3MockFile;
                 }
@@ -510,7 +511,7 @@ public class MockedS3ServerEngineUtils {
 
                 if (fromBucket != null
                         && StringUtils.equals(container, fromBucket.getBucketName())
-                        && StringUtils.equals(filePathTracer.toString() + s3MockDir.getName(), sanitiseSeparatorSuffix(expectedPath))) {
+                        && StringUtils.equals(filePathTracer + s3MockDir.getName(), sanitiseSeparatorSuffix(expectedPath))) {
 
                     return s3MockDir;
                 }
@@ -752,7 +753,7 @@ public class MockedS3ServerEngineUtils {
                                   final S3Mock bucket) {
         logger.debug("initBucketContent called");
 
-        initBucketContent(s3Client, Arrays.asList(bucket));
+        initBucketContent(s3Client, Collections.singletonList(bucket));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

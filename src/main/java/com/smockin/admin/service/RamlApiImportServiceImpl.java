@@ -64,8 +64,8 @@ public class RamlApiImportServiceImpl implements ApiImportService {
         try {
 
             tempDir = Files.createTempDirectory(Long.toString(System.nanoTime())).toFile();
-            final Api api = readContent(loadRamlFileFromUpload(dto.getFile(), tempDir));
-            final MockImportConfigDTO apiImportConfig = dto.getConfig();
+            final Api api = readContent(loadRamlFileFromUpload(dto.file(), tempDir));
+            final MockImportConfigDTO apiImportConfig = dto.config();
             final String conflictCtxPath = "raml_" + GeneralUtils.createFileNameUniqueTimeStamp();
 
             debug("Keep existing mocks: " + apiImportConfig.isKeepExisting());
@@ -98,10 +98,10 @@ public class RamlApiImportServiceImpl implements ApiImportService {
         if (dto == null)
             throw new ValidationException("No data was provided");
 
-        if (dto.getFile() == null)
+        if (dto.file() == null)
             throw new ValidationException("No file found");
 
-        if (dto.getConfig() == null)
+        if (dto.config() == null)
             throw new ValidationException("No config found");
 
     }

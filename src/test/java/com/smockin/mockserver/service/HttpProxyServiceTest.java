@@ -61,9 +61,9 @@ public class HttpProxyServiceTest {
         mockedRestServerEngineUtils = Mockito.mock(MockedRestServerEngineUtils.class);
 
         pxKey = new ProxiedKey("/helloworld", RestMethodEnum.GET);
-        mockReq = new RestfulMock(pxKey.getPath(), pxKey.getMethod(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 0, 0, 0, false, false, false, user, false, 0,0, null);
+        mockReq = new RestfulMock(pxKey.path(), pxKey.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 0, 0, 0, false, false, false, user, false, 0,0, null);
         mockReq.setExtId(GeneralUtils.generateUUID());
-        pxDto = new HttpProxiedDTO(pxKey.getMethod(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld\" }");
+        pxDto = new HttpProxiedDTO(pxKey.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld\" }");
 
         Mockito.when(restfulMockDAO.findByExtId(Mockito.anyString())).thenReturn(mockReq);
         Mockito.doNothing().when(userTokenServiceUtils).validateRecordOwner(Mockito.any(SmockinUser.class), Mockito.anyString());

@@ -203,9 +203,7 @@ public class HttpClientServiceImpl implements HttpClientService {
             return;
         }
 
-        if (reqDto.getHeaders().containsKey(HttpHeaders.CONTENT_LENGTH)) {
-            reqDto.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
-        }
+        reqDto.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
 
     }
 
@@ -222,7 +220,7 @@ public class HttpClientServiceImpl implements HttpClientService {
 
     String extractResponseBody(final HttpResponse httpResponse) throws IOException {
 
-        return IOUtils.toString(httpResponse.getEntity().getContent(), StandardCharsets.UTF_8.name());
+        return IOUtils.toString(httpResponse.getEntity().getContent(), StandardCharsets.UTF_8);
     }
 
     HttpClientResponseDTO executeRequest(final Request request,

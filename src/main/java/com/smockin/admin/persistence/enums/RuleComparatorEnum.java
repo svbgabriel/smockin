@@ -6,5 +6,5 @@ package com.smockin.admin.persistence.enums;
 public enum RuleComparatorEnum {
     EQUALS,
     CONTAINS,
-    IS_MISSING;
+    IS_MISSING
 }

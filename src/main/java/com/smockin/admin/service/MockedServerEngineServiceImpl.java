@@ -445,7 +445,7 @@ public class MockedServerEngineServiceImpl implements MockedServerEngineService 
             proxyForwardUserConfig.setProxyModeType(ProxyModeTypeEnum.ACTIVE);
             proxyForwardUserConfig.setDoNotForwardWhen404Mock(false);
 
-            saveUserProxyMappings(proxyForwardUserConfig, Arrays.asList());
+            saveUserProxyMappings(proxyForwardUserConfig, List.of());
         }
 
         return new ProxyForwardConfigResponseDTO(
@@ -691,8 +691,7 @@ public class MockedServerEngineServiceImpl implements MockedServerEngineService 
         proxyForwardMapping.setProxyForwardUserConfig(proxyForwardUserConfig);
         proxyForwardMapping.setPath(
                 (!StringUtils.startsWith(proxyForwardMappingDTO.getPath(), GeneralUtils.URL_PATH_SEPARATOR)
-                        && !StringUtils.equals(proxyForwardMappingDTO.getPath(), GeneralUtils.PATH_WILDCARD)) ? GeneralUtils.URL_PATH_SEPARATOR : ""
-                        + proxyForwardMappingDTO.getPath());
+                        && !StringUtils.equals(proxyForwardMappingDTO.getPath(), GeneralUtils.PATH_WILDCARD)) ? GeneralUtils.URL_PATH_SEPARATOR : proxyForwardMappingDTO.getPath());
         proxyForwardMapping.setProxyForwardUrl(proxyForwardMappingDTO.getProxyForwardUrl());
         proxyForwardMapping.setDisabled(proxyForwardMappingDTO.isDisabled());
 

@@ -33,13 +33,13 @@ public class MockedS3ServerEngine {
 
     private final Logger logger = LoggerFactory.getLogger(MockedS3ServerEngine.class);
 
-    private String host = "http://0.0.0.0";
+    private final String host = "http://0.0.0.0";
 
     @Autowired
     private MockedS3ServerEngineUtils mockedS3ServerEngineUtils;
 
     private final Object serverStateMonitor = new Object();
-    private MockServerState serverState = new MockServerState(false, 0);
+    private final MockServerState serverState = new MockServerState(false, 0);
     private S3Proxy s3Proxy;
     private S3Client s3Client; // A shared client instance for the duration of the S3 mock server
 

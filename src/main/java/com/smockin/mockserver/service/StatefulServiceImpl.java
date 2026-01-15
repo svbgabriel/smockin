@@ -208,7 +208,7 @@ public class StatefulServiceImpl implements StatefulService {
             }
 
             // Drills down into path and removes specific object.
-            removeDataStateRecordByPath(currentStateContentForMock, pathOpt.get().getPath());
+            removeDataStateRecordByPath(currentStateContentForMock, pathOpt.get().path());
 
             state.put(parentExtId, currentStateContentForMock); // TODO use merge
 
@@ -265,8 +265,8 @@ public class StatefulServiceImpl implements StatefulService {
                 return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
             }
 
-            currentStateContentForMock.remove(pathOpt.get().getIndex().intValue());
-            currentStateContentForMock.add(pathOpt.get().getIndex(), requestDataMapOpt.get());
+            currentStateContentForMock.remove(pathOpt.get().index().intValue());
+            currentStateContentForMock.add(pathOpt.get().index(), requestDataMapOpt.get());
 
             state.put(parentExtId, currentStateContentForMock); // TODO use merge
 
@@ -374,7 +374,7 @@ public class StatefulServiceImpl implements StatefulService {
                 return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
             }
 
-            final Optional<Map<String, Object>> currentDataOpt = findDataStateRecordByPath(currentStateContentForMock, pathOpt.get().getPath());
+            final Optional<Map<String, Object>> currentDataOpt = findDataStateRecordByPath(currentStateContentForMock, pathOpt.get().path());
 
             if (!currentDataOpt.isPresent()) {
                 return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
@@ -756,7 +756,7 @@ public class StatefulServiceImpl implements StatefulService {
             return Optional.empty();
         }
 
-        return findDataStateRecordByPath(allStateData, jsonPathOpt.get().getPath());
+        return findDataStateRecordByPath(allStateData, jsonPathOpt.get().path());
     }
 
     Optional<Map<String, Object>> findDataStateRecordByPath(
@@ -764,7 +764,7 @@ public class StatefulServiceImpl implements StatefulService {
             final String path) {
 
         final List<Map<String, Object>> allStateDataCopy
-                = SerializationUtils.clone(new StatefulSearchData(allStateDataSrc)).getData();
+                = SerializationUtils.clone(new StatefulSearchData(allStateDataSrc)).data();
 
         final String[] pathArray = StringUtils.split(path,".");
 
@@ -944,15 +944,13 @@ public class StatefulServiceImpl implements StatefulService {
                 final String p = paths[i];
                 final boolean lastIteration = (i == (paths.length - 1));
 
-                if (obj instanceof List) {
+                if (obj instanceof List l) {
 
                     final int indx = NumberUtils.toInt(p, -1);
 
                     if (indx == -1) {
                         throw new StatefulValidationException(String.format(StatefulValidationException.PATH_STRUCTURE_MISALIGN, path));
                     }
-
-                    final List l = ((List)obj);
 
                     if (lastIteration) {
 
@@ -979,9 +977,7 @@ public class StatefulServiceImpl implements StatefulService {
 
                     }
 
-                } else if (obj instanceof Map) {
-
-                    final Map map = ((Map)obj);
+                } else if (obj instanceof Map map) {
 
                     if (lastIteration) {
 
@@ -1003,9 +999,7 @@ public class StatefulServiceImpl implements StatefulService {
 
         } else {
 
-            if (matchedMap.get(path) instanceof List) {
-
-                final List l = ((List)matchedMap.get(path));
+            if (matchedMap.get(path) instanceof List l) {
 
                 if (!l.isEmpty()
                         && !l.get(0).getClass().equals(value.getClass())) {
@@ -1045,9 +1039,7 @@ public class StatefulServiceImpl implements StatefulService {
                 final String p = paths[i];
                 final boolean lastIteration = (i == (paths.length - 1));
 
-                if (obj instanceof List) {
-
-                    final List l = ((List)obj);
+                if (obj instanceof List l) {
 
                     if (lastIteration && "-".equals(p)) {
 
@@ -1073,9 +1065,7 @@ public class StatefulServiceImpl implements StatefulService {
 
                     }
 
-                } else if (obj instanceof Map) {
-
-                    final Map map = ((Map)obj);
+                } else if (obj instanceof Map map) {
 
                     if (lastIteration) {
 
@@ -1119,15 +1109,13 @@ public class StatefulServiceImpl implements StatefulService {
                 final String fp = fromPaths[i];
                 final boolean lastIteration = (i == (fromPaths.length - 1));
 
-                if (obj instanceof List) {
+                if (obj instanceof List l) {
 
                     final int indx = NumberUtils.toInt(fp, -1);
 
                     if (indx == -1) {
                         throw new StatefulValidationException(String.format(StatefulValidationException.FROM_STRUCTURE_MISALIGN, from));
                     }
-
-                    final List l = ((List)obj);
 
                     if (lastIteration) {
 
@@ -1151,9 +1139,7 @@ public class StatefulServiceImpl implements StatefulService {
 
                     }
 
-                } else if (obj instanceof Map) {
-
-                    final Map map = ((Map)obj);
+                } else if (obj instanceof Map map) {
 
                     if (lastIteration) {
 
@@ -1198,15 +1184,13 @@ public class StatefulServiceImpl implements StatefulService {
                 final String fp = fromPaths[i];
                 final boolean lastIteration = (i == (fromPaths.length - 1));
 
-                if (obj instanceof List) {
+                if (obj instanceof List l) {
 
                     final int indx = NumberUtils.toInt(fp, -1);
 
                     if (indx == -1) {
                         throw new StatefulValidationException(String.format(StatefulValidationException.FROM_STRUCTURE_MISALIGN, from));
                     }
-
-                    final List l = ((List)obj);
 
                     if (lastIteration) {
 
@@ -1231,9 +1215,7 @@ public class StatefulServiceImpl implements StatefulService {
 
                     }
 
-                } else if (obj instanceof Map) {
-
-                    final Map map = ((Map)obj);
+                } else if (obj instanceof Map map) {
 
                     if (lastIteration) {
 
@@ -1280,15 +1262,13 @@ public class StatefulServiceImpl implements StatefulService {
                 final String p = paths[i];
                 final boolean lastIteration = (i == (paths.length - 1));
 
-                if (obj instanceof List) {
+                if (obj instanceof List l) {
 
                     final int indx = NumberUtils.toInt(p, -1);
 
                     if (indx == -1) {
                         throw new StatefulValidationException(String.format(StatefulValidationException.PATH_STRUCTURE_MISALIGN, path));
                     }
-
-                    final List l = ((List)obj);
 
                     if (l.size() <= indx) {
                         throw new StatefulValidationException(String.format(StatefulValidationException.PATH_OUT_OF_RANGE_LIST_INDEX, path, indx));
@@ -1313,9 +1293,7 @@ public class StatefulServiceImpl implements StatefulService {
 
                     }
 
-                } else if (obj instanceof Map) {
-
-                    final Map map = ((Map)obj);
+                } else if (obj instanceof Map map) {
 
                     if (lastIteration) {
 
@@ -1374,8 +1352,6 @@ public class StatefulServiceImpl implements StatefulService {
                 result.path = Optional.of(myPath + "=" + currentJsonObject);
             }
 
-            return;
-
         } else if (currentJsonObject instanceof Map) {
 
             if (pathLevel == pathArray.length) {
@@ -1423,50 +1399,19 @@ public class StatefulServiceImpl implements StatefulService {
         }
     }
 
-    final static class StatefulPath {
+    record StatefulPath(String path, Integer index) {
 
-        private final String path;
-        private final Integer index;
-
-        public StatefulPath(String path, Integer index) {
-            this.path = path;
-            this.index = index;
-        }
-
-        public String getPath() {
-            return path;
-        }
-        public Integer getIndex() {
-            return index;
-        }
     }
 
-    final static class StatefulSearchData implements Serializable {
+    record StatefulSearchData(List<Map<String, Object>> data) implements Serializable {
 
-        private final List<Map<String, Object>> data;
-
-        public StatefulSearchData(final List<Map<String, Object>> data) {
-            this.data = data;
-        }
-
-        public List<Map<String, Object>> getData() {
-            return data;
-        }
     }
 
-    private final static class StatefulResponse {
+    private record StatefulResponse(int httpResponseCode, String responseBody) {
 
-        private final int httpResponseCode;
-        private final String responseBody;
-
-        public StatefulResponse(int httpResponseCode) {
-            this.httpResponseCode = httpResponseCode;
-            this.responseBody = null;
-        }
-        public StatefulResponse(int httpResponseCode, String responseBody) {
-            this.httpResponseCode = httpResponseCode;
-            this.responseBody = responseBody;
-        }
+            public StatefulResponse(int httpResponseCode) {
+                this(httpResponseCode, null);
+            }
     }
 
     private class StatefulValidationException extends RuntimeException {

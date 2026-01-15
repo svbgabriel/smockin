@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProxyMappingCache {
 
-    private AtomicReference<Map<String, ProxyForwardConfigCacheDTO>> proxyForwardConfigRef = new AtomicReference();
+    private final AtomicReference<Map<String, ProxyForwardConfigCacheDTO>> proxyForwardConfigRef = new AtomicReference();
 
     public void init(final List<ProxyForwardConfigCacheDTO> allProxyForwardConfig) {
 

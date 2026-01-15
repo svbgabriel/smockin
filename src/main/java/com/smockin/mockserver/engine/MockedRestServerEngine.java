@@ -75,16 +75,16 @@ public class MockedRestServerEngine {
 
     // Server state
     private final Object serverStateMonitor = new Object();
-    private MockServerState serverState = new MockServerState(false, 0);
+    private final MockServerState serverState = new MockServerState(false, 0);
 
     // Live logging response blocker
     // TODO find a smarter way to do this (i.e BlockingQueue...)
     private final Object responseBlockingMonitor = new Object();
-    private Map<String, Optional<LiveLoggingUserOverrideResponse>> responseAmendments = new HashMap<>();
-    private List<BlockedPathToRelease> userCallsToRelease = new ArrayList<>();
-    private AtomicBoolean liveBlockingModeEnabled = new AtomicBoolean();
-    private AtomicReference<List<LiveBlockPath>> liveBlockPathsRef = new AtomicReference<>(new ArrayList<>());
-    private AtomicBoolean proxyModeEnabled = new AtomicBoolean();
+    private final Map<String, Optional<LiveLoggingUserOverrideResponse>> responseAmendments = new HashMap<>();
+    private final List<BlockedPathToRelease> userCallsToRelease = new ArrayList<>();
+    private final AtomicBoolean liveBlockingModeEnabled = new AtomicBoolean();
+    private final AtomicReference<List<LiveBlockPath>> liveBlockPathsRef = new AtomicReference<>(new ArrayList<>());
+    private final AtomicBoolean proxyModeEnabled = new AtomicBoolean();
 
 
     public void start(final MockedServerConfigDTO config,
@@ -190,7 +190,7 @@ public class MockedRestServerEngine {
         // Live logging filter
         Spark.before((request, response) -> {
 
-            if (request.raw().getHeader(webSocketService.WS_SEC_WEBSOCKET_KEY) != null) {
+            if (request.raw().getHeader(WebSocketService.WS_SEC_WEBSOCKET_KEY) != null) {
                 return;
             }
 
@@ -220,8 +220,8 @@ public class MockedRestServerEngine {
 
         Spark.afterAfter((request, response) -> {
 
-            if (request.raw().getHeader(webSocketService.WS_SEC_WEBSOCKET_KEY) != null
-                    || serverSideEventService.SSE_EVENT_STREAM_HEADER.equals(response.raw().getHeader(HttpHeaders.CONTENT_TYPE))) {
+            if (request.raw().getHeader(WebSocketService.WS_SEC_WEBSOCKET_KEY) != null
+                    || ServerSideEventService.SSE_EVENT_STREAM_HEADER.equals(response.raw().getHeader(HttpHeaders.CONTENT_TYPE))) {
                 return;
             }
 

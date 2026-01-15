@@ -15,7 +15,7 @@ public enum ParamMatchTypeEnum {
     isoDate(false),
     uuid(false);
 
-    private boolean takesArg;
+    private final boolean takesArg;
 
     ParamMatchTypeEnum(final boolean takesArg) {
         this.takesArg = takesArg;

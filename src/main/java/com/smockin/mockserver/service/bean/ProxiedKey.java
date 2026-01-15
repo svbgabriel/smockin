@@ -7,36 +7,19 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /**
  * Created by mgallina on 11/08/17.
  */
-public class ProxiedKey {
-
-    private final String path;
-    private final RestMethodEnum method;
-
-    public ProxiedKey(String path, RestMethodEnum method) {
-        this.path = path;
-        this.method = method;
-    }
-
-    public String getPath() {
-        return path;
-    }
-    public RestMethodEnum getMethod() {
-        return method;
-    }
+public record ProxiedKey(String path, RestMethodEnum method) {
 
     @Override
     public boolean equals(Object o) {
 
         if (o == this) return true;
-        if (!(o instanceof ProxiedKey)) {
+        if (!(o instanceof ProxiedKey(String path1, RestMethodEnum method1))) {
             return false;
         }
 
-        ProxiedKey pk = (ProxiedKey) o;
-
         return new EqualsBuilder()
-                .append(path, pk.path)
-                .append(method, pk.method)
+                .append(path, path1)
+                .append(method, method1)
                 .isEquals();
     }
 

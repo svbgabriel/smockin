@@ -50,13 +50,9 @@ public class RuleResolverImpl implements RuleResolver {
             }
 
             return ruleMatchValue.equalsIgnoreCase(inboundValue);
-        } else if (RuleDataTypeEnum.NUMERIC.equals(ruleMatchDataType)
+        } else return RuleDataTypeEnum.NUMERIC.equals(ruleMatchDataType)
                 && NumberUtils.isCreatable(inboundValue)
-                && NumberUtils.toDouble(inboundValue) == NumberUtils.toDouble(ruleMatchValue)) {
-            return true;
-        }
-
-        return false;
+                && NumberUtils.toDouble(inboundValue) == NumberUtils.toDouble(ruleMatchValue);
     }
 
     // Always handled as TEXT!
@@ -71,12 +67,8 @@ public class RuleResolverImpl implements RuleResolver {
                 return true;
             }
 
-            if ( ( condition.getCaseSensitive() == null || !condition.getCaseSensitive() )
-                    && ( StringUtils.isNotBlank(condition.getMatchValue()) && !condition.getMatchValue().equalsIgnoreCase(inboundValue) ) ) {
-                return true;
-            }
-
-            return false;
+            return (condition.getCaseSensitive() == null || !condition.getCaseSensitive())
+                    && (StringUtils.isNotBlank(condition.getMatchValue()) && !condition.getMatchValue().equalsIgnoreCase(inboundValue));
         }
 
         return true;

@@ -139,7 +139,7 @@ public class WebSocketServiceImpl implements WebSocketService {
             Set<SessionIdWrapper> sessions = sessionMap.get(wsPath);
 
             final RestfulMock wsMock = restfulMockDAO.findActiveByMethodAndPathPatternAndTypesForSingleUser(
-                    RestMethodEnum.GET, wsPath, Arrays.asList(RestMockTypeEnum.RULE_WS));
+                    RestMethodEnum.GET, wsPath, List.of(RestMockTypeEnum.RULE_WS));
 
             if (wsMock != null && wsMock.getDefinitions().get(0) != null) {
 
@@ -201,7 +201,6 @@ public class WebSocketServiceImpl implements WebSocketService {
                     // TODO Need to account for multi users
 //                    liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogOutboundDTO(s.getTraceId(), null,null, null, "Websocket closed", false));
 
-                    return;
                 }
             });
         });

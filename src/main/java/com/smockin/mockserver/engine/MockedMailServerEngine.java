@@ -46,14 +46,14 @@ public class MockedMailServerEngine {
 
     private final Logger logger = LoggerFactory.getLogger(MockedMailServerEngine.class);
 
-    private String host = "0.0.0.0";
-    private String defaultMailUserPassword = "letmein";
+    private final String host = "0.0.0.0";
+    private final String defaultMailUserPassword = "letmein";
     private static final String MULTIPART = "multipart";
 
     private GreenMail greenMail;
     private ImapHostManager imapHostManager;
     private final Object serverStateMonitor = new Object();
-    private MockServerState serverState = new MockServerState(false, 0);
+    private final MockServerState serverState = new MockServerState(false, 0);
     private final ConcurrentHashMap<String, SmockinGreenMailUserWrapper> mailUsersMap = new ConcurrentHashMap<>(0);
 
     @Autowired
@@ -481,17 +481,13 @@ public class MockedMailServerEngine {
             final List<MailServerMessageInboxAttachmentDTO> attachmentDTOs = new ArrayList<>();
 
             if (!mimeMessage.getContentType().contains(MULTIPART)
-                    || !(mimeMessage.getContent() instanceof Multipart)) {
+                    || !(mimeMessage.getContent() instanceof Multipart multipart)) {
                 return attachmentDTOs;
             }
 
-            final Multipart multipart = (Multipart) mimeMessage.getContent();
-
             for (int i=0; i < multipart.getCount(); i++) {
 
-                if (multipart.getBodyPart(i) instanceof MimeBodyPart) {
-
-                    final MimeBodyPart mimeBodyPart = (MimeBodyPart)multipart.getBodyPart(i);
+                if (multipart.getBodyPart(i) instanceof MimeBodyPart mimeBodyPart) {
 
                     if (Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
 

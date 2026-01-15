@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicReference;
 @Transactional
 public class TunnelServiceImpl implements TunnelService {
 
-    private SmockinUserService smockinUserService;
-    private UserTokenServiceUtils userTokenServiceUtils;
-    private MockedServerEngineService mockedServerEngineService;
+    private final SmockinUserService smockinUserService;
+    private final UserTokenServiceUtils userTokenServiceUtils;
+    private final MockedServerEngineService mockedServerEngineService;
 
     private final AtomicReference<NgrokClient> ngrokClientRef = new AtomicReference();
 

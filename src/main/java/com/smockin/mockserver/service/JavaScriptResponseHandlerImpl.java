@@ -68,13 +68,11 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
                     "Looks like there is an issue with the Javascript driving this mock " + ex.getMessage());
         }
 
-        if (!(engineResponse instanceof ScriptObjectMirror)) {
+        if (!(engineResponse instanceof ScriptObjectMirror response)) {
             return new RestfulResponseDTO(500,
                     "text/plain",
                     "Looks like there is an issue with the Javascript driving this mock!");
         }
-
-        final ScriptObjectMirror response = (ScriptObjectMirror) engineResponse;
 
         return new RestfulResponseDTO(
                 (int) response.get("status"),

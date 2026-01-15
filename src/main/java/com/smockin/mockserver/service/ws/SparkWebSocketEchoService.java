@@ -17,7 +17,7 @@ import java.io.IOException;
 public class SparkWebSocketEchoService {
 
     private final WebSocketService webSocketService;
-    private boolean isMultiUserMode;
+    private final boolean isMultiUserMode;
 
     public SparkWebSocketEchoService(final WebSocketService webSocketService, final boolean isMultiUserMode) {
         this.webSocketService = webSocketService;

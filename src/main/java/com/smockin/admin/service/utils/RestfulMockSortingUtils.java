@@ -117,7 +117,7 @@ public class RestfulMockSortingUtils {
 
                 final String s1 = o2.substring(0, pos2 + 1);
                 final String s2 = o1.substring(0, pos2);
-                final String s22 = s2 + o2.substring(pos2, pos2 + 1);
+                final String s22 = s2 + o2.charAt(pos2);
 
                 if (s1.equalsIgnoreCase(s22) && result < 0) {
                     return Math.abs(result);
@@ -128,7 +128,7 @@ public class RestfulMockSortingUtils {
 
             final String s1 = o1.substring(0, pos + 1);
             final String s2 = o2.substring(0, pos);
-            final String s22 = s2 + o1.substring(pos, pos + 1);
+            final String s22 = s2 + o1.charAt(pos);
 
             if (s1.equalsIgnoreCase(s22) && result > 0) {
                 return result - (result * 2);
@@ -146,7 +146,7 @@ public class RestfulMockSortingUtils {
         while (sb.length() < (size.intValue() - stringToPad.length())) {
             for (char ch = sci.first(); ch != CharacterIterator.DONE; ch = sci.next()) {
                 if (sb.length() < (size.intValue() - stringToPad.length())) {
-                    sb.insert(sb.length(), String.valueOf(ch));
+                    sb.insert(sb.length(), ch);
                 }
             }
         }

@@ -50,11 +50,11 @@ public class ApiImportRouter {
             throw new ValidationException("Inbound dto is undefined");
         }
 
-        if (dto.getFile() == null) {
+        if (dto.file() == null) {
             throw new ValidationException("Inbound file (in dto) is undefined");
         }
 
-        if (dto.getConfig() == null) {
+        if (dto.config() == null) {
             throw new ValidationException("Inbound config (in dto) is undefined");
         }
 

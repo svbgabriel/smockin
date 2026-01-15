@@ -10,7 +10,6 @@ import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
-import com.smockin.mockserver.engine.MockedRestServerEngine;
 import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.mockserver.service.bean.ProxiedKey;
 import com.smockin.mockserver.service.dto.HttpProxiedDTO;
@@ -64,19 +63,19 @@ public class HttpProxyServiceQueueTest {
         helloKeyDelete = new ProxiedKey("/helloworld", RestMethodEnum.DELETE);
         fooKeyGet = new ProxiedKey("/foo", RestMethodEnum.GET);
 
-        mockReqHelloGet = new RestfulMock(helloKeyGet.getPath(), helloKeyGet.getMethod(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
+        mockReqHelloGet = new RestfulMock(helloKeyGet.path(), helloKeyGet.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
         mockReqHelloGet.setExtId(GeneralUtils.generateUUID());
-        mockReqHelloPost = new RestfulMock(helloKeyPost.getPath(), helloKeyPost.getMethod(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
+        mockReqHelloPost = new RestfulMock(helloKeyPost.path(), helloKeyPost.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
         mockReqHelloPost.setExtId(GeneralUtils.generateUUID());
-        mockReqHelloDelete = new RestfulMock(helloKeyDelete.getPath(), helloKeyDelete.getMethod(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
+        mockReqHelloDelete = new RestfulMock(helloKeyDelete.path(), helloKeyDelete.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
         mockReqHelloDelete.setExtId(GeneralUtils.generateUUID());
-        mockReqFooGet = new RestfulMock(fooKeyGet.getPath(), fooKeyGet.getMethod(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
+        mockReqFooGet = new RestfulMock(fooKeyGet.path(), fooKeyGet.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 500, 0, 0, false, false, false, user, false, 0, 0, null);
         mockReqFooGet.setExtId(GeneralUtils.generateUUID());
 
-        helloGetDTO = new HttpProxiedDTO(helloKeyGet.getMethod(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld 1\" }");
-        helloPostDTO = new HttpProxiedDTO(helloKeyPost.getMethod(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld 2\" }");
-        helloDeleteDTO = new HttpProxiedDTO(helloKeyDelete.getMethod(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld 3\" }");
-        fooGetDTO = new HttpProxiedDTO(fooKeyGet.getMethod(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"foo 1\" }");
+        helloGetDTO = new HttpProxiedDTO(helloKeyGet.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld 1\" }");
+        helloPostDTO = new HttpProxiedDTO(helloKeyPost.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld 2\" }");
+        helloDeleteDTO = new HttpProxiedDTO(helloKeyDelete.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"helloworld 3\" }");
+        fooGetDTO = new HttpProxiedDTO(fooKeyGet.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"foo 1\" }");
 
         Mockito.when(restfulMockDAO.findByExtId(mockReqHelloGet.getExtId())).thenReturn(mockReqHelloGet);
         Mockito.when(restfulMockDAO.findByExtId(mockReqHelloPost.getExtId())).thenReturn(mockReqHelloPost);
@@ -100,19 +99,19 @@ public class HttpProxyServiceQueueTest {
     @Test
     public void waitForResponse_ConsumeAll_Test() throws InterruptedException, ExecutionException, TimeoutException {
 
-        final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.getPath(), mockReqHelloGet);
+        final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet);
         Assert.assertNotNull(dto1);
         Assert.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
 
-        final RestfulResponseDTO dto2 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.getPath(), mockReqHelloPost);
+        final RestfulResponseDTO dto2 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost);
         Assert.assertNotNull(dto2);
         Assert.assertEquals(helloPostDTO.getBody(), dto2.getResponseBody());
 
-        final RestfulResponseDTO dto3 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.getPath(), mockReqHelloDelete);
+        final RestfulResponseDTO dto3 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete);
         Assert.assertNotNull(dto3);
         Assert.assertEquals(helloDeleteDTO.getBody(), dto3.getResponseBody());
 
-        final RestfulResponseDTO dto4 = proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.getPath(), mockReqFooGet);
+        final RestfulResponseDTO dto4 = proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet);
         Assert.assertNotNull(dto4);
         Assert.assertEquals(fooGetDTO.getBody(), dto4.getResponseBody());
 
@@ -121,11 +120,11 @@ public class HttpProxyServiceQueueTest {
     @Test
     public void waitForResponse_ConsumeAndWaitTimeout_Test() throws InterruptedException, ExecutionException, TimeoutException {
 
-        final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.getPath(), mockReqHelloGet);
+        final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet);
         Assert.assertNotNull(dto1);
         Assert.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
 
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.getPath(), mockReqHelloGet));
+        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet));
     }
 
     @Test
@@ -135,7 +134,7 @@ public class HttpProxyServiceQueueTest {
         proxyService.clearAllSessions();
 
         // Assertions
-        Assert.assertNull(proxyService.waitForResponse(helloKeyGet.getPath(), mockReqHelloGet));
+        Assert.assertNull(proxyService.waitForResponse(helloKeyGet.path(), mockReqHelloGet));
     }
 
     @Test
@@ -145,11 +144,11 @@ public class HttpProxyServiceQueueTest {
         proxyService.clearSession(mockReqHelloPost.getExtId(), user.getSessionToken());
 
         // Assertions
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.getPath(), mockReqHelloGet));
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.getPath(), mockReqHelloPost));
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.getPath(), mockReqHelloDelete));
+        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet));
+        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost));
+        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete));
 
-        final RestfulResponseDTO dto4 = proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.getPath(), mockReqFooGet);
+        final RestfulResponseDTO dto4 = proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet);
         Assert.assertNotNull(dto4);
         Assert.assertEquals(fooGetDTO.getBody(), dto4.getResponseBody());
     }
@@ -161,17 +160,17 @@ public class HttpProxyServiceQueueTest {
         proxyService.clearSession(mockReqFooGet.getExtId(), user.getSessionToken());
 
         // Assertions
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.getPath(), mockReqFooGet));
+        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet));
 
-        final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.getPath(), mockReqHelloGet);
+        final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet);
         Assert.assertNotNull(dto1);
         Assert.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
 
-        final RestfulResponseDTO dto2 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.getPath(), mockReqHelloPost);
+        final RestfulResponseDTO dto2 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost);
         Assert.assertNotNull(dto2);
         Assert.assertEquals(helloPostDTO.getBody(), dto2.getResponseBody());
 
-        final RestfulResponseDTO dto3 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.getPath(), mockReqHelloDelete);
+        final RestfulResponseDTO dto3 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete);
         Assert.assertNotNull(dto3);
         Assert.assertEquals(helloDeleteDTO.getBody(), dto3.getResponseBody());
     }

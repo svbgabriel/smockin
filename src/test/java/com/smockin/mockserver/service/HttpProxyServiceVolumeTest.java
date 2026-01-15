@@ -10,7 +10,6 @@ import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
-import com.smockin.mockserver.engine.MockedRestServerEngine;
 import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.mockserver.service.bean.ProxiedKey;
 import com.smockin.mockserver.service.dto.HttpProxiedDTO;
@@ -88,7 +87,7 @@ public class HttpProxyServiceVolumeTest {
 
             producers[p] = () -> {
                 try {
-                    proxyService.addResponse(rm.getExtId(), new HttpProxiedDTO(pk.getMethod(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"path\" : \"" + File.separator + user.getCtxPath() + pk.getPath() + "\" }"), user.getSessionToken());
+                    proxyService.addResponse(rm.getExtId(), new HttpProxiedDTO(pk.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"path\" : \"" + File.separator + user.getCtxPath() + pk.path() + "\" }"), user.getSessionToken());
                 } catch (RecordNotFoundException | ValidationException e) {
                     Assert.fail();
                 }
@@ -111,7 +110,7 @@ public class HttpProxyServiceVolumeTest {
 
                 @Override
                 public Object call() {
-                    return proxyService.waitForResponse(File.separator + user.getCtxPath() + pk.getPath(), rm);
+                    return proxyService.waitForResponse(File.separator + user.getCtxPath() + pk.path(), rm);
                 }
             };
 
@@ -151,7 +150,7 @@ public class HttpProxyServiceVolumeTest {
                 Assert.assertEquals(200, restfulResponse.getHttpStatusCode());
                 Assert.assertEquals(MediaType.APPLICATION_JSON_VALUE, restfulResponse.getResponseContentType());
                 Assert.assertNotNull(restfulResponse.getResponseBody());
-                Assert.assertTrue(restfulResponse.getResponseBody().contains(pk.getPath()));
+                Assert.assertTrue(restfulResponse.getResponseBody().contains(pk.path()));
                 Assert.assertTrue(restfulResponse.getHeaders().isEmpty());
 
                 assertionsCount++;
@@ -193,7 +192,7 @@ public class HttpProxyServiceVolumeTest {
     }
 
     private RestfulMock buildRestfulMock(final ProxiedKey pk) {
-        final RestfulMock mockReq = new RestfulMock(pk.getPath(), pk.getMethod(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 3000, 0, 0, false, false, false, user, false, 0, 0, null);
+        final RestfulMock mockReq = new RestfulMock(pk.path(), pk.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 3000, 0, 0, false, false, false, user, false, 0, 0, null);
         mockReq.setExtId(GeneralUtils.generateUUID());
         return mockReq;
     }

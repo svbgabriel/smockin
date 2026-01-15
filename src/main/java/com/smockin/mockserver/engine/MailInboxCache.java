@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 public class MailInboxCache {
 
-    private ConcurrentHashMap<CachedMailServerMessageKey, CachedMailServerMessage> mailMessageCache
+    private final ConcurrentHashMap<CachedMailServerMessageKey, CachedMailServerMessage> mailMessageCache
             = new ConcurrentHashMap<>();
 
     public void clearAll() {
