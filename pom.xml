@@ -29,7 +29,7 @@
         <commons-email.version>1.5</commons-email.version>
         <mockito-core.version>3.2.0</mockito-core.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <raml-parser.version>1.0.25</raml-parser.version>
+        <raml-parser.version>1.0.51</raml-parser.version>
         <openapi-generator.version>5.1.0</openapi-generator.version>
         <jasypt.version>1.9.2</jasypt.version>
         <java-jwt.version>3.4.0</java-jwt.version>
@@ -39,7 +39,7 @@
         <s3mock.version>2.2.2</s3mock.version>
         <aws-java-sdk-s3.version>1.12.261</aws-java-sdk-s3.version>
         <s3proxy.version>1.7.1</s3proxy.version>
-        <greenmail.version>1.6.5</greenmail.version>
+        <greenmail.version>1.6.15</greenmail.version>
         <jackson-databind.version>2.14.2</jackson-databind.version>
         <java-ngrok.version>2.1.0</java-ngrok.version>
         <nashorn.version>15.7</nashorn.version>
