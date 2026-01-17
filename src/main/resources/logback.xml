@@ -21,7 +21,7 @@
         <appender-ref ref="smockin_appender" />
     </logger>
 
-    <root level="ERROR">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 
