@@ -30,6 +30,7 @@
         <mockito-core.version>3.2.0</mockito-core.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <raml-parser.version>1.0.51</raml-parser.version>
+        <swagger-parser.version>2.1.37</swagger-parser.version>
         <openapi-generator.version>5.1.0</openapi-generator.version>
         <jasypt.version>1.9.2</jasypt.version>
         <java-jwt.version>3.4.0</java-jwt.version>
@@ -155,9 +156,9 @@
 
         <!-- OpenAPI -->
         <dependency>
-            <groupId>org.openapitools</groupId>
-            <artifactId>openapi-generator-maven-plugin</artifactId>
-            <version>${openapi-generator.version}</version>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser</artifactId>
+            <version>${swagger-parser.version}</version>
         </dependency>
 
         <!-- Encryption -->

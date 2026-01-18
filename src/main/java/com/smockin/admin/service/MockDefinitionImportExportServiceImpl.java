@@ -23,6 +23,7 @@ import com.smockin.mockserver.service.S3Client;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +157,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                 mocks.stream()
                       .map(m ->
                               s3MockService.buildBucketDtoTree(m, true))
-                      .collect(Collectors.toList());
+                      .toList();
 
         return GeneralUtils.serialiseJson(mockDTOs);
     }
@@ -172,7 +173,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                 (!selectedExports.isEmpty())
                     ? selectedExports.stream()
                         .map(r -> findRestByExternalId(r, allRestfulMocks))
-                        .collect(Collectors.toList())
+                        .toList()
                     : allRestfulMocks;
 
         return GeneralUtils.serialiseJson(restfulMocksToExport);
@@ -184,7 +185,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                 .stream()
                 .filter(r -> r.getExtId().equals(externalId))
                 .findFirst()
-                .orElseThrow(() -> new RecordNotFoundException());
+                .orElseThrow(RecordNotFoundException::new);
     }
 
     //
@@ -265,7 +266,6 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
         final StringBuilder outcome = new StringBuilder();
 
         GeneralUtils.deserializeJson(content, new TypeReference<List<RestfulMockResponseDTO>>() {})
-                .stream()
                 .forEach(rm ->
                     processRestImport(outcome, config, rm, currentUser, conflictCtxPath));
 
@@ -278,7 +278,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                            final SmockinUser currentUser,
                            final String conflictCtxPath) {
 
-        if (outcome.length() == 0) {
+        if (outcome.isEmpty()) {
             outcome.append("Successful Imports:" + GeneralUtils.CARRIAGE + GeneralUtils.CARRIAGE);
         }
 
@@ -293,7 +293,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
             outcome.append(rm.getPath());
             outcome.append(GeneralUtils.CARRIAGE);
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             outcome.append(handleImportFail(rm.getMethod() + " " + rm.getPath(), ex));
         }
 
@@ -312,7 +312,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                         processS3Import(outcome, s3, config, currentUser))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
+                .toList();
 
         // Update mock server with new imported buckets (if running)
         final MockServerState s3MockServerState = mockedServerEngineService.getS3ServerState();
@@ -333,7 +333,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                                      final MockImportConfigDTO config,
                                      final SmockinUser currentUser) {
 
-        if (outcome.length() == 0) {
+        if (outcome.isEmpty()) {
             outcome.append("Successful Imports:" + GeneralUtils.CARRIAGE + GeneralUtils.CARRIAGE);
         }
 
@@ -363,7 +363,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
             // Update bucket (cascade persist all child content)
             return Optional.of(s3MockDAO.saveAndFlush(bucket).getExtId());
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
 
             outcome.append(handleImportFail(bucketName, ex));
             return Optional.empty();
@@ -379,8 +379,8 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
         Optional<Pair<String, String>> existingBucketIdOpt = s3MockService.doesBucketAlreadyExist(s3BucketDTO.getBucket());
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Keep Existing: "  + config.isKeepExisting());
-            logger.debug("Existing Bucket: " + existingBucketIdOpt.isPresent());
+            logger.debug("Keep Existing: {}", config.isKeepExisting());
+            logger.debug("Existing Bucket: {}", existingBucketIdOpt.isPresent());
         }
 
         if (config.isKeepExisting()
@@ -390,7 +390,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
 
         } else if (existingBucketIdOpt.isPresent()) {
 
-            if (StringUtils.equals(existingBucketIdOpt.get().getRight(), currentUser.getExtId())) {
+            if (Strings.CS.equals(existingBucketIdOpt.get().getRight(), currentUser.getExtId())) {
 
                 s3MockDAO.delete(s3MockDAO.findByExtId(existingBucketIdOpt.get().getLeft()));
                 s3MockDAO.flush();

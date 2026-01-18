@@ -6,7 +6,6 @@ import com.smockin.admin.exception.MockImportException;
 import com.smockin.admin.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -15,21 +14,25 @@ public class ApiImportRouter {
 
     private final Logger logger = LoggerFactory.getLogger(ApiImportRouter.class);
 
-    @Autowired
-    @Qualifier("ramlApiImportService")
-    private ApiImportService ramlApiImportService;
+    private final ApiImportService ramlApiImportService;
+    private final ApiImportService openApiImportService;
+
+    public ApiImportRouter(@Qualifier("ramlApiImportService") ApiImportService ramlApiImportService, @Qualifier("openApiImportService") ApiImportService openApiImportService) {
+        this.ramlApiImportService = ramlApiImportService;
+        this.openApiImportService = openApiImportService;
+    }
 
     public void route(final String importType, final ApiImportDTO dto, final String token) throws MockImportException, ValidationException {
         logger.debug("route called");
 
         validate(importType, dto, token);
 
-        switch (ApiImportTypeEnum.valueOf(importType)) {
-            case RAML:
-                ramlApiImportService.importApiDoc(dto, token);
-                break;
-            default:
-                throw new ValidationException("Unsupported import type");
+        if (ApiImportTypeEnum.valueOf(importType) == ApiImportTypeEnum.OPENAPI) {
+            openApiImportService.importApiDoc(dto, token);
+        } else if (ApiImportTypeEnum.valueOf(importType) == ApiImportTypeEnum.RAML) {
+            ramlApiImportService.importApiDoc(dto, token);
+        } else {
+            throw new ValidationException("Unsupported import type");
         }
 
     }
@@ -41,8 +44,8 @@ public class ApiImportRouter {
         }
 
         try {
-             ApiImportTypeEnum.valueOf(importType);
-        } catch (Throwable ex) {
+            ApiImportTypeEnum.valueOf(importType);
+        } catch (Exception ex) {
             throw new ValidationException("Invalid Import Type: " + importType);
         }
 
