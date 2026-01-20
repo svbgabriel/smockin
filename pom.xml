@@ -35,7 +35,6 @@
         <jasypt.version>1.9.2</jasypt.version>
         <java-jwt.version>3.4.0</java-jwt.version>
         <spring-boot-maven-plugin.version>2.7.18</spring-boot-maven-plugin.version>
-        <owasp.plugin.version>5.3.0</owasp.plugin.version>
         <lombok.version>1.18.42</lombok.version>
         <s3mock.version>2.2.2</s3mock.version>
         <aws-java-sdk-s3.version>1.12.261</aws-java-sdk-s3.version>
@@ -249,16 +248,6 @@
         <plugins>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot-maven-plugin.version}</version>
@@ -280,18 +269,6 @@
                     <addResources>true</addResources>
                 </configuration>
                 -->
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.smockin.SmockinApp</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -317,28 +294,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <!-- mvn install -P owasp) -->
-    <profiles>
-        <profile>
-            <id>owasp</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                        <version>${owasp.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>
