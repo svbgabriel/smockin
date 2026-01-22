@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import spark.Request;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -33,7 +33,7 @@ public class RuleEngineImpl implements RuleEngine {
     private SmockinUserService smockinUserService;
 
 
-    public RestfulResponseDTO process(final Request req, final List<RestfulMockDefinitionRule> rules) {
+    public RestfulResponseDTO process(final HttpServletRequest req, final List<RestfulMockDefinitionRule> rules) {
         logger.debug("process called");
 
         for (RestfulMockDefinitionRule rule : rules) {
@@ -61,7 +61,7 @@ public class RuleEngineImpl implements RuleEngine {
 
                 }
 
-                // If a group of conditions is met then return straight out of this iteration.
+                // If a group of conditions is met, then return straight out of this iteration.
                 if (groupMatchCount == group.getConditions().size()) {
 
                     GeneralUtils.checkForAndHandleSleep(rule.getSleepInMillis());
@@ -76,22 +76,22 @@ public class RuleEngineImpl implements RuleEngine {
         return null;
     }
 
-    String extractInboundValue(final RuleMatchingTypeEnum matchingType, final String fieldName, final Request req, final String mockPath, final String userCtxPath) {
+    String extractInboundValue(final RuleMatchingTypeEnum matchingType, final String fieldName, final HttpServletRequest req, final String mockPath, final String userCtxPath) {
 
         switch (matchingType) {
             case REQUEST_HEADER:
-                return req.headers(fieldName);
+                return req.getHeader(fieldName);
             case REQUEST_PARAM:
                 return GeneralUtils.extractRequestParamByName(req, fieldName);
             case REQUEST_BODY:
-                return req.body();
+                return GeneralUtils.extractRequestBody(req);
             case PATH_VARIABLE:
-                final String sanitizedInboundPath = GeneralUtils.sanitizeMultiUserPath(smockinUserService.getUserMode(), req.pathInfo(), userCtxPath);
+                final String sanitizedInboundPath = GeneralUtils.sanitizeMultiUserPath(smockinUserService.getUserMode(), req.getPathInfo(), userCtxPath);
                 return GeneralUtils.findPathVarIgnoreCase(sanitizedInboundPath, mockPath, fieldName);
             case PATH_VARIABLE_WILD:
-                return RuleEngineUtils.matchOnPathVariable(fieldName, req);
+                return RuleEngineUtils.matchOnPathVariable(fieldName, req, mockPath);
             case REQUEST_BODY_JSON_ANY:
-                return RuleEngineUtils.matchOnJsonField(fieldName, req.body(), req.pathInfo());
+                return RuleEngineUtils.matchOnJsonField(fieldName, GeneralUtils.extractRequestBody(req));
             default:
                 throw new IllegalArgumentException("Unsupported Rule Matching Type : " + matchingType);
         }

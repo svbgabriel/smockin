@@ -3,7 +3,8 @@ package com.smockin.utils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.math.NumberUtils;
-import spark.Request;
+
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,20 +13,26 @@ public final class RuleEngineUtils {
 
     private RuleEngineUtils() {}
 
-    public static String matchOnPathVariable(final String fieldName, final Request req) {
+    public static String matchOnPathVariable(final String fieldName, final HttpServletRequest req, final String mockPath) {
 
         final int argPosition = NumberUtils.toInt(fieldName, -1);
+        final String inboundPath = req.getPathInfo();
 
-        if (argPosition == -1
-                || req.splat().length < argPosition) {
-            throw new IllegalArgumentException("Unable to perform wildcard matching on the mocked endpoint '" + req.pathInfo() + "'. Path variable arg count does not align.");
+        // Extract all path variables (including wildcards indexed as *0, *1, etc.)
+        final Map<String, String> pathVars = GeneralUtils.findAllPathVars(inboundPath, mockPath);
+
+        // The Smockin indexes wildcards in findAllPathVars as "*0", "*1", etc.
+        // The original Spark splat() logic is based on 1, so we subtract 1 to align to index 0.
+        final String wildcardKey = "*" + (argPosition - 1);
+
+        if (argPosition == -1 || !pathVars.containsKey(wildcardKey)) {
+            throw new IllegalArgumentException("Unable to perform wildcard matching on the mocked endpoint '" + inboundPath + "'. Path variable arg count does not align.");
         }
 
-        return req.splat()[(argPosition - 1)];
-
+        return pathVars.get(wildcardKey);
     }
 
-    public static String matchOnJsonField(final String fieldName, final String reqBody, final String path) {
+    public static String matchOnJsonField(final String fieldName, final String reqBody) {
 
         if (StringUtils.isBlank(reqBody)) {
             return null;

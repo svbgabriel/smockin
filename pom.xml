@@ -20,7 +20,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
         <spring-boot-test.version>2.7.18</spring-boot-test.version>
-        <spark-core.version>2.9.4</spark-core.version>
         <h2.version>2.3.232</h2.version>
         <hikaricp.version>2.6.1</hikaricp.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
@@ -76,13 +75,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson-databind.version}</version>
-        </dependency>
-
-        <!-- Spark (HTTP Server) -->
-        <dependency>
-            <groupId>io.github.sparkjavateam</groupId>
-            <artifactId>spark-core</artifactId>
-            <version>${spark-core.version}</version>
         </dependency>
 
         <!-- DB -->

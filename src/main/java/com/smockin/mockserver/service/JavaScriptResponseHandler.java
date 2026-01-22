@@ -2,7 +2,8 @@ package com.smockin.mockserver.service;
 
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
-import spark.Request;
+
+import javax.servlet.http.HttpServletRequest;
 
 public interface JavaScriptResponseHandler {
 
@@ -46,6 +47,6 @@ public interface JavaScriptResponseHandler {
             + " response;"
             + "}";
 
-    RestfulResponseDTO executeUserResponse(final Request req, final RestfulMock mock);
+    RestfulResponseDTO executeUserResponse(final HttpServletRequest req, final RestfulMock mock);
 
 }

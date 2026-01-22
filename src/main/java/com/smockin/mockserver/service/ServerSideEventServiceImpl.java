@@ -18,8 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import spark.Request;
-import spark.Response;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -55,19 +56,23 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
     private LiveLoggingHandler liveLoggingHandler;
 
     @Override
-    public void register(final String path, final long heartBeatMillis, final boolean proxyPushIdOnConnect, final Request request, final Response response) throws IOException {
+    public void register(final String path,
+                         final long heartBeatMillis,
+                         final boolean proxyPushIdOnConnect,
+                         final HttpServletRequest request,
+                         final HttpServletResponse response) throws IOException {
         logger.debug("register called");
 
         final String clientId = GeneralUtils.generateUUID();
-        final String traceId = request.attribute(GeneralUtils.LOG_REQ_ID);
+        final String traceId = (String) request.getAttribute(GeneralUtils.LOG_REQ_ID);
 
         applyHeaders(response);
 
-        // Register client and build messages collection
+        // Register the client and build a messages collection
         clients.computeIfAbsent(clientId, k ->
                 new ClientSseData(path, Thread.currentThread(), GeneralUtils.getCurrentDate()));
 
-        liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogOutboundDTO(traceId, path, response.status(), null, "SSE established (clientId: " + clientId + ")", false));
+        liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogOutboundDTO(traceId, path, response.getStatus(), null, "SSE established (clientId: " + clientId + ")", false));
 
         initHeartBeat(clientId, heartBeatMillis, proxyPushIdOnConnect, traceId, path, response);
     }
@@ -100,141 +105,106 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
 
         dto.setBody(GeneralUtils.removeAllLineBreaks(dto.getBody()));
 
-        // Add message to specific client.
-        if (id != null) {
+        if (id != null && clients.containsKey(id)) {
             clients.get(id).getMessages().add(dto.getBody());
             return;
         }
 
-        // Add message to all clients associated to this path.
-        clients.values().forEach( (data) -> {
+        clients.values().forEach(data -> {
             if (data.getPath().equals(dto.getPath())) {
                 data.getMessages().add(dto.getBody());
             }
         });
-
     }
 
     @Override
     public void interruptAndClearAllHeartBeatThreads() {
-
-        clients.forEach( (key, msgs) -> {
-            msgs.getThread().interrupt();
-        });
-/*
-        heartbeatThreadVector.forEach(t -> {
-            ((Thread)t).interrupt();
-        });
-
-        heartbeatThreadVector.clear();
-*/
+        clients.forEach( (key, msgs) -> msgs.getThread().interrupt());
         clients.clear();
     }
 
     @Override
     public void clearState() {
-
         clients.clear();
     }
 
-    void applyHeaders(final Response res) {
-
-       // Set SSE related headers
-       res.header(HttpHeaders.CONTENT_TYPE, SSE_EVENT_STREAM_HEADER);
-       res.header(HttpHeaders.CACHE_CONTROL, "no-cache");
-
+    void applyHeaders(final HttpServletResponse res) {
+        res.setHeader(HttpHeaders.CONTENT_TYPE, SSE_EVENT_STREAM_HEADER);
+        res.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
+        res.setHeader(HttpHeaders.CONNECTION, "keep-alive");
     }
 
-    void initHeartBeat(final String clientId, final long heartBeatMillis, final boolean proxyPushIdOnConnect, final String traceId, final String path, final Response response) throws IOException {
+    void initHeartBeat(final String clientId,
+                       final long heartBeatMillis,
+                       final boolean proxyPushIdOnConnect,
+                       final String traceId,
+                       final String path,
+                       final HttpServletResponse response) throws IOException {
         logger.debug("initHeartBeat called");
 
-        // Get raw response Start stream
-        final PrintWriter writer = response.raw().getWriter();
+        final PrintWriter writer = response.getWriter();
 
         if (proxyPushIdOnConnect) {
             writer.write(messagePrefix + "clientId: " + clientId + messageSuffix);
         }
 
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
 
-            final List<String> messages = clients.get(clientId).getMessages();
+            final ClientSseData clientData = clients.get(clientId);
+            if (clientData == null) break;
+
+            final List<String> messages = clientData.getMessages();
 
             try {
 
                 if (!messages.isEmpty()) {
-
-                    final Iterator<String> messagesIterator = messages.iterator();
-
-                    while (messagesIterator.hasNext()) {
-                        final String body = messagePrefix + messagesIterator.next();
+                    final Iterator<String> it = messages.iterator();
+                    while (it.hasNext()) {
+                        final String body = messagePrefix + it.next();
                         writer.write(body + messageSuffix);
-                        messagesIterator.remove();
-
+                        it.remove();
                         liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogOutboundDTO(traceId, path, 200, null, body, false));
                     }
-
                 } else {
-                    writer.write(messagePrefix + messageSuffix); // Empty heartbeat must follow this structure exactly!
+                    writer.write(messagePrefix + messageSuffix);
+                }
+
+                if (writer.checkError()) {
+                    throw new IOException("Writer error detected (client likely disconnected)");
                 }
 
                 writer.flush();
 
-            } catch (RuntimeIOException ex) {
-
-                if (ex.getMessage().equals("org.eclipse.jetty.io.EofException")) {
-                    logger.info("closing SSE connection");
-
-                    writer.close();
-                    clients.remove(clientId);
-
-                    liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogOutboundDTO(traceId, path,200, null, "SSE client connection closed", false));
-
-                    break;
-                }
-
-                logger.error("Error pushing SSE message", ex);
+            } catch (Exception ex) {
+                logger.info("Closing SSE connection for client {}", clientId);
+                clients.remove(clientId);
+                liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogOutboundDTO(traceId, path, 200, null, "SSE client connection closed", false));
+                break;
             }
 
             try {
                 Thread.sleep(heartBeatMillis);
             } catch (InterruptedException ex) {
-
-                if (logger.isDebugEnabled()) {
-                    logger.debug("SSE heartbeat thread sleep interrupted", ex);
-                }
-
+                Thread.currentThread().interrupt();
                 break;
             }
-
         }
-
     }
 
-    private final class ClientSseData {
-
+    private static final class ClientSseData {
         private final String path;
         private final Thread thread;
         private final Date dateJoined;
-        private final List<String> messages = new ArrayList<String>(0);
+        private final List<String> messages = new ArrayList<>();
 
         public ClientSseData(final String path, final Thread thread, final Date dateJoined) {
             this.path = path;
             this.thread = thread;
             this.dateJoined = dateJoined;
         }
-
-        public String getPath() {
-            return path;
-        }
-        public Thread getThread() {
-            return thread;
-        }
-        public Date getDateJoined() {
-            return dateJoined;
-        }
-        public List<String> getMessages() {
-            return messages;
-        }
+        public String getPath() { return path; }
+        public Thread getThread() { return thread; }
+        public Date getDateJoined() { return dateJoined; }
+        public List<String> getMessages() { return messages; }
     }
-
 }

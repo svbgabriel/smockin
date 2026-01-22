@@ -11,18 +11,16 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.AntPathMatcher;
-import spark.Request;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -103,18 +101,19 @@ public final class GeneralUtils {
     /**
      *
      * Returns the header value for the given name.
-     * Look up is case insensitive (as Java Spark handles header look ups with case sensitivity, which is wrong)
+     * Lookup is case-insensitive
      *
      * @param request
      * @param headerName
      * @returns String
      *
      */
-    public static String findHeaderIgnoreCase(final Request request, final String headerName) {
+    public static String findHeaderIgnoreCase(final HttpServletRequest request, final String headerName) {
 
-        for (String h : request.headers()) {
+        for (Iterator<String> it = request.getHeaderNames().asIterator(); it.hasNext(); ) {
+            String h = it.next();
             if (h.equalsIgnoreCase(headerName)) {
-                return request.headers(h);
+                return request.getHeader(h);
             }
         }
 
@@ -411,7 +410,7 @@ public final class GeneralUtils {
         }
     }
 
-    public static String extractRequestParamByName(final Request req, final String fieldName) {
+    public static String extractRequestParamByName(final HttpServletRequest req, final String fieldName) {
 
         return extractAllRequestParams(req)
                 .entrySet()
@@ -423,39 +422,19 @@ public final class GeneralUtils {
                 .orElse(null);
     }
 
-    public static Map<String, String> extractAllRequestParams(final Request req) {
+    public static Map<String, String> extractAllRequestParams(final HttpServletRequest req) {
 
-        if (!Strings.CI.equals(HttpMethod.POST.name(), req.requestMethod())
-                && !Strings.CI.equals(HttpMethod.PUT.name(), req.requestMethod())
-                && !Strings.CI.equals(HttpMethod.PATCH.name(), req.requestMethod())) {
+        final Map<String, String> allParams = new HashMap<>();
 
-            if (req.queryParams().isEmpty()) {
-                return new HashMap<>();
+        final Map<String, String[]> parameterMap = req.getParameterMap();
+
+        parameterMap.forEach((key, values) -> {
+            if (values != null && values.length > 0) {
+                allParams.put(key, values[0]);
+            } else {
+                allParams.put(key, null);
             }
-
-            return req.queryParams()
-                    .stream()
-                    .collect(Collectors.toMap(k -> k, req::queryParams));
-        }
-
-        final Map<String, String> allParams = req.queryMap()
-                .toMap()
-                .entrySet()
-                .stream()
-                .collect(HashMap::new,
-                        (m,v) ->
-                            m.put(v.getKey(), (v.getValue() != null && v.getValue().length != 0) ? v.getValue()[0] : null),
-                        HashMap::putAll);
-
-
-        if (req.contentType() != null
-                && (req.contentType().contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                ||  req.contentType().contains(MediaType.MULTIPART_FORM_DATA_VALUE)) && req.body() != null && req.body().contains("=")) {
-                allParams.putAll(URLEncodedUtils.parse(req.body(), Charset.defaultCharset())
-                                    .stream()
-                                    .collect(HashMap::new, (m,v) -> m.put(v.getName(), v.getValue()), HashMap::putAll));
-            }
-
+        });
 
         return allParams;
     }
@@ -546,7 +525,7 @@ public final class GeneralUtils {
             try {
                 fis.close();
             } catch (IOException ex) {
-                logger.error("Error closing inputstream", ex);
+                logger.error("Error closing Inputstream", ex);
             }
         }
     }
@@ -558,6 +537,15 @@ public final class GeneralUtils {
                 task.run();
             }
         });
+    }
+
+    public static String extractRequestBody(HttpServletRequest request) {
+        try {
+            return IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
+        } catch (IOException | NullPointerException e) {
+            logger.error("Error reading request body", e);
+            return null;
+        }
     }
 
 }

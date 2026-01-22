@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import spark.Request;
 
+import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 
 /**
@@ -35,7 +35,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
     private static final String GENERAL_ERROR = "Error processing inbound param matching. Please check your token syntax";
 
     @Override
-    public String enrichWithInboundParamMatches(final Request req,
+    public String enrichWithInboundParamMatches(final HttpServletRequest req,
                                                 final String mockPath,
                                                 final String responseBody,
                                                 final String userCtxPath,
@@ -45,7 +45,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
             return null;
         }
 
-        final String sanitizedUserCtxInboundPath = GeneralUtils.sanitizeMultiUserPath(smockinUserService.getUserMode(), req.pathInfo(), userCtxPath);
+        final String sanitizedUserCtxInboundPath = GeneralUtils.sanitizeMultiUserPath(smockinUserService.getUserMode(), req.getPathInfo(), userCtxPath);
 
         String enrichedResponseBody = responseBody;
 
@@ -80,7 +80,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         return enrichedResponseBody;
     }
 
-    String processParamMatch(final Request req,
+    String processParamMatch(final HttpServletRequest req,
                              final String mockPath,
                              final String responseBody,
                              final String sanitizedUserCtxInboundPath,
@@ -117,7 +117,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         if (ParamMatchTypeEnum.requestBody.equals(paramMatchType)) {
             return StringUtils.replaceIgnoreCase(responseBody,
                     ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.requestBody,
-                    (req.body() != null) ? req.body() : "",
+                    GeneralUtils.extractRequestBody(req),
                     1);
         }
 
@@ -183,7 +183,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
     String processKvp(final int matchStartingPosition,
                       final String sanitizedUserCtxInboundPath,
                       final String mockPath,
-                      final Request req,
+                      final HttpServletRequest req,
                       final String responseBody,
                       final long mockOwnerUserId) {
 
@@ -228,7 +228,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
                     sanitisedKvpKey = GeneralUtils.findPathVarIgnoreCase(sanitizedUserCtxInboundPath, mockPath, sanitiseArgName(nestedRequestKey));
                     break;
                 case requestBody:
-                    sanitisedKvpKey = req.body();
+                    sanitisedKvpKey = GeneralUtils.extractRequestBody(req);
                     break;
                 default:
                     sanitisedKvpKey = null;
@@ -250,7 +250,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
                 1);
     }
 
-    String processRequestHeader(final int matchStartingPosition, final Request req, final String responseBody) {
+    String processRequestHeader(final int matchStartingPosition, final HttpServletRequest req, final String responseBody) {
 
         final String headerName = extractArgName(matchStartingPosition, ParamMatchTypeEnum.requestHeader, responseBody, false);
         final String headerValue = GeneralUtils.findHeaderIgnoreCase(req, sanitiseArgName(headerName));
@@ -268,7 +268,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
     }
 
     String processRequestParameter(final int matchStartingPosition,
-                                   final Request req,
+                                   final HttpServletRequest req,
                                    final String responseBody) {
 
         final String requestParamName = extractArgName(matchStartingPosition, ParamMatchTypeEnum.requestParameter, responseBody, false);
