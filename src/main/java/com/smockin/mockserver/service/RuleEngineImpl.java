@@ -50,10 +50,8 @@ public class RuleEngineImpl implements RuleEngine {
                             rule.getRestfulMock().getPath(),
                             rule.getRestfulMock().getCreatedBy().getCtxPath());
 
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Rule Matching Type: " + condition.getRuleMatchingType());
-                        logger.debug("Inbound Value: " + inboundValue);
-                    }
+                    logger.debug("Rule Matching Type: {}", condition.getRuleMatchingType());
+                    logger.debug("Inbound Value: {}", inboundValue);
 
                     if (ruleResolver.processRuleComparison(condition, inboundValue)) {
                         groupMatchCount++;

@@ -196,10 +196,8 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
             sanitisedKvpKey = sanitisedKvpKey.concat(")");
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("RAW KVP: " + kvpKey);
-            logger.debug("Cleaned KVP : " + sanitisedKvpKey);
-        }
+        logger.debug("RAW KVP: {}", kvpKey);
+        logger.debug("Cleaned KVP : {}", sanitisedKvpKey);
 
         // Check if kvpKey is a nested ParamMatchTypeEnum itself
         final Pair<ParamMatchTypeEnum, Integer> kvpMatchResult = findInboundParamMatch(sanitisedKvpKey);
@@ -207,15 +205,11 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
 
         if (isNested) {
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Nested KVP request type: " + kvpMatchResult.getLeft());
-            }
+            logger.debug("Nested KVP request type: {}", kvpMatchResult.getLeft());
 
             final String nestedRequestKey = extractArgName(kvpMatchResult.getRight(), kvpMatchResult.getLeft(), sanitisedKvpKey, isNested);
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Nested KVP request key: " + nestedRequestKey);
-            }
+            logger.debug("Nested KVP request key: {}", nestedRequestKey);
 
             switch (kvpMatchResult.getLeft()) {
                 case requestHeader:
@@ -240,9 +234,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
                 ? userKeyValueDataService.loadByKey(sanitisedKvpKey, mockOwnerUserId)
                 : null;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("KVP value: " + ((userKeyValueDataDTO != null) ? userKeyValueDataDTO.getValue() : null));
-        }
+        logger.debug("KVP value: {}", ((userKeyValueDataDTO != null) ? userKeyValueDataDTO.getValue() : null));
 
         return StringUtils.replaceIgnoreCase(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.lookUpKvp + "(" + kvpKey + ((kvpKey.contains("(")) ? "))" : ")"),
@@ -253,13 +245,12 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
     String processRequestHeader(final int matchStartingPosition, final HttpServletRequest req, final String responseBody) {
 
         final String headerName = extractArgName(matchStartingPosition, ParamMatchTypeEnum.requestHeader, responseBody, false);
-        final String headerValue = GeneralUtils.findHeaderIgnoreCase(req, sanitiseArgName(headerName));
+        final String sanitizedHeaderName = sanitiseArgName(headerName);
+        final String headerValue = GeneralUtils.findHeaderIgnoreCase(req, sanitizedHeaderName);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("raw header: " + headerName);
-            logger.debug("cleaned header: " + sanitiseArgName(headerName));
-            logger.debug("header value: " + headerValue);
-        }
+        logger.debug("raw header: {}", headerName);
+        logger.debug("cleaned header: {}", sanitizedHeaderName);
+        logger.debug("header value: {}", headerValue);
 
         return StringUtils.replaceIgnoreCase(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.requestHeader + "(" + headerName + ")",
@@ -272,13 +263,12 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
                                    final String responseBody) {
 
         final String requestParamName = extractArgName(matchStartingPosition, ParamMatchTypeEnum.requestParameter, responseBody, false);
-        final String requestParamValue = GeneralUtils.extractRequestParamByName(req, sanitiseArgName(requestParamName));
+        final String sanitizedRequestParamName = sanitiseArgName(requestParamName);
+        final String requestParamValue = GeneralUtils.extractRequestParamByName(req, sanitizedRequestParamName);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("RAW request param: " + requestParamName);
-            logger.debug("Cleaned request param: " + sanitiseArgName(requestParamName));
-            logger.debug("Request param value: " + requestParamValue);
-        }
+        logger.debug("RAW request param: {}", requestParamName);
+        logger.debug("Cleaned request param: {}", sanitizedRequestParamName);
+        logger.debug("Request param value: {}", requestParamValue);
 
         return StringUtils.replaceIgnoreCase(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.requestParameter + "(" + requestParamName + ")",
@@ -290,13 +280,12 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
     String processPathVariable(final String sanitizedUserCtxInboundPath, final int matchStartingPosition, final String mockPath, final String responseBody) {
 
         final String pathVariableName = extractArgName(matchStartingPosition, ParamMatchTypeEnum.pathVar, responseBody, false);
-        final String pathVariableValue = GeneralUtils.findPathVarIgnoreCase(sanitizedUserCtxInboundPath, mockPath, sanitiseArgName(pathVariableName));
+        final String sanitizedPathVariableName = sanitiseArgName(pathVariableName);
+        final String pathVariableValue = GeneralUtils.findPathVarIgnoreCase(sanitizedUserCtxInboundPath, mockPath, sanitizedPathVariableName);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("RAW path var: " + pathVariableName);
-            logger.debug("Cleaned path var : " + sanitiseArgName(pathVariableName));
-            logger.debug("Path var value: " + pathVariableValue);
-        }
+        logger.debug("RAW path var: {}", pathVariableName);
+        logger.debug("Cleaned path var : {}", sanitizedPathVariableName);
+        logger.debug("Path var value: {}", pathVariableValue);
 
         return StringUtils.replaceIgnoreCase(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.pathVar + "(" + pathVariableName + ")",
@@ -309,9 +298,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
 
         final String randomNumberContent = extractArgName(matchStartingPosition, ParamMatchTypeEnum.randomNumber, responseBody, false);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Random number params: " + randomNumberContent);
-        }
+        logger.debug("Random number params: {}", randomNumberContent);
 
         if (randomNumberContent == null) {
             throw new IllegalArgumentException(ParamMatchTypeEnum.randomNumber.name() + " is missing args");
@@ -331,9 +318,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         final int endExcl = (randomNumberContentParams.length == 2) ? Integer.parseInt(randomNumberContentParams[1].trim()) : Integer.parseInt(randomNumberContentParams[0].trim());
         final int randomValue = RandomUtils.nextInt(startInc, endExcl);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Random number value: " + randomValue);
-        }
+        logger.debug("Random number value: {}", randomValue);
 
         return StringUtils.replaceIgnoreCase(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.randomNumber + "(" + randomNumberContent + ")",

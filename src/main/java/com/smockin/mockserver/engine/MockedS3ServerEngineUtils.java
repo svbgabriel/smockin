@@ -85,8 +85,7 @@ public class MockedS3ServerEngineUtils {
 
         logger.debug("persistS3RemoteCall called");
 
-        if (logger.isDebugEnabled())
-            logger.debug("Remote S3 Client > Method name: " + methodName);
+        logger.debug("Remote S3 Client > Method name: {}", methodName);
 
         if (!supportedInternalS3ClientUpdateMethods.contains(methodName)) {
             return Optional.empty();

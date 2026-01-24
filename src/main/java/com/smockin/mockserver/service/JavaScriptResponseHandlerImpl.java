@@ -75,8 +75,7 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
     }
 
     Object executeJS(final String js) throws ScriptException {
-        if (logger.isDebugEnabled())
-            logger.debug(js);
+        logger.debug(js);
         return buildEngine().eval(js);
     }
 

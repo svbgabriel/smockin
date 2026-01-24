@@ -254,8 +254,7 @@ public class RamlApiImportServiceImpl implements ApiImportService {
 
     void debug(final String msg) {
 
-        if (logger.isDebugEnabled())
-            logger.debug(msg);
+        logger.debug(msg);
 
     }
 

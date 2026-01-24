@@ -308,8 +308,7 @@ public class S3MockServiceImpl implements S3MockService {
     @Override
     public void deleteS3BucketOrFile(final String extId, final S3MockTypeEnum type, final String token) throws RecordNotFoundException, ValidationException {
 
-        if (logger.isDebugEnabled())
-            logger.debug(String.format("deleteS3BucketOrFile called (type: %s)", type));
+        logger.debug("deleteS3BucketOrFile called (type: {})", type);
 
         if (S3MockTypeEnum.BUCKET.equals(type)) {
 

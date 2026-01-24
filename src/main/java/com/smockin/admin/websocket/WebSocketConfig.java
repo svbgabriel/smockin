@@ -72,8 +72,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 final String path = request.getURI().getPath();
 
-                if (logger.isDebugEnabled())
-                    logger.debug("Inbound WS path: {}", path);
+                logger.debug("Inbound WS path: {}", path);
 
                 // Extract Token param
                 final int tokenPosition = Strings.CS.lastIndexOf(path, GeneralUtils.URL_PATH_SEPARATOR);
@@ -106,10 +105,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 final boolean showAllUserCalls = BooleanUtils.toBoolean(showAll);
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("showAllUserCalls: {}", showAllUserCalls);
-                    logger.debug("User Ctx Path: {}", smockinUser.getCtxPath());
-                }
+                logger.debug("showAllUserCalls: {}", showAllUserCalls);
+                logger.debug("User Ctx Path: {}", smockinUser.getCtxPath());
 
                 attributes.put(LiveLoggingHandler.WS_CONNECTED_USER_ADMIN_VIEW_ALL, showAllUserCalls);
                 attributes.put(LiveLoggingHandler.WS_CONNECTED_USER_ROLE, smockinUser.getRole());

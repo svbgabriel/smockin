@@ -330,22 +330,16 @@ public class MockedRestServerEngineUtils {
     }
 
     private void debugInboundRequest(final HttpServletRequest request) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("URL: " + request.getRequestURL());
-            logger.debug("Method: " + request.getMethod());
-            logger.debug("Path: " + request.getPathInfo());
-        }
+        logger.debug("URL: {}", request.getRequestURL());
+        logger.debug("Method: {}", request.getMethod());
+        logger.debug("Path: {}", request.getPathInfo());
     }
 
     private void debugLoadedMock(final RestfulMock mock) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Mock: " + mock.getExtId() + " (" + mock.getMockType() + ")");
-        }
+        logger.debug("Mock: {} ({})", mock.getExtId(), mock.getMockType());
     }
 
     private void debugOutcome(final RestfulResponseDTO outcome) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Status: " + outcome.getHttpStatusCode());
-        }
+        logger.debug("Status: {}", outcome.getHttpStatusCode());
     }
 }

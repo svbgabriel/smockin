@@ -65,9 +65,7 @@ public class HttpProxyServiceImpl implements HttpProxyService {
 
                     // The wait has timed out
 
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("The wait for '" + mock.getMethod() + " " + requestPath + "' has timed out");
-                    }
+                    logger.debug("The wait for '{} {}' has timed out", mock.getMethod(), requestPath);
 
                     return null;
                 }
@@ -111,8 +109,7 @@ public class HttpProxyServiceImpl implements HttpProxyService {
 
             synchronizedProxyResponsesMap.put(key, responses);
 
-            if (logger.isDebugEnabled())
-                logger.debug("Added dto " + path + ". Responses size is " + responses.size());
+            logger.debug("Added dto {}. Responses size is {}", path, responses.size());
 
             // Signal ALL threads waiting on a proxied response to check synchronizedProxyResponsesMap.
             condition.signalAll();

@@ -188,9 +188,9 @@ public class HttpClientServiceImpl implements HttpClientService {
             return;
 
         requestHeaders
-            .entrySet()
-            .forEach(h ->
-                request.addHeader(h.getKey(), h.getValue()));
+                .entrySet()
+                .forEach(h ->
+                        request.addHeader(h.getKey(), h.getValue()));
 
     }
 
@@ -249,12 +249,12 @@ public class HttpClientServiceImpl implements HttpClientService {
         return new HttpClientResponseDTO(
                 httpResponse.getStatusLine().getStatusCode(),
                 (httpResponse.getEntity() != null)
-                    ? httpResponse.getEntity().getContentType().getValue()
-                    : null, // i.e. 204
+                        ? httpResponse.getEntity().getContentType().getValue()
+                        : null, // i.e. 204
                 extractResponseHeaders(httpResponse),
                 (httpResponse.getEntity() != null)
-                    ? extractResponseBody(httpResponse)
-                    : null // i.e. 204
+                        ? extractResponseBody(httpResponse)
+                        : null // i.e. 204
         );
     }
 
@@ -279,15 +279,12 @@ public class HttpClientServiceImpl implements HttpClientService {
 
     private void debugDTO(final HttpClientCallDTO dto) {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug( "URL : " + dto.getUrl() );
-            logger.debug( "METHOD : " + dto.getMethod().name() );
-            logger.debug( "BODY : " + dto.getBody() );
-            logger.debug( "HEADERS : " );
+        logger.debug("URL : {}", dto.getUrl());
+        logger.debug("METHOD : {}", dto.getMethod().name());
+        logger.debug("BODY : {}", dto.getBody());
+        logger.debug("HEADERS : ");
 
-            dto.getHeaders().entrySet().forEach(h ->
-                    logger.debug( h.getKey() +  " : " + h.getValue() ));
-        }
+        dto.getHeaders().forEach((key, value) -> logger.debug("{} : {}", key, value));
 
     }
 

@@ -113,24 +113,18 @@ public class MockedS3ServerEngine {
 
         final InvocationHandler handler = (proxy, method, args) -> {
 
-            if (logger.isDebugEnabled())
-                logger.debug("PROXY METHOD: " + method.getName());
+            logger.debug("PROXY METHOD: {}", method.getName());
 
             final Optional<Boolean> isInternalCall = mockedS3ServerEngineUtils.isCallInternal(args, method.getName());
 
-            if (logger.isDebugEnabled())
-                logger.debug("PROXY > isInternalCall: " + isInternalCall);
+            logger.debug("PROXY > isInternalCall: {}", isInternalCall);
 
             args = (isInternalCall.isPresent() && isInternalCall.get())
                     ? mockedS3ServerEngineUtils.sanitiseContainerNameInArgs(args, method.getName())
                     : args;
 
-            if (logger.isDebugEnabled()) {
-                if (args != null) {
-                    for (Object arg : args) {
-                        logger.debug("PROXY ARG: " + arg);
-                    }
-                }
+            if (args != null) {
+                logger.debug("PROXY ARGS: {}", args);
             }
 
             final Object result = method.invoke(originalBlobStore, args);

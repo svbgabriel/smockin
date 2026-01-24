@@ -378,10 +378,8 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
 
         Optional<Pair<String, String>> existingBucketIdOpt = s3MockService.doesBucketAlreadyExist(s3BucketDTO.getBucket());
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Keep Existing: {}", config.isKeepExisting());
-            logger.debug("Existing Bucket: {}", existingBucketIdOpt.isPresent());
-        }
+        logger.debug("Keep Existing: {}", config.isKeepExisting());
+        logger.debug("Existing Bucket: {}", existingBucketIdOpt.isPresent());
 
         if (config.isKeepExisting()
                 && existingBucketIdOpt.isPresent()) {

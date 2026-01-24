@@ -100,19 +100,15 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         exclusions = Collections.unmodifiableMap(exclusionsMap);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Current Exclusions:");
-            exclusions.forEach((key, value) -> logger.debug("exclusion path: {}, method: {}", key, value));
-        }
+        logger.debug("Current Exclusions:");
+        exclusions.forEach((key, value) -> logger.debug("exclusion path: {}, method: {}", key, value));
 
     }
 
     private void debugRequest(final HttpServletRequest request) {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Request URI: {}", request.getRequestURI());
-            logger.debug("Request Method: {}", request.getMethod());
-        }
+        logger.debug("Request URI: {}", request.getRequestURI());
+        logger.debug("Request Method: {}", request.getMethod());
 
     }
 
