@@ -16,8 +16,8 @@ public final class HttpClientUtils {
 
     private HttpClientUtils() {}
 
-    static String EQUALS = "=";
-    static String AND = "&";
+    static final String EQUALS = "=";
+    static final String AND = "&";
 
     public static void handleRequestData(final Request request,
                                          final Map<String, String> requestHeaders,
