@@ -3,7 +3,7 @@ package com.smockin.mockserver.service;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface JavaScriptResponseHandler {
 

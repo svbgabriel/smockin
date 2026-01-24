@@ -5,8 +5,8 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.mockserver.service.dto.SseMessageDTO;
 import com.smockin.mockserver.service.dto.PushClientDTO;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 

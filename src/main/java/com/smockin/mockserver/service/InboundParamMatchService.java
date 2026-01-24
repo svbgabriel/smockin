@@ -2,7 +2,7 @@ package com.smockin.mockserver.service;
 
 import com.smockin.mockserver.exception.InboundParamMatchException;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Created by mgallina.

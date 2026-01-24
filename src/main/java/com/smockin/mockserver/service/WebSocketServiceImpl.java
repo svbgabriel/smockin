@@ -14,6 +14,7 @@ import com.smockin.mockserver.service.dto.PushClientDTO;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.mockserver.service.dto.WebSocketDTO;
 import com.smockin.utils.GeneralUtils;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +22,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,18 +74,20 @@ public class WebSocketServiceImpl implements WebSocketService {
 
         if (wsMock == null) {
             if (session.isOpen()) {
-                try {
-                    session.getRemote().sendString("No suitable mock found for " + wsPath);
-                    session.disconnect();
-                } catch (IOException e) {
-                    logger.error("Error closing web socket", e);
-                }
+                session.sendText("No suitable mock found for " + wsPath, Callback.from(
+                        session::close,
+                        t -> {
+                            logger.error("Error sending error message", t);
+                            session.close();
+                        }
+                ));
             }
             return;
         }
 
+        Duration timeout = (wsMock.getWebSocketTimeoutInMillis() > 0) ? Duration.of(wsMock.getWebSocketTimeoutInMillis(), ChronoUnit.MILLIS) : Duration.of(MAX_IDLE_TIMEOUT_MILLIS, ChronoUnit.MILLIS);
         final String path = mockedRestServerEngineUtils.buildUserPath(wsMock);
-        session.setIdleTimeout((wsMock.getWebSocketTimeoutInMillis() > 0) ? wsMock.getWebSocketTimeoutInMillis() : MAX_IDLE_TIMEOUT_MILLIS);
+        session.setIdleTimeout(timeout);
 
         final Set<SessionIdWrapper> sessions = sessionMap.computeIfAbsent(path, k -> Collections.synchronizedSet(new HashSet<>()));
         final String assignedId = GeneralUtils.generateUUID();
@@ -150,11 +155,10 @@ public class WebSocketServiceImpl implements WebSocketService {
                     .filter(s -> s.getId().equals(id))
                     .findFirst()
                     .ifPresent(s -> {
-                        try {
-                            s.getSession().getRemote().sendString(dto.getBody());
-                        } catch (IOException e) {
-                            throw new MockServerException(e);
-                        }
+                        s.getSession().sendText(dto.getBody(), Callback.from(
+                                () -> {},
+                                t -> logger.error("Error sending message to session " + id, t)
+                        ));
                     });
         }
     }

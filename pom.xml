@@ -12,16 +12,14 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.5.10</version>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
-        <spring-boot-test.version>2.7.18</spring-boot-test.version>
-        <h2.version>2.3.232</h2.version>
-        <hikaricp.version>2.6.1</hikaricp.version>
+        <spring-boot-test.version>3.5.10</spring-boot-test.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
         <httpclient.version>4.5.13</httpclient.version>
         <commons-io.version>2.17.0</commons-io.version>
@@ -33,13 +31,11 @@
         <openapi-generator.version>5.1.0</openapi-generator.version>
         <jasypt.version>1.9.2</jasypt.version>
         <java-jwt.version>3.4.0</java-jwt.version>
-        <spring-boot-maven-plugin.version>2.7.18</spring-boot-maven-plugin.version>
-        <lombok.version>1.18.42</lombok.version>
+        <spring-boot-maven-plugin.version>3.5.10</spring-boot-maven-plugin.version>
         <s3mock.version>2.2.2</s3mock.version>
         <aws-java-sdk-s3.version>1.12.261</aws-java-sdk-s3.version>
         <s3proxy.version>1.7.1</s3proxy.version>
         <greenmail.version>1.6.15</greenmail.version>
-        <jackson-databind.version>2.14.2</jackson-databind.version>
         <java-ngrok.version>2.1.0</java-ngrok.version>
         <nashorn.version>15.7</nashorn.version>
     </properties>
@@ -69,12 +65,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
 
         <!-- Jackson (JSON) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson-databind.version}</version>
         </dependency>
 
         <!-- DB -->
@@ -83,9 +82,13 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>${h2.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -95,7 +98,6 @@
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>${hikaricp.version}</version>
         </dependency>
 
         <!-- Apache Commons -->
@@ -129,7 +131,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
         </dependency>
 
         <!-- RAML -->
@@ -209,21 +210,18 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>${mockito-core.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring-boot-test.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
-            <version>5.8.2</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
