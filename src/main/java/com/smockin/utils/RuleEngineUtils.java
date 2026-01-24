@@ -18,18 +18,13 @@ public final class RuleEngineUtils {
         final int argPosition = NumberUtils.toInt(fieldName, -1);
         final String inboundPath = req.getPathInfo();
 
-        // Extract all path variables (including wildcards indexed as *0, *1, etc.)
-        final Map<String, String> pathVars = GeneralUtils.findAllPathVars(inboundPath, mockPath);
+        final String[] splat = GeneralUtils.splat(req, mockPath);
 
-        // The Smockin indexes wildcards in findAllPathVars as "*0", "*1", etc.
-        // The original Spark splat() logic is based on 1, so we subtract 1 to align to index 0.
-        final String wildcardKey = "*" + (argPosition - 1);
-
-        if (argPosition == -1 || !pathVars.containsKey(wildcardKey)) {
+        if (argPosition == -1 || splat.length < argPosition) {
             throw new IllegalArgumentException("Unable to perform wildcard matching on the mocked endpoint '" + inboundPath + "'. Path variable arg count does not align.");
         }
 
-        return pathVars.get(wildcardKey);
+        return splat[argPosition - 1];
     }
 
     public static String matchOnJsonField(final String fieldName, final String reqBody) {

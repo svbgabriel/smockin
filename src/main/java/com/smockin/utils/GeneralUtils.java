@@ -27,6 +27,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -546,6 +548,36 @@ public final class GeneralUtils {
             logger.error("Error reading request body", e);
             return null;
         }
+    }
+
+
+    public static String[] splat(HttpServletRequest request, String routeMapping) {
+
+        String pathInfo = request.getRequestURI();
+
+        // Remove the application context if needed
+        String contextPath = request.getContextPath();
+        if (contextPath != null && pathInfo.startsWith(contextPath)) {
+            pathInfo = pathInfo.substring(contextPath.length());
+        }
+
+        // Transform the route pattern into a Regex
+        // Escape special character and transform '*' into capture groups (.*?)
+        String regex = "^" + Pattern.quote(routeMapping)
+                .replace("*", "\\E(.*)\\Q") + "$";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(pathInfo);
+
+        if (matcher.find()) {
+            List<String> splats = new ArrayList<>();
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                splats.add(matcher.group(i));
+            }
+            return splats.toArray(new String[0]);
+        }
+
+        return new String[0];
     }
 
 }
