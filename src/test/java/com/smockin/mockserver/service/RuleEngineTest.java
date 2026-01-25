@@ -1,20 +1,17 @@
 package com.smockin.mockserver.service;
 
-import com.smockin.admin.enums.UserModeEnum;
 import com.smockin.admin.persistence.entity.*;
 import com.smockin.admin.persistence.enums.RuleComparatorEnum;
 import com.smockin.admin.persistence.enums.RuleDataTypeEnum;
 import com.smockin.admin.persistence.enums.RuleMatchingTypeEnum;
 import com.smockin.admin.service.SmockinUserService;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -26,8 +23,8 @@ import java.util.List;
 /**
  * Created by mgallina.
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RuleEngineTest {
+@ExtendWith(MockitoExtension.class)
+class RuleEngineTest {
 
     @Mock
     private RuleResolver ruleResolver;
@@ -44,37 +41,31 @@ public class RuleEngineTest {
     @InjectMocks
     private RuleEngineImpl ruleEngine = new RuleEngineImpl();
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     private String userCtxPath;
 
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         userCtxPath = "";
-        Mockito.when(smockinUserService.getUserMode()).thenReturn(UserModeEnum.INACTIVE);
         req = new MockHttpServletRequest();
 
     }
 
     @Test
-    public void process_nullRules_Test() {
-
-        // Assertions
-        thrown.expect(NullPointerException.class);
+    void process_nullRules_Test() {
 
         // Setup
         rules = null;
 
-        // Test
-        ruleEngine.process(req, rules);
+        // Test & Assertions
+        Assertions.assertThrows(NullPointerException.class,
+                () -> ruleEngine.process(req, rules));
 
     }
 
     @Test
-    public void process_emptyRules_Test() {
+    void process_emptyRules_Test() {
 
         // Setup
         rules = new ArrayList<>();
@@ -83,12 +74,12 @@ public class RuleEngineTest {
         final RestfulResponseDTO result = ruleEngine.process(req, rules);
 
         // Assertions
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
 
     }
 
     @Test
-    public void process_Test() {
+    void process_Test() {
 
         // Setup
         rules = new ArrayList<>();
@@ -114,25 +105,23 @@ public class RuleEngineTest {
         final RestfulResponseDTO result = ruleEngine.process(req, rules);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(rule.getHttpStatusCode(), result.getHttpStatusCode());
-        Assert.assertEquals(rule.getResponseContentType(), result.getResponseContentType());
-        Assert.assertEquals(rule.getResponseBody(), result.getResponseBody());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(rule.getHttpStatusCode(), result.getHttpStatusCode());
+        Assertions.assertEquals(rule.getResponseContentType(), result.getResponseContentType());
+        Assertions.assertEquals(rule.getResponseBody(), result.getResponseBody());
     }
 
     @Test
-    public void extractInboundValue_nullRuleMatchingType_Test() {
+    void extractInboundValue_nullRuleMatchingType_Test() {
 
-        // Assertions
-        thrown.expect(NullPointerException.class);
-
-        // Test
-        ruleEngine.extractInboundValue(null, "", req, "/person/{name}", userCtxPath);
+        // Test & Assertions
+        Assertions.assertThrows(NullPointerException.class,
+                () -> ruleEngine.extractInboundValue(null, "", req, "/person/{name}", userCtxPath));
 
     }
 
     @Test
-    public void extractInboundValue_reqHeader_Test() {
+    void extractInboundValue_reqHeader_Test() {
 
         // Setup
         final String fieldName = "name";
@@ -143,13 +132,13 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_HEADER, fieldName, req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(reqResponse, result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(reqResponse, result);
 
     }
 
     @Test
-    public void extractInboundValue_reqParam_Test() {
+    void extractInboundValue_reqParam_Test() {
 
         // Setup
         final String fieldName = "name";
@@ -162,13 +151,13 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_PARAM, "name", req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(reqResponse, result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(reqResponse, result);
 
     }
 
     @Test
-    public void extractInboundValue_reqBody_Test() {
+    void extractInboundValue_reqBody_Test() {
 
         // Setup
         final String reqResponse = "Hey Joe";
@@ -178,13 +167,13 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_BODY, "", req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(reqResponse, result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(reqResponse, result);
 
     }
 
     @Test
-    public void extractInboundValue_pathVariable_Test() {
+    void extractInboundValue_pathVariable_Test() {
 
         // Setup
         final String fieldName = "name";
@@ -194,13 +183,13 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.PATH_VARIABLE, fieldName, req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals("Joe", result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("Joe", result);
 
     }
 
     @Test
-    public void extractInboundValue_jsonReqBody_Test() {
+    void extractInboundValue_jsonReqBody_Test() {
 
         // Setup
         final String fieldName = "username";
@@ -212,13 +201,13 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_BODY_JSON_ANY, fieldName, req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(fieldValue, result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(fieldValue, result);
 
     }
 
     @Test
-    public void extractInboundValue_jsonReqBody_NotFound_Test() {
+    void extractInboundValue_jsonReqBody_NotFound_Test() {
 
         // Setup
         final String fieldName = "username";
@@ -229,12 +218,12 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_BODY_JSON_ANY, fieldName, req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
 
     }
 
     @Test
-    public void extractInboundValue_jsonReqBody_invalidJson_Test() {
+    void extractInboundValue_jsonReqBody_invalidJson_Test() {
 
         // Setup
         final String fieldName = "username";
@@ -246,12 +235,12 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_BODY_JSON_ANY, fieldName, req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
 
     }
 
     @Test
-    public void extractInboundValue_jsonReqBody_null_Test() {
+    void extractInboundValue_jsonReqBody_null_Test() {
 
         // Setup
         final String fieldName = "username";
@@ -260,7 +249,7 @@ public class RuleEngineTest {
         final String result = ruleEngine.extractInboundValue(RuleMatchingTypeEnum.REQUEST_BODY_JSON_ANY, fieldName, req, "/person/{name}", userCtxPath);
 
         // Assertions
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
 
     }
 

@@ -15,19 +15,19 @@ import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.mockserver.dto.MockServerState;
 import com.smockin.mockserver.dto.MockedServerConfigDTO;
 import com.smockin.utils.GeneralUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.UUID;
 
-@RunWith(MockitoJUnitRunner.class)
-public class TunnelServiceTest {
+@ExtendWith(MockitoExtension.class)
+class TunnelServiceTest {
 
     @Mock
     private SmockinUserService smockinUserService;
@@ -55,8 +55,8 @@ public class TunnelServiceTest {
 
     private TunnelServiceImpl tunnelService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         tunnelService = Mockito.spy(new TunnelServiceImpl(
                 smockinUserService,
@@ -65,7 +65,7 @@ public class TunnelServiceTest {
     }
 
     @Test
-    public void load_NotInstanced_Pass() {
+    void load_NotInstanced_Pass() {
 
         // Setup
         Mockito.doReturn(null)
@@ -76,13 +76,13 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.load(UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertFalse(responseDTO.isEnabled());
-        Assert.assertNull(responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertFalse(responseDTO.isEnabled());
+        Assertions.assertNull(responseDTO.getUri());
     }
 
     @Test
-    public void load_Instanced_Pass() {
+    void load_Instanced_Pass() {
 
         // Setup
         final String uri = "https://123.smockin-test.com";
@@ -103,13 +103,13 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.load(UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertTrue(responseDTO.isEnabled());
-        Assert.assertEquals(uri, responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertTrue(responseDTO.isEnabled());
+        Assertions.assertEquals(uri, responseDTO.getUri());
     }
 
     @Test
-    public void load_InstancedNotNotRunning_Pass() {
+    void load_InstancedNotNotRunning_Pass() {
 
         // Setup
         Mockito.when(ngrokProcess.isRunning())
@@ -124,13 +124,13 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.load(UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertFalse(responseDTO.isEnabled());
-        Assert.assertNull(responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertFalse(responseDTO.isEnabled());
+        Assertions.assertNull(responseDTO.getUri());
     }
 
     @Test
-    public void load_MissingTunnel_Fail() {
+    void load_MissingTunnel_Fail() {
 
         // Setup
         Mockito.when(ngrokProcess.isRunning())
@@ -144,14 +144,14 @@ public class TunnelServiceTest {
                 .getNgrokClientInstance();
 
         // Test && Assertion
-        final TunnelException tunnelException = Assert.assertThrows(
+        final TunnelException tunnelException = Assertions.assertThrows(
                 TunnelException.class,
                 () -> tunnelService.load(UUID.randomUUID().toString()));
-        Assert.assertEquals("ngrok Tunnel is missing", tunnelException.getMessage());
+        Assertions.assertEquals("ngrok Tunnel is missing", tunnelException.getMessage());
     }
 
     @Test
-    public void load_MultipleTunnels_Fail() {
+    void load_MultipleTunnels_Fail() {
 
         // Setup
         Mockito.when(ngrokProcess.isRunning())
@@ -165,14 +165,14 @@ public class TunnelServiceTest {
                 .getNgrokClientInstance();
 
         // Test && Assertion
-        final TunnelException tunnelException = Assert.assertThrows(
+        final TunnelException tunnelException = Assertions.assertThrows(
                 TunnelException.class,
                 () -> tunnelService.load(UUID.randomUUID().toString()));
-        Assert.assertEquals("Multiple ngrok tunnels were found", tunnelException.getMessage());
+        Assertions.assertEquals("Multiple ngrok tunnels were found", tunnelException.getMessage());
     }
 
     @Test
-    public void update_newInstance_Pass() throws AuthException, ValidationException {
+    void update_newInstance_Pass() throws AuthException, ValidationException {
 
         // Setup
         final String uri = "https://123.smockin-test.com";
@@ -211,9 +211,9 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.update(new TunnelRequestDTO(true), UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertTrue(responseDTO.isEnabled());
-        Assert.assertEquals(uri, responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertTrue(responseDTO.isEnabled());
+        Assertions.assertEquals(uri, responseDTO.getUri());
 
         Mockito.verify(tunnelService, Mockito.times(1))
                 .instanceNgrokClient();
@@ -222,7 +222,7 @@ public class TunnelServiceTest {
     }
 
     @Test
-    public void update_killTunnel_Pass() throws AuthException, ValidationException {
+    void update_killTunnel_Pass() throws AuthException, ValidationException {
 
         // Setup
         final String uri = "https://123.smockin-test.com";
@@ -247,16 +247,16 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.update(new TunnelRequestDTO(false), UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertFalse(responseDTO.isEnabled());
-        Assert.assertNull(responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertFalse(responseDTO.isEnabled());
+        Assertions.assertNull(responseDTO.getUri());
 
         Mockito.verify(ngrokClient, Mockito.times(1))
                 .kill();
     }
 
     @Test
-    public void update_alreadyRunning_Pass() throws AuthException, ValidationException {
+    void update_alreadyRunning_Pass() throws AuthException, ValidationException {
 
         // Setup
         final String uri = "https://123.smockin-test.com";
@@ -281,13 +281,13 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.update(new TunnelRequestDTO(true), UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertTrue(responseDTO.isEnabled());
-        Assert.assertEquals(uri, responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertTrue(responseDTO.isEnabled());
+        Assertions.assertEquals(uri, responseDTO.getUri());
     }
 
     @Test
-    public void update_newInstanceButNotEnabled_Pass() throws AuthException, ValidationException {
+    void update_newInstanceButNotEnabled_Pass() throws AuthException, ValidationException {
 
         // Setup
         Mockito.when(userTokenServiceUtils.loadCurrentActiveUser(Mockito.anyString()))
@@ -309,9 +309,9 @@ public class TunnelServiceTest {
         final TunnelResponseDTO responseDTO = tunnelService.update(new TunnelRequestDTO(false), UUID.randomUUID().toString());
 
         // Assertions
-        Assert.assertNotNull(responseDTO);
-        Assert.assertFalse(responseDTO.isEnabled());
-        Assert.assertNull(responseDTO.getUri());
+        Assertions.assertNotNull(responseDTO);
+        Assertions.assertFalse(responseDTO.isEnabled());
+        Assertions.assertNull(responseDTO.getUri());
 
         Mockito.verify(tunnelService, Mockito.times(1))
                 .instanceNgrokClient();

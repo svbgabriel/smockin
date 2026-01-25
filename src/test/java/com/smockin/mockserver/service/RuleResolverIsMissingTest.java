@@ -4,27 +4,27 @@ import com.smockin.admin.persistence.entity.RestfulMockDefinitionRuleGroupCondit
 import com.smockin.admin.persistence.enums.RuleComparatorEnum;
 import com.smockin.admin.persistence.enums.RuleDataTypeEnum;
 import com.smockin.admin.persistence.enums.RuleMatchingTypeEnum;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by mgallina.
  */
-public class RuleResolverIsMissingTest {
+class RuleResolverIsMissingTest {
 
     private RuleResolver ruleResolver;
 
     private final String ruleFieldName = "FirstName";
 
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         ruleResolver = new RuleResolverImpl();
     }
 
     @Test
-    public void processRuleComparison_Text_IsMissing_Pass() {
+    void processRuleComparison_Text_IsMissing_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -34,11 +34,11 @@ public class RuleResolverIsMissingTest {
         final boolean result = ruleResolver.processRuleComparison(condition, null);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Text_IsMissing_Fail() {
+    void processRuleComparison_Text_IsMissing_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -48,11 +48,11 @@ public class RuleResolverIsMissingTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "Joe");
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitiveText_IsMissing_Pass() {
+    void processRuleComparison_CaseSensitiveText_IsMissing_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -62,11 +62,11 @@ public class RuleResolverIsMissingTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "joe");
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Text_IsMissing_DifferentInputValue_Pass() {
+    void processRuleComparison_Text_IsMissing_DifferentInputValue_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -76,11 +76,11 @@ public class RuleResolverIsMissingTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "jane");
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Text_IsMissing_NullInput_Pass() {
+    void processRuleComparison_Text_IsMissing_NullInput_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -90,11 +90,11 @@ public class RuleResolverIsMissingTest {
         final boolean result = ruleResolver.processRuleComparison(condition, null);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Text_IsMissing_BlankInput_Pass() {
+    void processRuleComparison_Text_IsMissing_BlankInput_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -104,7 +104,7 @@ public class RuleResolverIsMissingTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "");
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
 }

@@ -4,14 +4,14 @@ import com.smockin.admin.persistence.entity.RestfulMockDefinitionRuleGroupCondit
 import com.smockin.admin.persistence.enums.RuleComparatorEnum;
 import com.smockin.admin.persistence.enums.RuleDataTypeEnum;
 import com.smockin.admin.persistence.enums.RuleMatchingTypeEnum;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by mgallina.
  */
-public class RuleResolverContainsTest {
+class RuleResolverContainsTest {
 
     private RuleResolver ruleResolver;
 
@@ -19,13 +19,13 @@ public class RuleResolverContainsTest {
     private final String inboundTextValue = "aBcDeFg" + ruleTextValue + "qRsTuVwXyZ";
 
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         ruleResolver = new RuleResolverImpl();
     }
 
     @Test
-    public void processRuleComparison_NullValue_Text_Contains_Fail() {
+    void processRuleComparison_NullValue_Text_Contains_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -35,11 +35,11 @@ public class RuleResolverContainsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, null);
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_Text_Contains_Pass() {
+    void processRuleComparison_Text_Contains_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -49,11 +49,11 @@ public class RuleResolverContainsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitiveText_Contains_Pass() {
+    void processRuleComparison_CaseSensitiveText_Contains_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -63,11 +63,11 @@ public class RuleResolverContainsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitiveText_Contains_Fail() {
+    void processRuleComparison_CaseSensitiveText_Contains_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -77,11 +77,11 @@ public class RuleResolverContainsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue);
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitiveFieldIsNullText_Contains_Fail() {
+    void processRuleComparison_CaseSensitiveFieldIsNullText_Contains_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -91,7 +91,7 @@ public class RuleResolverContainsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
 }

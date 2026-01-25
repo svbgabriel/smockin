@@ -9,23 +9,21 @@ import com.smockin.mockserver.service.MockOrderingCounterService;
 import com.smockin.mockserver.service.HttpProxyService;
 import com.smockin.mockserver.service.RuleEngine;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 /**
  * Created by mgallina.
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MockedRestServerEngineUtilsTest {
+@ExtendWith(MockitoExtension.class)
+class MockedRestServerEngineUtilsTest {
 
     @Mock
     private RestfulMockDAO restfulMockDAO;
@@ -46,14 +44,11 @@ public class MockedRestServerEngineUtilsTest {
     @InjectMocks
     private MockedRestServerEngineUtils engineUtils = new MockedRestServerEngineUtils();
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     private RestfulMock restfulMock;
     private RestfulMockDefinitionOrder order1, order2, order3;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         restfulMock = new RestfulMock();
         restfulMock.getDefinitions().add(order1 = new RestfulMockDefinitionOrder(restfulMock, 200, "text/html", "HelloWorld 1", 1, 0, false, 0, 0));
@@ -62,55 +57,49 @@ public class MockedRestServerEngineUtilsTest {
     }
 
     @Test
-    public void getDefault_Null_Test() {
+    void getDefault_Null_Test() {
 
-        // Assertions
-        thrown.expect(NullPointerException.class);
-
-        // Test
-        engineUtils.getDefault(null);
+        // Test & Assertions
+        Assertions.assertThrows(NullPointerException.class, () -> engineUtils.getDefault(null));
     }
 
     @Test
-    public void getDefault_NoDefinitionsDefined_Test() {
-
-        // Assertions
-        thrown.expect(IndexOutOfBoundsException.class);
+    void getDefault_NoDefinitionsDefined_Test() {
 
         // Setup
         restfulMock.getDefinitions().clear();
 
-        // Test
-        engineUtils.getDefault(restfulMock);
+        // Test & Assertions
+        Assertions.assertThrows(IndexOutOfBoundsException.class, () -> engineUtils.getDefault(restfulMock));
     }
 
     @Test
-    public void getDefaultTest() {
+    void getDefaultTest() {
 
         // Test (run 1)
         // Should always be response with 'order No 1'
         final RestfulResponseDTO result1 = engineUtils.getDefault(restfulMock);
 
         // Assertions
-        Assert.assertNotNull(result1);
-        Assert.assertEquals(order1.getHttpStatusCode(), result1.getHttpStatusCode());
-        Assert.assertEquals(order1.getResponseContentType(), result1.getResponseContentType());
-        Assert.assertEquals(order1.getResponseBody(), result1.getResponseBody());
+        Assertions.assertNotNull(result1);
+        Assertions.assertEquals(order1.getHttpStatusCode(), result1.getHttpStatusCode());
+        Assertions.assertEquals(order1.getResponseContentType(), result1.getResponseContentType());
+        Assertions.assertEquals(order1.getResponseBody(), result1.getResponseBody());
 
         // Test (run 2)
         // ... and just to double check...
         final RestfulResponseDTO result2 = engineUtils.getDefault(restfulMock);
 
         // Assertions
-        Assert.assertNotNull(result2);
-        Assert.assertEquals(order1.getHttpStatusCode(), result2.getHttpStatusCode());
-        Assert.assertEquals(order1.getResponseContentType(), result2.getResponseContentType());
-        Assert.assertEquals(order1.getResponseBody(), result2.getResponseBody());
+        Assertions.assertNotNull(result2);
+        Assertions.assertEquals(order1.getHttpStatusCode(), result2.getHttpStatusCode());
+        Assertions.assertEquals(order1.getResponseContentType(), result2.getResponseContentType());
+        Assertions.assertEquals(order1.getResponseBody(), result2.getResponseBody());
 
     }
 
     @Test
-    public void getDefault_Proxy_Test() {
+    void getDefault_Proxy_Test() {
 
         // Setup
         restfulMock.setMockType(RestMockTypeEnum.PROXY_HTTP);
@@ -119,11 +108,11 @@ public class MockedRestServerEngineUtilsTest {
         final RestfulResponseDTO result = engineUtils.getDefault(restfulMock);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(HttpStatus.NOT_FOUND.value(), result.getHttpStatusCode());
-        Assert.assertNull(result.getResponseContentType());
-        Assert.assertNull(result.getResponseBody());
-        Assert.assertTrue(result.getHeaders().isEmpty());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getHttpStatusCode());
+        Assertions.assertNull(result.getResponseContentType());
+        Assertions.assertNull(result.getResponseBody());
+        Assertions.assertTrue(result.getHeaders().isEmpty());
     }
 
 }

@@ -8,17 +8,17 @@ import com.smockin.admin.dto.response.LiveLoggingS3DTO;
 import com.smockin.admin.dto.response.LiveLoggingTrafficDTO;
 import com.smockin.admin.enums.LiveLoggingDirectionEnum;
 import com.smockin.admin.enums.LiveLoggingMessageTypeEnum;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LiveLoggingUtilsTest {
+class LiveLoggingUtilsTest {
 
     @Test
-    public void buildLiveLogInterceptedResponseDTO_defaultsBody_Test() {
+    void buildLiveLogInterceptedResponseDTO_defaultsBody_Test() {
 
         // Setup
         final Map<String, String> headers = new HashMap<>();
@@ -29,25 +29,25 @@ public class LiveLoggingUtilsTest {
                 "req-1", "http://example.com", 200, headers, " ", true);
 
         // Assertions
-        Assert.assertEquals(LiveLoggingMessageTypeEnum.BLOCKED_RESPONSE, result.getType());
-        Assert.assertTrue(result.getPayload() instanceof LiveLoggingTrafficDTO);
+        Assertions.assertEquals(LiveLoggingMessageTypeEnum.BLOCKED_RESPONSE, result.getType());
+        Assertions.assertTrue(result.getPayload() instanceof LiveLoggingTrafficDTO);
 
         final LiveLoggingTrafficDTO payload = (LiveLoggingTrafficDTO) result.getPayload();
-        Assert.assertEquals("req-1", payload.getId());
-        Assert.assertEquals(LiveLoggingDirectionEnum.RESPONSE, payload.getDirection());
-        Assert.assertTrue(payload.isProxied());
-        Assert.assertNotNull(payload.getDate());
+        Assertions.assertEquals("req-1", payload.getId());
+        Assertions.assertEquals(LiveLoggingDirectionEnum.RESPONSE, payload.getDirection());
+        Assertions.assertTrue(payload.isProxied());
+        Assertions.assertNotNull(payload.getDate());
 
         final LiveLoggingContentDTO content = payload.getContent();
-        Assert.assertTrue(content instanceof LiveLoggingOutboundContentDTO);
-        Assert.assertEquals("http://example.com", content.getUrl());
-        Assert.assertEquals(headers, content.getHeaders());
-        Assert.assertEquals("n/a", content.getBody());
-        Assert.assertEquals(Integer.valueOf(200), ((LiveLoggingOutboundContentDTO) content).getStatus());
+        Assertions.assertTrue(content instanceof LiveLoggingOutboundContentDTO);
+        Assertions.assertEquals("http://example.com", content.getUrl());
+        Assertions.assertEquals(headers, content.getHeaders());
+        Assertions.assertEquals("n/a", content.getBody());
+        Assertions.assertEquals(Integer.valueOf(200), ((LiveLoggingOutboundContentDTO) content).getStatus());
     }
 
     @Test
-    public void buildLiveLogInboundDTO_emptyParams_Defaults_Test() {
+    void buildLiveLogInboundDTO_emptyParams_Defaults_Test() {
 
         // Setup
         final Map<String, String> headers = Collections.singletonMap("Accept", "application/json");
@@ -57,25 +57,25 @@ public class LiveLoggingUtilsTest {
                 "req-2", "POST", "/pets", headers, "", false, Collections.emptyMap());
 
         // Assertions
-        Assert.assertEquals(LiveLoggingMessageTypeEnum.TRAFFIC, result.getType());
-        Assert.assertTrue(result.getPayload() instanceof LiveLoggingTrafficDTO);
+        Assertions.assertEquals(LiveLoggingMessageTypeEnum.TRAFFIC, result.getType());
+        Assertions.assertTrue(result.getPayload() instanceof LiveLoggingTrafficDTO);
 
         final LiveLoggingTrafficDTO payload = (LiveLoggingTrafficDTO) result.getPayload();
-        Assert.assertEquals("req-2", payload.getId());
-        Assert.assertEquals(LiveLoggingDirectionEnum.REQUEST, payload.getDirection());
-        Assert.assertFalse(payload.isProxied());
+        Assertions.assertEquals("req-2", payload.getId());
+        Assertions.assertEquals(LiveLoggingDirectionEnum.REQUEST, payload.getDirection());
+        Assertions.assertFalse(payload.isProxied());
 
         final LiveLoggingContentDTO content = payload.getContent();
-        Assert.assertTrue(content instanceof LiveLoggingInboundContentDTO);
-        Assert.assertEquals("/pets", content.getUrl());
-        Assert.assertEquals(headers, content.getHeaders());
-        Assert.assertEquals("n/a", content.getBody());
-        Assert.assertEquals("POST", ((LiveLoggingInboundContentDTO) content).getMethod());
-        Assert.assertNull(((LiveLoggingInboundContentDTO) content).getRequestParams());
+        Assertions.assertTrue(content instanceof LiveLoggingInboundContentDTO);
+        Assertions.assertEquals("/pets", content.getUrl());
+        Assertions.assertEquals(headers, content.getHeaders());
+        Assertions.assertEquals("n/a", content.getBody());
+        Assertions.assertEquals("POST", ((LiveLoggingInboundContentDTO) content).getMethod());
+        Assertions.assertNull(((LiveLoggingInboundContentDTO) content).getRequestParams());
     }
 
     @Test
-    public void buildLiveLogOutboundDTO_bodyAndStatus_Test() {
+    void buildLiveLogOutboundDTO_bodyAndStatus_Test() {
 
         // Setup
         final Map<String, String> headers = Collections.singletonMap("Content-Type", "application/json");
@@ -85,31 +85,31 @@ public class LiveLoggingUtilsTest {
                 "req-3", "/pets/1", 201, headers, "{\"id\":1}", false);
 
         // Assertions
-        Assert.assertEquals(LiveLoggingMessageTypeEnum.TRAFFIC, result.getType());
-        Assert.assertTrue(result.getPayload() instanceof LiveLoggingTrafficDTO);
+        Assertions.assertEquals(LiveLoggingMessageTypeEnum.TRAFFIC, result.getType());
+        Assertions.assertTrue(result.getPayload() instanceof LiveLoggingTrafficDTO);
 
         final LiveLoggingContentDTO content = ((LiveLoggingTrafficDTO) result.getPayload()).getContent();
-        Assert.assertTrue(content instanceof LiveLoggingOutboundContentDTO);
-        Assert.assertEquals("/pets/1", content.getUrl());
-        Assert.assertEquals(headers, content.getHeaders());
-        Assert.assertEquals("{\"id\":1}", content.getBody());
-        Assert.assertEquals(Integer.valueOf(201), ((LiveLoggingOutboundContentDTO) content).getStatus());
+        Assertions.assertTrue(content instanceof LiveLoggingOutboundContentDTO);
+        Assertions.assertEquals("/pets/1", content.getUrl());
+        Assertions.assertEquals(headers, content.getHeaders());
+        Assertions.assertEquals("{\"id\":1}", content.getBody());
+        Assertions.assertEquals(Integer.valueOf(201), ((LiveLoggingOutboundContentDTO) content).getStatus());
     }
 
     @Test
-    public void buildS3LiveLogging_buildsPayload_Test() {
+    void buildS3LiveLogging_buildsPayload_Test() {
 
         // Test
         final LiveLoggingDTO result = LiveLoggingUtils.buildS3LiveLogging("bucket created", "owner-1");
 
         // Assertions
-        Assert.assertEquals(LiveLoggingMessageTypeEnum.S3, result.getType());
-        Assert.assertTrue(result.getPayload() instanceof LiveLoggingS3DTO);
+        Assertions.assertEquals(LiveLoggingMessageTypeEnum.S3, result.getType());
+        Assertions.assertTrue(result.getPayload() instanceof LiveLoggingS3DTO);
 
         final LiveLoggingS3DTO payload = (LiveLoggingS3DTO) result.getPayload();
-        Assert.assertNull(payload.getId());
-        Assert.assertNotNull(payload.getDate());
-        Assert.assertEquals("bucket created", payload.getInformation());
-        Assert.assertEquals("owner-1", payload.getBucketOwnerId());
+        Assertions.assertNull(payload.getId());
+        Assertions.assertNotNull(payload.getDate());
+        Assertions.assertEquals("bucket created", payload.getInformation());
+        Assertions.assertEquals("owner-1", payload.getBucketOwnerId());
     }
 }

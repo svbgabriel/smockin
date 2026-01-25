@@ -14,18 +14,16 @@ import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -35,6 +33,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -42,11 +42,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MockDefinitionImportExportServiceTest {
+@ExtendWith(MockitoExtension.class)
+class MockDefinitionImportExportServiceTest {
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    private Path tempFolder;
 
     @Mock
     private RestfulMockDAO restfulMockDAO;
@@ -68,8 +68,8 @@ public class MockDefinitionImportExportServiceTest {
     private RestfulMockResponseDTO seqBasedDTO;
 
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         final SmockinUser smockinUser = new SmockinUser();
         smockinUser.setSessionToken(GeneralUtils.generateUUID());
@@ -85,7 +85,7 @@ public class MockDefinitionImportExportServiceTest {
         // Seq based HTTP mock
         seqBasedDTO = new RestfulMockResponseDTO(GeneralUtils.generateUUID(), "/hello", null, RestMethodEnum.GET, RecordStatusEnum.ACTIVE,
                 RestMockTypeEnum.SEQ, false, GeneralUtils.getCurrentDate(), "bob", 0, 0, 0,
-                false, false, false, false, 0,0, null, null, null, null, null);
+                false, false, false, false, 0, 0, null, null, null, null, null);
 
         RestfulMockDefinitionDTO seqDTO = new RestfulMockDefinitionDTO(GeneralUtils.generateUUID(), 1, 400, MediaType.TEXT_PLAIN_VALUE, "Not good!", 0, false, 1, 0);
         seqDTO.getResponseHeaders().put("X-Smockin-ID", "67890");
@@ -99,7 +99,7 @@ public class MockDefinitionImportExportServiceTest {
         // Rule based HTTP mock
         final RestfulMockResponseDTO ruleBasedDTO = new RestfulMockResponseDTO(GeneralUtils.generateUUID(), "/hello", null, RestMethodEnum.GET, RecordStatusEnum.ACTIVE,
                 RestMockTypeEnum.RULE, false, GeneralUtils.getCurrentDate(), "bob", 0, 0, 0,
-                false, false, false, false, 0,0, null, null, null, null, null);
+                false, false, false, false, 0, 0, null, null, null, null, null);
 
         final RuleDTO rule = new RuleDTO(GeneralUtils.generateUUID(), 1, 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"hello\" }", 0, false);
         rule.getResponseHeaders().put("X-Smockin-ID", "12345");
@@ -118,7 +118,7 @@ public class MockDefinitionImportExportServiceTest {
         // Websocket Rule mock
         final RestfulMockResponseDTO wsRuleBasedDTO = new RestfulMockResponseDTO(GeneralUtils.generateUUID(), "/helloWs", null, RestMethodEnum.GET, RecordStatusEnum.ACTIVE,
                 RestMockTypeEnum.RULE_WS, false, GeneralUtils.getCurrentDate(), "bob", 0, 0, 0,
-                false, false, false, false, 0,0, null, null, null, null, null);
+                false, false, false, false, 0, 0, null, null, null, null, null);
 
         final RuleDTO wsRule = new RuleDTO(GeneralUtils.generateUUID(), 1, 200, MediaType.APPLICATION_JSON_VALUE, "{ \"msg\" : \"hello\" }", 0, false);
         rule.getResponseHeaders().put("X-Smockin-ID", "12345");
@@ -131,13 +131,13 @@ public class MockDefinitionImportExportServiceTest {
         wsRuleBasedDTO.getRules().add(wsRule);
 
         allRestfulMocks.add(wsRuleBasedDTO);
-        
+
 
         //
         // WS based HTTP mock
         final RestfulMockResponseDTO wsBasedDTO = new RestfulMockResponseDTO(GeneralUtils.generateUUID(), "/ws", "mike", RestMethodEnum.GET, RecordStatusEnum.ACTIVE,
                 RestMockTypeEnum.PROXY_WS, false, GeneralUtils.getCurrentDate(), "mike", 0, 50000, 0,
-                true, false, false, false, 0,0, null, null, null, null, null);
+                true, false, false, false, 0, 0, null, null, null, null, null);
 
         allRestfulMocks.add(wsBasedDTO);
 
@@ -146,7 +146,7 @@ public class MockDefinitionImportExportServiceTest {
         // SSE based HTTP mock
         final RestfulMockResponseDTO sseBasedDTO = new RestfulMockResponseDTO(GeneralUtils.generateUUID(), "/sse", "paul", RestMethodEnum.GET, RecordStatusEnum.ACTIVE,
                 RestMockTypeEnum.PROXY_SSE, false, GeneralUtils.getCurrentDate(), "paul", 0, 0, 40000,
-                false, false, false, false, 0,0, null, null, null, null, null);
+                false, false, false, false, 0, 0, null, null, null, null, null);
 
         allRestfulMocks.add(sseBasedDTO);
 
@@ -159,49 +159,56 @@ public class MockDefinitionImportExportServiceTest {
 
         allRestfulMocks.add(remoteFeedBasedDTO);
 
-        Mockito.when(restfulMockDAO.loadAllActiveByIds(Mockito.anyList(), Mockito.anyLong()))
-                .thenReturn(Arrays.asList());
-
-        Mockito.when(restfulMockServiceUtils.buildRestfulMockDefinitionDTOs(Mockito.anyList()))
-                .thenReturn(allRestfulMocks);
     }
 
     @Test
-    public void export_allRestful_Pass() throws IOException, ValidationException {
+    void export_allRestful_Pass() throws IOException, ValidationException {
 
         // Setup
         final List<String> ids = allRestfulMocks.stream()
-                .map(r -> r.getExtId())
-                .collect(Collectors.toList());
+                .map(RestfulMockResponseDTO::getExtId)
+                .toList();
+
+        Mockito.when(restfulMockDAO.loadAllActiveByIds(Mockito.anyList(), Mockito.anyLong()))
+                .thenReturn(List.of());
+
+        Mockito.when(restfulMockServiceUtils.buildRestfulMockDefinitionDTOs(Mockito.anyList()))
+                .thenReturn(allRestfulMocks);
 
         // Test
-        final String base64Content = mockDefinitionImportExportService.export(ids, ServerTypeEnum.RESTFUL,"ABC");
+        final String base64Content = mockDefinitionImportExportService.export(ids, ServerTypeEnum.RESTFUL, "ABC");
 
         // Assertions
         Stream.of(unpackZipToTempArchive(base64Content).listFiles())
                 .forEach(f -> {
 
-            try {
+                    try {
 
-                if (f.getName().indexOf(MockDefinitionImportExportService.restExportFileName) > -1) {
-                    Assert.assertEquals(allRestfulMocks.size(), ((List)GeneralUtils.deserializeJson(readFileToString(f))).size());
-                } else {
-                    Assert.fail();
-                }
+                        if (f.getName().indexOf(MockDefinitionImportExportService.restExportFileName) > -1) {
+                            Assertions.assertEquals(allRestfulMocks.size(), ((List) GeneralUtils.deserializeJson(readFileToString(f))).size());
+                        } else {
+                            Assertions.fail();
+                        }
 
-            } catch (IOException e) {
-                Assert.fail();
-            }
+                    } catch (IOException e) {
+                        Assertions.fail();
+                    }
 
-        });
+                });
 
     }
 
     @Test
-    public void export_selectedRestful_Pass() throws IOException, ValidationException {
+    void export_selectedRestful_Pass() throws IOException, ValidationException {
 
         // Setup
         final RestfulMockResponseDTO restfulDTO = allRestfulMocks.get(1);
+
+        Mockito.when(restfulMockDAO.loadAllActiveByIds(Mockito.anyList(), Mockito.anyLong()))
+                .thenReturn(List.of());
+
+        Mockito.when(restfulMockServiceUtils.buildRestfulMockDefinitionDTOs(Mockito.anyList()))
+                .thenReturn(allRestfulMocks);
 
         // Test
         final String base64Content = mockDefinitionImportExportService.export(Arrays.asList(restfulDTO.getExtId()), ServerTypeEnum.RESTFUL, "ABC");
@@ -212,15 +219,16 @@ public class MockDefinitionImportExportServiceTest {
             try {
 
                 if (f.getName().indexOf(MockDefinitionImportExportService.restExportFileName) > -1) {
-                    final List<RestfulMockResponseDTO> restfulMocks = GeneralUtils.deserializeJson(readFileToString(f), new TypeReference<List<RestfulMockResponseDTO>>() {});
-                    Assert.assertEquals(1, restfulMocks.size());
-                    Assert.assertEquals(restfulDTO.getExtId(), restfulMocks.get(0).getExtId());
+                    final List<RestfulMockResponseDTO> restfulMocks = GeneralUtils.deserializeJson(readFileToString(f), new TypeReference<List<RestfulMockResponseDTO>>() {
+                    });
+                    Assertions.assertEquals(1, restfulMocks.size());
+                    Assertions.assertEquals(restfulDTO.getExtId(), restfulMocks.get(0).getExtId());
                 } else {
-                    Assert.fail();
+                    Assertions.fail();
                 }
 
             } catch (IOException e) {
-                Assert.fail();
+                Assertions.fail();
             }
 
         });
@@ -228,7 +236,7 @@ public class MockDefinitionImportExportServiceTest {
     }
 
     @Test
-    public void importFile_restful_Pass()
+    void importFile_restful_Pass()
             throws MockImportException, ValidationException, RecordNotFoundException, IOException, URISyntaxException {
 
 
@@ -236,13 +244,13 @@ public class MockDefinitionImportExportServiceTest {
         final String result = mockDefinitionImportExportService.importFile(buildMockMultiPartFile("import-export/" + mockDefinitionImportExportService.exportZipFileNamePrefix + "rest" + mockDefinitionImportExportService.exportZipFileNameExt), new MockImportConfigDTO(), "ABC");
 
         // Assertions (NOTE: smockin_export_rest.zip file contains 5 records)
-        Assert.assertNotNull(result);
-        Assert.assertThat(result, CoreMatchers.is("Successful Imports:\n\n"
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("Successful Imports:\n\n"
                 + "GET /hello\n"
                 + "GET /hello\n"
                 + "GET /ws\n"
                 + "GET /sse\n"
-                + "POST /remotefeed\n"));
+                + "POST /remotefeed\n", result);
         Mockito.verify(restfulMockServiceUtils, Mockito.times(5))
                 .preHandleExistingEndpoints(Mockito.any(RestfulMockDTO.class), Mockito.any(MockImportConfigDTO.class), Mockito.any(SmockinUser.class), Mockito.anyString());
         Mockito.verify(restfulMockService, Mockito.times(5)).createEndpoint(Mockito.any(RestfulMockResponseDTO.class), Mockito.anyString());
@@ -250,15 +258,15 @@ public class MockDefinitionImportExportServiceTest {
 
     private File unpackZipToTempArchive(final String base64EncodedZipFile) throws IOException {
 
-        Assert.assertNotNull(base64EncodedZipFile);
+        Assertions.assertNotNull(base64EncodedZipFile);
 
         final byte[] zipFileBytes = Base64.getDecoder().decode(base64EncodedZipFile);
-        final File unpackedDir = tempFolder.newFolder();
-        final File zipFile = tempFolder.newFile("test_export.zip");
+        final File unpackedDir = Files.createTempDirectory(tempFolder, "unpacked").toFile();
+        final File zipFile = Files.createTempFile(tempFolder, "test_export", ".zip").toFile();
 
         FileUtils.writeByteArrayToFile(zipFile, zipFileBytes);
 
-        Assert.assertNotNull(zipFile);
+        Assertions.assertNotNull(zipFile);
 
         GeneralUtils.unpackArchive(zipFile.getAbsolutePath(), unpackedDir.getAbsolutePath());
 
@@ -269,8 +277,8 @@ public class MockDefinitionImportExportServiceTest {
 
         final String json = FileUtils.readFileToString(f, Charset.defaultCharset());
 
-        Assert.assertNotNull(json);
-        Assert.assertTrue(json.length() > 0);
+        Assertions.assertNotNull(json);
+        Assertions.assertTrue(json.length() > 0);
 
         return json;
     }

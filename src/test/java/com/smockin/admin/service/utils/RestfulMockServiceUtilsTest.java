@@ -6,18 +6,18 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.service.SmockinUserService;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Created by mgallina.
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RestfulMockServiceUtilsTest {
+@ExtendWith(MockitoExtension.class)
+class RestfulMockServiceUtilsTest {
 
     @Mock
     private RestfulMockDAO restfulMockDefinitionDAO;
@@ -39,13 +39,13 @@ public class RestfulMockServiceUtilsTest {
     private RestfulMockDTO dto;
 
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         dto = new RestfulMockDTO();
     }
 
     @Test
-    public void amendPath_PrefixAdded_Test() {
+    void amendPath_PrefixAdded_Test() {
 
         // Setup
         dto.setPath("foo");
@@ -54,12 +54,12 @@ public class RestfulMockServiceUtilsTest {
         utils.amendPath(dto);
 
         // Assertions
-        Assert.assertEquals("/foo", dto.getPath());
+        Assertions.assertEquals("/foo", dto.getPath());
 
     }
 
     @Test
-    public void amendPath_NothingToChange_Test() {
+    void amendPath_NothingToChange_Test() {
 
         // Setup
         dto.setPath("/foo");
@@ -68,12 +68,12 @@ public class RestfulMockServiceUtilsTest {
         utils.amendPath(dto);
 
         // Assertions
-        Assert.assertEquals("/foo", dto.getPath());
+        Assertions.assertEquals("/foo", dto.getPath());
 
     }
 
     @Test
-    public void validateMockPathDoesNotStartWithUsername_1partPath_Test() throws ValidationException {
+    void validateMockPathDoesNotStartWithUsername_1partPath_Test() throws ValidationException {
 
         // Setup
         Mockito.when(smockinUserService.getUserMode()).thenReturn(UserModeEnum.ACTIVE);
@@ -86,13 +86,13 @@ public class RestfulMockServiceUtilsTest {
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Mockito.verify(smockinUserDAO, Mockito.times(1)).existsSmockinUserByUsername(captor.capture());
         final String pathSegment = captor.getValue();
-        Assert.assertNotNull(pathSegment);
-        Assert.assertEquals("bob", pathSegment);
+        Assertions.assertNotNull(pathSegment);
+        Assertions.assertEquals("bob", pathSegment);
 
     }
 
     @Test
-    public void validateMockPathDoesNotStartWithUsername_1partNonPrefixedPath_Test() throws ValidationException {
+    void validateMockPathDoesNotStartWithUsername_1partNonPrefixedPath_Test() throws ValidationException {
 
         // Setup
         Mockito.when(smockinUserService.getUserMode()).thenReturn(UserModeEnum.ACTIVE);
@@ -105,13 +105,13 @@ public class RestfulMockServiceUtilsTest {
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Mockito.verify(smockinUserDAO, Mockito.times(1)).existsSmockinUserByUsername(captor.capture());
         final String pathSegment = captor.getValue();
-        Assert.assertNotNull(pathSegment);
-        Assert.assertEquals("bob", pathSegment);
+        Assertions.assertNotNull(pathSegment);
+        Assertions.assertEquals("bob", pathSegment);
 
     }
 
     @Test
-    public void validateMockPathDoesNotStartWithUsername_2partPath_Test() throws ValidationException {
+    void validateMockPathDoesNotStartWithUsername_2partPath_Test() throws ValidationException {
 
         // Setup
         Mockito.when(smockinUserService.getUserMode()).thenReturn(UserModeEnum.ACTIVE);
@@ -124,13 +124,13 @@ public class RestfulMockServiceUtilsTest {
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Mockito.verify(smockinUserDAO, Mockito.times(1)).existsSmockinUserByUsername(captor.capture());
         final String pathSegment = captor.getValue();
-        Assert.assertNotNull(pathSegment);
-        Assert.assertEquals("bob", pathSegment);
+        Assertions.assertNotNull(pathSegment);
+        Assertions.assertEquals("bob", pathSegment);
 
     }
 
     @Test
-    public void validateMockPathDoesNotStartWithUsername_2partNonPrefixedPath_Test() throws ValidationException {
+    void validateMockPathDoesNotStartWithUsername_2partNonPrefixedPath_Test() throws ValidationException {
 
         // Setup
         Mockito.when(smockinUserService.getUserMode()).thenReturn(UserModeEnum.ACTIVE);
@@ -143,8 +143,8 @@ public class RestfulMockServiceUtilsTest {
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Mockito.verify(smockinUserDAO, Mockito.times(1)).existsSmockinUserByUsername(captor.capture());
         final String pathSegment = captor.getValue();
-        Assert.assertNotNull(pathSegment);
-        Assert.assertEquals("bob", pathSegment);
+        Assertions.assertNotNull(pathSegment);
+        Assertions.assertEquals("bob", pathSegment);
 
     }
 

@@ -6,18 +6,18 @@ import com.smockin.admin.persistence.entity.S3MockFile;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.S3SyncModeEnum;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MockedS3ServerEngineUtilsTest {
+class MockedS3ServerEngineUtilsTest {
 
     private MockedS3ServerEngineUtils mockedS3ServerEngineUtils;
 
     private S3MockFile s3MockFile;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         mockedS3ServerEngineUtils = new MockedS3ServerEngineUtils();
 
@@ -26,7 +26,7 @@ public class MockedS3ServerEngineUtilsTest {
 
         final S3MockDir s3MockDirLevel1 = new S3MockDir("B", s3MockParent);
         final S3MockDir s3MockDirLevel2 = new S3MockDir("C", s3MockDirLevel1);
-        final S3MockDir s3MockDirLevel3 = new S3MockDir("D",  s3MockDirLevel2);
+        final S3MockDir s3MockDirLevel3 = new S3MockDir("D", s3MockDirLevel2);
 
         s3MockFile = new S3MockFile("foo.bar", null, s3MockDirLevel3);
         s3MockDirLevel3.getFiles().add(s3MockFile);
@@ -34,15 +34,15 @@ public class MockedS3ServerEngineUtilsTest {
     }
 
     @Test
-    public void extractBucketAndFilePathTest() {
+    void extractBucketAndFilePathTest() {
 
         // Test
         final Pair<String, String> fileInfo = mockedS3ServerEngineUtils.extractBucketAndFilePath(s3MockFile);
 
         // Assertions
-        Assert.assertNotNull(fileInfo);
-        Assert.assertEquals("A", fileInfo.getLeft());
-        Assert.assertEquals("B/C/D/foo.bar", fileInfo.getRight());
+        Assertions.assertNotNull(fileInfo);
+        Assertions.assertEquals("A", fileInfo.getLeft());
+        Assertions.assertEquals("B/C/D/foo.bar", fileInfo.getRight());
 
     }
 

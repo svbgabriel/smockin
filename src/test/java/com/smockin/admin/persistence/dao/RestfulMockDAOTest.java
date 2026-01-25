@@ -7,30 +7,30 @@ import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
 /**
  * Created by mgallina.
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootConfiguration
 @EnableAutoConfiguration
 @EnableJpaRepositories("com.smockin.admin.persistence.dao")
 @EntityScan("com.smockin.admin.persistence.entity")
-public class RestfulMockDAOTest {
+class RestfulMockDAOTest {
 
     @Autowired
     private RestfulMockDAO restfulMockDAO;
@@ -41,8 +41,8 @@ public class RestfulMockDAOTest {
     private RestfulMock a, b, c, d, e, f, g, h, i, j, k;
     private SmockinUser user;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         user = smockinUserDAO.saveAndFlush(SmockinTestUtils.buildSmockinUser());
 
@@ -66,8 +66,8 @@ public class RestfulMockDAOTest {
 
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
 
         restfulMockDAO.deleteAll();
         restfulMockDAO.flush();
@@ -77,43 +77,43 @@ public class RestfulMockDAOTest {
     }
 
     @Test
-    public void findAllByStatusTest() {
+    void findAllByStatusTest() {
 
         final List<RestfulMock> mocks = restfulMockDAO.findAllByStatus(RecordStatusEnum.ACTIVE);
 
-        Assert.assertNotNull(mocks);
-        Assert.assertEquals(6, mocks.size());
+        Assertions.assertNotNull(mocks);
+        Assertions.assertEquals(6, mocks.size());
 
-        int[] expectedLoadOrder = new int[] { 1, 2, 3, 6, 12, 15 };
+        int[] expectedLoadOrder = new int[]{1, 2, 3, 6, 12, 15};
 
         int index = 0;
 
         for (RestfulMock m : mocks) {
-            Assert.assertEquals(expectedLoadOrder[index++], m.getInitializationOrder());
+            Assertions.assertEquals(expectedLoadOrder[index++], m.getInitializationOrder());
         }
 
     }
 
     @Test
-    public void findAllTest() {
+    void findAllTest() {
 
         final List<RestfulMock> mocks = restfulMockDAO.findAll();
 
-        Assert.assertNotNull(mocks);
-        Assert.assertEquals(8, mocks.size());
+        Assertions.assertNotNull(mocks);
+        Assertions.assertEquals(8, mocks.size());
 
-        int[] expectedLoadOrder = new int[] { 1, 2, 3, 6, 10, 12, 14, 15 };
+        int[] expectedLoadOrder = new int[]{1, 2, 3, 6, 10, 12, 14, 15};
 
         int index = 0;
 
         for (RestfulMock m : mocks) {
-            Assert.assertEquals(expectedLoadOrder[index++], m.getInitializationOrder());
+            Assertions.assertEquals(expectedLoadOrder[index++], m.getInitializationOrder());
         }
 
     }
 
-    @Test(expected = DataIntegrityViolationException.class)
-    public void uniquePathMethodAndUserConstraintTest() {
+    @Test
+    void uniquePathMethodAndUserConstraintTest() {
 
         a.setPath("/foo");
         a.setMethod(RestMethodEnum.GET);
@@ -123,12 +123,14 @@ public class RestfulMockDAOTest {
         b.setMethod(RestMethodEnum.GET);
         b.setCreatedBy(user);
 
-        restfulMockDAO.saveAndFlush(a);
-        restfulMockDAO.saveAndFlush(b);
+        Assertions.assertThrows(DataIntegrityViolationException.class, () -> {
+            restfulMockDAO.saveAndFlush(a);
+            restfulMockDAO.saveAndFlush(b);
+        });
     }
 
     @Test
-    public void findAllPathDuplicatesTest() {
+    void findAllPathDuplicatesTest() {
 
         SmockinUser userB = smockinUserDAO.saveAndFlush(buildPathDuplicatesUser("userB", SmockinUserRoleEnum.REGULAR));
         SmockinUser userC = smockinUserDAO.saveAndFlush(buildPathDuplicatesUser("userC", SmockinUserRoleEnum.REGULAR));
@@ -188,38 +190,38 @@ public class RestfulMockDAOTest {
     }
 
     @Test
-    public void doesMockPathStartWithSegment_exactMatch_Test() {
+    void doesMockPathStartWithSegment_exactMatch_Test() {
 
         // Setup
         final RestfulMock bobMock = SmockinTestUtils.buildRestfulMock("/bob", RestMockTypeEnum.SEQ, 15, RestMethodEnum.GET, RecordStatusEnum.ACTIVE, user);
         restfulMockDAO.saveAndFlush(bobMock);
 
         // Test
-        Assert.assertTrue(restfulMockDAO.doesMockPathStartWithSegment("bob"));
+        Assertions.assertTrue(restfulMockDAO.doesMockPathStartWithSegment("bob"));
 
     }
 
     @Test
-    public void doesMockPathStartWithSegment_prefixMatch_Test() {
+    void doesMockPathStartWithSegment_prefixMatch_Test() {
 
         // Setup
         final RestfulMock bobMock = SmockinTestUtils.buildRestfulMock("/bob/house", RestMockTypeEnum.SEQ, 15, RestMethodEnum.GET, RecordStatusEnum.ACTIVE, user);
         restfulMockDAO.saveAndFlush(bobMock);
 
         // Test
-        Assert.assertTrue(restfulMockDAO.doesMockPathStartWithSegment("bob"));
+        Assertions.assertTrue(restfulMockDAO.doesMockPathStartWithSegment("bob"));
 
     }
 
     @Test
-    public void doesMockPathStartWithSegment_NoMatch_Test() {
+    void doesMockPathStartWithSegment_NoMatch_Test() {
 
         // Setup
         final RestfulMock bobMock = SmockinTestUtils.buildRestfulMock("/bob/house", RestMockTypeEnum.SEQ, 15, RestMethodEnum.GET, RecordStatusEnum.ACTIVE, user);
         restfulMockDAO.saveAndFlush(bobMock);
 
         // Test
-        Assert.assertFalse(restfulMockDAO.doesMockPathStartWithSegment("mike"));
+        Assertions.assertFalse(restfulMockDAO.doesMockPathStartWithSegment("mike"));
 
     }
 

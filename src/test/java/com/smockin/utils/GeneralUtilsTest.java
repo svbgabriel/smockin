@@ -1,41 +1,37 @@
 package com.smockin.utils;
 
 import com.smockin.admin.enums.UserModeEnum;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpMethod;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.*;
 
 /**
  * Created by mgallina on 08/08/17.
  */
-public class GeneralUtilsTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+class GeneralUtilsTest {
 
     @Test
-    public void generateUUID_Populated_Test() {
-        Assert.assertNotNull(GeneralUtils.generateUUID());
+    void generateUUID_Populated_Test() {
+        Assertions.assertNotNull(GeneralUtils.generateUUID());
     }
 
     @Test
-    public void generateUUID_Distinct_Test() {
-        Assert.assertNotEquals(GeneralUtils.generateUUID(), GeneralUtils.generateUUID());
+    void generateUUID_Distinct_Test() {
+        Assertions.assertNotEquals(GeneralUtils.generateUUID(), GeneralUtils.generateUUID());
     }
 
     @Test
-    public void getCurrentDate_Populated_Test() {
-        Assert.assertNotNull(GeneralUtils.getCurrentDate());
+    void getCurrentDate_Populated_Test() {
+        Assertions.assertNotNull(GeneralUtils.getCurrentDate());
     }
 
     @Test
-    public void findHeaderIgnoreCaseTest() {
+    void findHeaderIgnoreCaseTest() {
 
         // Setup
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -49,25 +45,25 @@ public class GeneralUtilsTest {
         final String nameResult = GeneralUtils.findHeaderIgnoreCase(req, "NAME");
 
         // Assertions
-        Assert.assertNotNull(nameResult);
-        Assert.assertEquals("Bob", nameResult);
+        Assertions.assertNotNull(nameResult);
+        Assertions.assertEquals("Bob", nameResult);
 
         // Test
         final String ageResult = GeneralUtils.findHeaderIgnoreCase(req, "age");
 
         // Assertions
-        Assert.assertNotNull(ageResult);
-        Assert.assertEquals("21", ageResult);
+        Assertions.assertNotNull(ageResult);
+        Assertions.assertEquals("21", ageResult);
     }
 
     @Test
-    public void findRequestParamIgnoreCaseTest() {
+    void findRequestParamIgnoreCaseTest() {
 
         // Setup
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         Map<String, String[]> params = new HashMap<>();
-        params.put("name", new String[] { "Bob" });
-        params.put("Age", new String[] { "21" });
+        params.put("name", new String[]{"Bob"});
+        params.put("Age", new String[]{"21"});
 
         Mockito.when(req.getParameterMap()).thenReturn(params);
 
@@ -75,46 +71,46 @@ public class GeneralUtilsTest {
         final String nameResult = GeneralUtils.extractRequestParamByName(req, "NAME");
 
         // Assertions
-        Assert.assertNotNull(nameResult);
-        Assert.assertEquals("Bob", nameResult);
+        Assertions.assertNotNull(nameResult);
+        Assertions.assertEquals("Bob", nameResult);
 
         // Test
         final String ageResult = GeneralUtils.extractRequestParamByName(req, "age");
 
         // Assertions
-        Assert.assertNotNull(ageResult);
-        Assert.assertEquals("21", ageResult);
+        Assertions.assertNotNull(ageResult);
+        Assertions.assertEquals("21", ageResult);
     }
 
     @Test
-    public void findPathVarIgnoreCase1Test() {
+    void findPathVarIgnoreCase1Test() {
 
         // Test
         final String nameResult = GeneralUtils.findPathVarIgnoreCase("/person/Bob", "/person/{name}", "NAME");
 
         // Assertions
-        Assert.assertNotNull(nameResult);
-        Assert.assertEquals("Bob", nameResult);
+        Assertions.assertNotNull(nameResult);
+        Assertions.assertEquals("Bob", nameResult);
     }
 
     @Test
-    public void findPathVarIgnoreCase2Test() {
+    void findPathVarIgnoreCase2Test() {
 
         // Test
         final String ageResult = GeneralUtils.findPathVarIgnoreCase("/person/21", "/person/{age}", "agE");
 
         // Assertions
-        Assert.assertNotNull(ageResult);
-        Assert.assertEquals("21", ageResult);
+        Assertions.assertNotNull(ageResult);
+        Assertions.assertEquals("21", ageResult);
     }
 
     @Test
-    public void extractRequestParamByNameTest() {
+    void extractRequestParamByNameTest() {
 
         // Setup
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         final Map<String, String[]> params = new HashMap<>();
-        params.put("name", new String[] { "bob" });
+        params.put("name", new String[]{"bob"});
 
         Mockito.when(req.getParameterMap()).thenReturn(params);
 
@@ -122,18 +118,18 @@ public class GeneralUtilsTest {
         final String result = GeneralUtils.extractRequestParamByName(req, "name");
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals("bob", result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("bob", result);
     }
 
     @Test
-    public void extractAllRequestParamsTest() {
+    void extractAllRequestParamsTest() {
 
         // Setup
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         final Map<String, String[]> params = new HashMap<>();
-        params.put("name", new String[] { "bob" });
-        params.put("age", new String[] { "27" });
+        params.put("name", new String[]{"bob"});
+        params.put("age", new String[]{"27"});
 
         Mockito.when(req.getParameterMap()).thenReturn(params);
 
@@ -141,14 +137,14 @@ public class GeneralUtilsTest {
         final Map<String, String> results = GeneralUtils.extractAllRequestParams(req);
 
         // Assertions
-        Assert.assertNotNull(results);
-        Assert.assertEquals(2, results.size());
-        Assert.assertEquals("bob", results.get("name"));
-        Assert.assertEquals("27", results.get("age"));
+        Assertions.assertNotNull(results);
+        Assertions.assertEquals(2, results.size());
+        Assertions.assertEquals("bob", results.get("name"));
+        Assertions.assertEquals("27", results.get("age"));
     }
 
     @Test
-    public void extractAllRequestParams_nullValues_Test() {
+    void extractAllRequestParams_nullValues_Test() {
 
         // Setup
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -163,15 +159,15 @@ public class GeneralUtilsTest {
         final Map<String, String> results = GeneralUtils.extractAllRequestParams(req);
 
         // Assertions
-        Assert.assertNotNull(results);
-        Assert.assertEquals(2, results.size());
-        Assert.assertNull(results.get("name"));
-        Assert.assertNull(results.get("age"));
+        Assertions.assertNotNull(results);
+        Assertions.assertEquals(2, results.size());
+        Assertions.assertNull(results.get("name"));
+        Assertions.assertNull(results.get("age"));
 
     }
 
     @Test
-    public void extractAllRequestParams_emptyMap_Test() {
+    void extractAllRequestParams_emptyMap_Test() {
 
         // Setup
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -181,69 +177,69 @@ public class GeneralUtilsTest {
         final Map<String, String> results = GeneralUtils.extractAllRequestParams(req);
 
         // Assertions
-        Assert.assertNotNull(results);
-        Assert.assertEquals(0, results.size());
+        Assertions.assertNotNull(results);
+        Assertions.assertEquals(0, results.size());
 
     }
 
     @Test
-    public void deserialiseJSONToListTest() {
+    void deserializeJSONToListTest() {
 
         // Test
         final List<Map<String, ?>> result = GeneralUtils.deserialiseJSONToList("[{\"fruit\":{\"name\":\"pear\"}},{\"fruit\":{\"name\":\"apple\"}}]");
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(2, result.size());
-        Assert.assertNotNull(result.get(0));
-        Assert.assertNotNull(result.get(1));
-        Assert.assertNotNull(result.get(0).get("fruit"));
-        Assert.assertNotNull(result.get(1).get("fruit"));
-        Assert.assertTrue(result.get(0).get("fruit") instanceof Map);
-        Assert.assertTrue(result.get(1).get("fruit") instanceof Map);
-        Assert.assertTrue(((Map)result.get(0).get("fruit")).get("name") != null);
-        Assert.assertTrue(((Map)result.get(1).get("fruit")).get("name") != null);
-        Assert.assertEquals("pear", ((Map)result.get(0).get("fruit")).get("name"));
-        Assert.assertEquals("apple", ((Map)result.get(1).get("fruit")).get("name"));
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertNotNull(result.get(0));
+        Assertions.assertNotNull(result.get(1));
+        Assertions.assertNotNull(result.get(0).get("fruit"));
+        Assertions.assertNotNull(result.get(1).get("fruit"));
+        Assertions.assertTrue(result.get(0).get("fruit") instanceof Map);
+        Assertions.assertTrue(result.get(1).get("fruit") instanceof Map);
+        Assertions.assertTrue(((Map) result.get(0).get("fruit")).get("name") != null);
+        Assertions.assertTrue(((Map) result.get(1).get("fruit")).get("name") != null);
+        Assertions.assertEquals("pear", ((Map) result.get(0).get("fruit")).get("name"));
+        Assertions.assertEquals("apple", ((Map) result.get(1).get("fruit")).get("name"));
 
     }
 
     @Test
-    public void deserialiseJSONToListEmptyTest() {
+    void deserializeJSONToListEmptyTest() {
 
         // Test
         final List<Map<String, ?>> result = GeneralUtils.deserialiseJSONToList("[]");
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.isEmpty());
+        Assertions.assertNotNull(result);
+        Assertions.assertTrue(result.isEmpty());
 
     }
 
     @Test
-    public void deserialiseJSONToListNullTest() {
+    void deserializeJSONToListNullTest() {
 
         // Test
         final List<Map<String, ?>> result = GeneralUtils.deserialiseJSONToList(null);
 
         // Assertions
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
 
     }
 
     @Test
-    public void deserialiseJSONToListBlankTest() {
+    void deserializeJSONToListBlankTest() {
 
         // Test
         final List<Map<String, ?>> result = GeneralUtils.deserialiseJSONToList(" ");
 
         // Assertions
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
 
     }
 
     @Test
-    public void removeJsCommentsTest() {
+    void removeJsCommentsTest() {
 
         // Setup
         final String jsSrc = "function doSomething(a,b) {\n"
@@ -257,8 +253,8 @@ public class GeneralUtilsTest {
         final String result = GeneralUtils.removeJsComments(jsSrc);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals("function doSomething(a,b) {\n" +
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("function doSomething(a,b) {\n" +
                 "  var c = a;\n" +
                 "  var d = b; \n" +
                 "  var e = c+d;\n" +
@@ -266,7 +262,7 @@ public class GeneralUtilsTest {
     }
 
     @Test
-    public void removeJsComments_noCommentsPresent_Test() {
+    void removeJsComments_noCommentsPresent_Test() {
 
         // Setup
         final String jsSrc = "function doSomething(a,b) {\n"
@@ -279,8 +275,8 @@ public class GeneralUtilsTest {
         final String result = GeneralUtils.removeJsComments(jsSrc);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals("function doSomething(a,b) {\n" +
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("function doSomething(a,b) {\n" +
                 "  var c = a;\n" +
                 "  var d = b;\n" +
                 "  var e = c+d;\n" +
@@ -288,7 +284,7 @@ public class GeneralUtilsTest {
     }
 
     @Test
-    public void removeJsComments_singleLine_Test() {
+    void removeJsComments_singleLine_Test() {
 
         // Setup
         final String jsSrc = "function doSomething(a,b) { var c = a; var d = b; var e = c+d; } // end of line";
@@ -297,72 +293,72 @@ public class GeneralUtilsTest {
         final String result = GeneralUtils.removeJsComments(jsSrc);
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals("function doSomething(a,b) { var c = a; var d = b; var e = c+d; }", result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("function doSomething(a,b) { var c = a; var d = b; var e = c+d; }", result);
     }
 
     @Test
-    public void removeJsComments_nullInput_Test() {
+    void removeJsComments_nullInput_Test() {
 
         // Test & Assertions
-        Assert.assertNull(GeneralUtils.removeJsComments(null));
+        Assertions.assertNull(GeneralUtils.removeJsComments(null));
     }
 
     @Test
-    public void removeJsComments_BlankInput_Test() {
+    void removeJsComments_BlankInput_Test() {
 
         // Test
         final String result = GeneralUtils.removeJsComments("");
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals("", result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("", result);
     }
 
     @Test
-    public void findAllPathVars_WildcardAndNamed_Test() {
+    void findAllPathVars_WildcardAndNamed_Test() {
 
         // Test
         final Map<String, String> result = GeneralUtils.findAllPathVars(
                 "/person/123/details/ABC", "/person/*/details/{code}");
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertEquals(2, result.size());
-        Assert.assertEquals("123", result.get("*1"));
-        Assert.assertEquals("ABC", result.get("code"));
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertEquals("123", result.get("*1"));
+        Assertions.assertEquals("ABC", result.get("code"));
     }
 
     @Test
-    public void findAllPathVars_InboundShorter_ReturnsEmpty_Test() {
+    void findAllPathVars_InboundShorter_ReturnsEmpty_Test() {
 
         // Test
         final Map<String, String> result = GeneralUtils.findAllPathVars(
                 "/person/123", "/person/123/details");
 
         // Assertions
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.isEmpty());
+        Assertions.assertNotNull(result);
+        Assertions.assertTrue(result.isEmpty());
     }
 
     @Test
-    public void sanitizeMultiUserPath_activeRemovesContext_Test() {
+    void sanitizeMultiUserPath_activeRemovesContext_Test() {
 
         // Test
         final String result = GeneralUtils.sanitizeMultiUserPath(
                 UserModeEnum.ACTIVE, "/ctx/api/ping", "/ctx");
 
         // Assertions
-        Assert.assertEquals("/api/ping", result);
+        Assertions.assertEquals("/api/ping", result);
     }
 
     @Test
-    public void prefixPath_handlesBlankAndMissingSlash_Test() {
+    void prefixPath_handlesBlankAndMissingSlash_Test() {
 
         // Test & Assertions
-        Assert.assertNull(GeneralUtils.prefixPath(" "));
-        Assert.assertEquals("/test", GeneralUtils.prefixPath("test"));
-        Assert.assertEquals("/test", GeneralUtils.prefixPath("/test"));
+        Assertions.assertNull(GeneralUtils.prefixPath(" "));
+        Assertions.assertEquals("/test", GeneralUtils.prefixPath("test"));
+        Assertions.assertEquals("/test", GeneralUtils.prefixPath("/test"));
     }
 
 }

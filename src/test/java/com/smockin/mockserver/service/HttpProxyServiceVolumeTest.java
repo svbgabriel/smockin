@@ -15,9 +15,9 @@ import com.smockin.mockserver.service.bean.ProxiedKey;
 import com.smockin.mockserver.service.dto.HttpProxiedDTO;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.utils.GeneralUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 /**
  * Created by mgallina on 11/08/17.
  */
-public class HttpProxyServiceVolumeTest {
+class HttpProxyServiceVolumeTest {
 
     private RestfulMockDAO restfulMockDAO;
     private UserTokenServiceUtils userTokenServiceUtils;
@@ -48,8 +48,8 @@ public class HttpProxyServiceVolumeTest {
     private ProxiedKey[] keys;
     private RestfulMock[] mocks;
 
-    @Before
-    public void setUp() throws RecordNotFoundException, ValidationException {
+    @BeforeEach
+    void setUp() throws RecordNotFoundException, ValidationException {
 
         user = new SmockinUser();
         user.setRole(SmockinUserRoleEnum.REGULAR);
@@ -60,7 +60,7 @@ public class HttpProxyServiceVolumeTest {
 
         proxyService = new HttpProxyServiceImpl();
 
-        // Had to resort to manually mocking, as there is a problem using @RunWith(MockitoJUnitRunner.class) where the mocks do not seem to work within the separate threads.
+        // Had to resort to manually mocking, as there is a problem using @ExtendWith(MockitoExtension.class) where the mocks do not seem to work within the separate threads.
         proxyService = new HttpProxyServiceImpl();
         restfulMockDAO = Mockito.mock(RestfulMockDAO.class);
         userTokenServiceUtils = Mockito.mock(UserTokenServiceUtils.class);
@@ -77,7 +77,7 @@ public class HttpProxyServiceVolumeTest {
 
         producers = new Runnable[proxiedTestCount];
 
-        for (int p=0; p < proxiedTestCount; p++) {
+        for (int p = 0; p < proxiedTestCount; p++) {
 
             final ProxiedKey pk = keys[p];
             final RestfulMock rm = mocks[p];
@@ -89,7 +89,7 @@ public class HttpProxyServiceVolumeTest {
                 try {
                     proxyService.addResponse(rm.getExtId(), new HttpProxiedDTO(pk.method(), 200, MediaType.APPLICATION_JSON_VALUE, "{ \"path\" : \"" + File.separator + user.getCtxPath() + pk.path() + "\" }"), user.getSessionToken());
                 } catch (RecordNotFoundException | ValidationException e) {
-                    Assert.fail();
+                    Assertions.fail();
                 }
             };
 
@@ -97,7 +97,7 @@ public class HttpProxyServiceVolumeTest {
 
         consumers = new TestCallable[proxiedTestCount];
 
-        for (int c=0; c < proxiedTestCount; c++) {
+        for (int c = 0; c < proxiedTestCount; c++) {
 
             final ProxiedKey pk = keys[c];
             final RestfulMock rm = mocks[c];
@@ -105,7 +105,7 @@ public class HttpProxyServiceVolumeTest {
             consumers[c] = new TestCallable() {
 
                 public ProxiedKey getProxiedKey() {
-                     return pk;
+                    return pk;
                 }
 
                 @Override
@@ -119,12 +119,12 @@ public class HttpProxyServiceVolumeTest {
     }
 
     @Test
-    public void proxyConcurrency_itemAlreadyInQueue_Test() throws InterruptedException, ExecutionException {
+    void proxyConcurrency_itemAlreadyInQueue_Test() throws InterruptedException, ExecutionException {
 
         // Test
         List<FutureAssertionWrapper> futureAssertionsList = new ArrayList<>();
 
-        for (int i=0; i < proxiedTestCount; i++) {
+        for (int i = 0; i < proxiedTestCount; i++) {
 
             final TestCallable callable = consumers[i];
             futureAssertionsList.add(new FutureAssertionWrapper(callable.getProxiedKey(), executor.submit(callable)));
@@ -144,21 +144,21 @@ public class HttpProxyServiceVolumeTest {
 
                 final Object response = future.get();
 
-                Assert.assertTrue(response instanceof RestfulResponseDTO);
-                final RestfulResponseDTO restfulResponse = (RestfulResponseDTO)response;
+                Assertions.assertTrue(response instanceof RestfulResponseDTO);
+                final RestfulResponseDTO restfulResponse = (RestfulResponseDTO) response;
 
-                Assert.assertEquals(200, restfulResponse.getHttpStatusCode());
-                Assert.assertEquals(MediaType.APPLICATION_JSON_VALUE, restfulResponse.getResponseContentType());
-                Assert.assertNotNull(restfulResponse.getResponseBody());
-                Assert.assertTrue(restfulResponse.getResponseBody().contains(pk.path()));
-                Assert.assertTrue(restfulResponse.getHeaders().isEmpty());
+                Assertions.assertEquals(200, restfulResponse.getHttpStatusCode());
+                Assertions.assertEquals(MediaType.APPLICATION_JSON_VALUE, restfulResponse.getResponseContentType());
+                Assertions.assertNotNull(restfulResponse.getResponseBody());
+                Assertions.assertTrue(restfulResponse.getResponseBody().contains(pk.path()));
+                Assertions.assertTrue(restfulResponse.getHeaders().isEmpty());
 
                 assertionsCount++;
             } while (!future.isDone());
 
         }
 
-        Assert.assertEquals(proxiedTestCount, assertionsCount);
+        Assertions.assertEquals(proxiedTestCount, assertionsCount);
 
     }
 
@@ -166,7 +166,7 @@ public class HttpProxyServiceVolumeTest {
 
         final ProxiedKey[] keys = new ProxiedKey[proxiedTestCount];
 
-        for (int p=0; p < proxiedTestCount; p++) {
+        for (int p = 0; p < proxiedTestCount; p++) {
 
             final int distinctAppender;
 
@@ -188,7 +188,7 @@ public class HttpProxyServiceVolumeTest {
 
         return Stream.of(pks).map(this::buildRestfulMock)
                 .collect(Collectors.toList())
-                .toArray(new RestfulMock[] {});
+                .toArray(new RestfulMock[]{});
     }
 
     private RestfulMock buildRestfulMock(final ProxiedKey pk) {
@@ -214,6 +214,7 @@ public class HttpProxyServiceVolumeTest {
         public ProxiedKey getProxiedKey() {
             return proxiedKey;
         }
+
         public Future getFuture() {
             return future;
         }

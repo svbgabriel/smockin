@@ -14,15 +14,13 @@ import com.smockin.admin.service.utils.RestfulMockServiceUtils;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,11 +28,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
-public class RamlApiImportServiceTest {
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
+@ExtendWith(MockitoExtension.class)
+class RamlApiImportServiceTest {
 
     @Mock
     private RestfulMockService restfulMockService;
@@ -58,23 +53,14 @@ public class RamlApiImportServiceTest {
     @InjectMocks
     private ApiImportService apiImportService = new RamlApiImportServiceImpl();
 
-    @Before
-    public void setUp() throws RecordNotFoundException, ValidationException {
-
-        Mockito.when(restfulMockService.createEndpoint(Mockito.any(RestfulMockDTO.class), Mockito.anyString())).thenReturn("1");
-
-        Mockito.when(userTokenServiceUtils.loadCurrentActiveUser(Mockito.anyString())).thenReturn(user);
-        Mockito.when(user.getSessionToken()).thenReturn(GeneralUtils.generateUUID());
-
-        Mockito.doNothing().when(restfulMockServiceUtils)
-                .preHandleExistingEndpoints(Mockito.any(RestfulMockDTO.class), Mockito.any(MockImportConfigDTO.class), Mockito.any(SmockinUser.class), Mockito.anyString());
-    }
-
     @Test
-    public void importApiDocPass() throws MockImportException, ValidationException, RecordNotFoundException, URISyntaxException, IOException {
+    void importApiDocPass() throws MockImportException, ValidationException, RecordNotFoundException, URISyntaxException, IOException {
 
         // Setup
         final ApiImportDTO importDTO = new ApiImportDTO(buildMockMultiPartFile("raml/raml_100.raml"), new MockImportConfigDTO(MockImportKeepStrategyEnum.RENAME_EXISTING));
+
+        Mockito.when(userTokenServiceUtils.loadCurrentActiveUser(Mockito.anyString())).thenReturn(user);
+        Mockito.when(user.getSessionToken()).thenReturn(GeneralUtils.generateUUID());
 
         // Test
         apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID());
@@ -88,68 +74,68 @@ public class RamlApiImportServiceTest {
 
             if ("/hello".equals(mockDTO.getPath())) {
 
-                Assert.assertEquals(RestMethodEnum.GET, mockDTO.getMethod());
+                Assertions.assertEquals(RestMethodEnum.GET, mockDTO.getMethod());
 
-                Assert.assertEquals(1, mockDTO.getDefinitions().size());
-                Assert.assertEquals(200, mockDTO.getDefinitions().get(0).getHttpStatusCode());
-                Assert.assertEquals("application/json", mockDTO.getDefinitions().get(0).getResponseContentType());
-                Assert.assertEquals("{ \"message\": \"helloworld\" }\n", mockDTO.getDefinitions().get(0).getResponseBody());
+                Assertions.assertEquals(1, mockDTO.getDefinitions().size());
+                Assertions.assertEquals(200, mockDTO.getDefinitions().get(0).getHttpStatusCode());
+                Assertions.assertEquals("application/json", mockDTO.getDefinitions().get(0).getResponseContentType());
+                Assertions.assertEquals("{ \"message\": \"helloworld\" }\n", mockDTO.getDefinitions().get(0).getResponseBody());
 
-                Assert.assertEquals(1, mockDTO.getDefinitions().get(0).getResponseHeaders().size());
-                Assert.assertNotNull(mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
-                Assert.assertEquals("FooBar", mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
+                Assertions.assertEquals(1, mockDTO.getDefinitions().get(0).getResponseHeaders().size());
+                Assertions.assertNotNull(mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
+                Assertions.assertEquals("FooBar", mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
 
             } else if ("/hello/:name".equals(mockDTO.getPath())) {
 
                 if (RestMethodEnum.GET.equals(mockDTO.getMethod())) {
 
-                    Assert.assertEquals(3, mockDTO.getDefinitions().size());
+                    Assertions.assertEquals(3, mockDTO.getDefinitions().size());
 
                     mockDTO.getDefinitions().stream().forEach(d -> {
 
                         if (200 == d.getHttpStatusCode()) {
 
-                            Assert.assertEquals("application/json", d.getResponseContentType());
-                            Assert.assertEquals("{ \"message\": \"hello John!\" }\n", d.getResponseBody());
-                            Assert.assertTrue(d.getResponseHeaders().isEmpty());
+                            Assertions.assertEquals("application/json", d.getResponseContentType());
+                            Assertions.assertEquals("{ \"message\": \"hello John!\" }\n", d.getResponseBody());
+                            Assertions.assertTrue(d.getResponseHeaders().isEmpty());
 
                         } else if (404 == d.getHttpStatusCode()) {
 
-                            Assert.assertEquals("application/json", d.getResponseContentType());
-                            Assert.assertNull(d.getResponseBody());
-                            Assert.assertTrue(d.getResponseHeaders().isEmpty());
+                            Assertions.assertEquals("application/json", d.getResponseContentType());
+                            Assertions.assertNull(d.getResponseBody());
+                            Assertions.assertTrue(d.getResponseHeaders().isEmpty());
 
                         } else if (400 == d.getHttpStatusCode()) {
 
-                            Assert.assertEquals("application/json", d.getResponseContentType());
-                            Assert.assertEquals("{ \"message\": \"Missing name!\" }\n", d.getResponseBody());
-                            Assert.assertTrue(d.getResponseHeaders().isEmpty());
+                            Assertions.assertEquals("application/json", d.getResponseContentType());
+                            Assertions.assertEquals("{ \"message\": \"Missing name!\" }\n", d.getResponseBody());
+                            Assertions.assertTrue(d.getResponseHeaders().isEmpty());
 
                         } else {
-                            Assert.fail();
+                            Assertions.fail();
                         }
 
                     });
 
                 } else if (RestMethodEnum.POST.equals(mockDTO.getMethod())) {
 
-                    Assert.assertEquals(1, mockDTO.getDefinitions().size());
-                    Assert.assertEquals(201, mockDTO.getDefinitions().get(0).getHttpStatusCode());
-                    Assert.assertEquals("application/json", mockDTO.getDefinitions().get(0).getResponseContentType());
-                    Assert.assertEquals("{ \"id\" : 1 }\n", mockDTO.getDefinitions().get(0).getResponseBody());
+                    Assertions.assertEquals(1, mockDTO.getDefinitions().size());
+                    Assertions.assertEquals(201, mockDTO.getDefinitions().get(0).getHttpStatusCode());
+                    Assertions.assertEquals("application/json", mockDTO.getDefinitions().get(0).getResponseContentType());
+                    Assertions.assertEquals("{ \"id\" : 1 }\n", mockDTO.getDefinitions().get(0).getResponseBody());
 
-                    Assert.assertEquals(1, mockDTO.getDefinitions().get(0).getResponseHeaders().size());
-                    Assert.assertNotNull(mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
-                    Assert.assertEquals("FooBar", mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
+                    Assertions.assertEquals(1, mockDTO.getDefinitions().get(0).getResponseHeaders().size());
+                    Assertions.assertNotNull(mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
+                    Assertions.assertEquals("FooBar", mockDTO.getDefinitions().get(0).getResponseHeaders().get("X-Powered-By"));
 
                 } else {
 
-                    Assert.fail();
+                    Assertions.fail();
 
                 }
 
             } else {
-                Assert.fail();
+                Assertions.fail();
             }
 
 
@@ -158,59 +144,51 @@ public class RamlApiImportServiceTest {
     }
 
     @Test
-    public void importApiDoc_NullDto_Fail() throws MockImportException, ValidationException {
+    void importApiDoc_NullDto_Fail() throws MockImportException, ValidationException {
 
-        // Assertions
-        expected.expect(ValidationException.class);
-        expected.expectMessage("No data was provided");
-
-        // Test
-        apiImportService.importApiDoc(null, GeneralUtils.generateUUID());
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportService.importApiDoc(null, GeneralUtils.generateUUID()));
+        Assertions.assertEquals("No data was provided", ex.getMessage());
 
     }
 
     @Test
-    public void importApiDoc_NullFile_Fail() throws MockImportException, ValidationException {
+    void importApiDoc_NullFile_Fail() throws MockImportException, ValidationException {
 
         // Setup
         final ApiImportDTO importDTO = new ApiImportDTO(null, new MockImportConfigDTO(MockImportKeepStrategyEnum.RENAME_EXISTING));
 
-        // Assertions
-        expected.expect(ValidationException.class);
-        expected.expectMessage("No file found");
-
-        // Test
-        apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID());
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID()));
+        Assertions.assertEquals("No file found", ex.getMessage());
 
     }
 
     @Test
-    public void importApiDoc_NullConfig_Fail() throws MockImportException, ValidationException, URISyntaxException, IOException {
+    void importApiDoc_NullConfig_Fail() throws MockImportException, ValidationException, URISyntaxException, IOException {
 
         // Setup
         final ApiImportDTO importDTO = new ApiImportDTO(buildMockMultiPartFile("raml/raml_100.raml"), null);
 
-        // Assertions
-        expected.expect(ValidationException.class);
-        expected.expectMessage("No config found");
-
-        // Test
-        apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID());
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID()));
+        Assertions.assertEquals("No config found", ex.getMessage());
 
     }
 
     @Test
-    public void importApiDoc_InvalidContent_Fail() throws MockImportException, ValidationException, URISyntaxException, IOException {
+    void importApiDoc_InvalidContent_Fail() throws MockImportException, URISyntaxException, IOException {
 
         // Setup
         final ApiImportDTO importDTO = new ApiImportDTO(buildMockMultiPartFile("raml/bad_raml_100.raml"), new MockImportConfigDTO());
 
-        // Assertions
-        expected.expect(MockImportException.class);
-        expected.expectMessage("Unexpected key 'get'. Options are :");
-
-        // Test
-        apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID());
+        // Test & Assertions
+        final MockImportException ex = Assertions.assertThrows(MockImportException.class,
+                () -> apiImportService.importApiDoc(importDTO, GeneralUtils.generateUUID()));
+        Assertions.assertTrue(ex.getMessage().startsWith("/ Unexpected key 'get'. Options are :"));
 
     }
 

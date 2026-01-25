@@ -2,16 +2,20 @@ package com.smockin.admin.interceptor;
 
 import com.smockin.admin.service.AuthService;
 import com.smockin.admin.service.SmockinUserService;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AuthInterceptorTest {
+import java.util.stream.Stream;
+
+@ExtendWith(MockitoExtension.class)
+class AuthInterceptorTest {
 
     @Mock
     private SmockinUserService smockinUserService;
@@ -24,76 +28,31 @@ public class AuthInterceptorTest {
     private AuthInterceptor authInterceptor = new AuthInterceptor(smockinUserService, authService);
 
 
-    @Test
-    public void matchExclusionUrl_exactMatchPass() {
-
-        final String exclusionKey = "/smockin/test/mock";
-        final String inboundUrl = "/smockin/test/mock";
-
-        Assert.assertTrue(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
+    @ParameterizedTest(name = "[{index}] exclusionKey={0} inboundUrl={1} expected={2}")
+    @MethodSource("matchExclusionUrlCases")
+    void matchExclusionUrl(final String exclusionKey, final String inboundUrl, final boolean expected) {
+        Assertions.assertEquals(expected, authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
     }
 
-    @Test
-    public void matchExclusionUrl_exactMatchFail() {
-
-        final String exclusionKey = "/smockin/test/mock";
-        final String inboundUrl = "/smockin/test/mock2";
-
-        Assert.assertFalse(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
-    }
-
-    @Test
-    public void matchExclusionUrl_wildcardPathMatchPass() {
-
-        final String exclusionKey = "/smockin/test/mock/*";
-        final String inboundUrl = "/smockin/test/mock/123";
-
-        Assert.assertTrue(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
-    }
-
-    @Test
-    public void matchExclusionUrl_wildcardPathMatchFail() {
-
-        final String exclusionKey = "/smockin/test/mock/*";
-        final String inboundUrl = "/smockin/test/mock2/123";
-
-        Assert.assertFalse(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
-    }
-
-    @Test
-    public void matchExclusionUrl_wildcardSubPathMatchFail() {
-
-        final String exclusionKey = "/smockin/test/mock/*";
-        final String inboundUrl = "/test/mock/123";
-
-        Assert.assertFalse(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
-    }
-
-    @Test
-    public void matchExclusionUrl_wildcardSubPathMatchFail2() {
-
-        final String exclusionKey = "/test/mock/*";
-        final String inboundUrl = "/smockin/test/mock/123";
-
-        Assert.assertFalse(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
-    }
-
-    @Test
-    public void matchExclusionUrl_wildcardFileMatchPass() {
-
-        final String exclusionKey = "*.html";
-        final String inboundUrl = "/smockin/test/mock/file.html";
-
-        Assert.assertTrue(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
-    }
-
-    @Test
-    public void matchExclusionUrl_wildcardFileMatchFail() {
-
-        final String exclusionKey = "*.html";
-        final String inboundUrl = "/smockin/test/mock/file.htmlx";
-
-        Assert.assertFalse(authInterceptor.matchExclusionUrl(exclusionKey, inboundUrl));
+    private static Stream<Arguments> matchExclusionUrlCases() {
+        return Stream.of(
+                // exact match
+                Arguments.of("/smockin/test/mock", "/smockin/test/mock", true),
+                // non-matching exact path
+                Arguments.of("/smockin/test/mock", "/smockin/test/mock2", false),
+                // wildcard path match (single segment)
+                Arguments.of("/smockin/test/mock/*", "/smockin/test/mock/123", true),
+                // wildcard path mismatch (different segment)
+                Arguments.of("/smockin/test/mock/*", "/smockin/test/mock2/123", false),
+                // wildcard path mismatch (different base)
+                Arguments.of("/smockin/test/mock/*", "/test/mock/123", false),
+                // wildcard path mismatch (key missing base prefix)
+                Arguments.of("/test/mock/*", "/smockin/test/mock/123", false),
+                // wildcard file extension match
+                Arguments.of("*.html", "/smockin/test/mock/file.html", true),
+                // wildcard file extension mismatch
+                Arguments.of("*.html", "/smockin/test/mock/file.htmlx", false)
+        );
     }
 
 }

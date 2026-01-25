@@ -15,12 +15,12 @@ import com.smockin.mockserver.service.bean.ProxiedKey;
 import com.smockin.mockserver.service.dto.HttpProxiedDTO;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.utils.GeneralUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 
 import java.io.File;
@@ -29,8 +29,8 @@ import java.util.concurrent.*;
 /**
  * Created by mgallina on 11/08/17.
  */
-@RunWith(MockitoJUnitRunner.class)
-public class HttpProxyServiceQueueTest {
+@ExtendWith(MockitoExtension.class)
+class HttpProxyServiceQueueTest {
 
     private RestfulMock mockReqHelloGet, mockReqHelloPost, mockReqHelloDelete, mockReqFooGet;
     private ProxiedKey helloKeyGet, helloKeyPost, helloKeyDelete, fooKeyGet;
@@ -50,8 +50,8 @@ public class HttpProxyServiceQueueTest {
     @InjectMocks
     private HttpProxyService proxyService = new HttpProxyServiceImpl();
 
-    @Before
-    public void setUp() throws RecordNotFoundException, ValidationException {
+    @BeforeEach
+    void setUp() throws RecordNotFoundException, ValidationException {
 
         user = new SmockinUser();
         user.setRole(SmockinUserRoleEnum.REGULAR);
@@ -97,82 +97,82 @@ public class HttpProxyServiceQueueTest {
     }
 
     @Test
-    public void waitForResponse_ConsumeAll_Test() throws InterruptedException, ExecutionException, TimeoutException {
+    void waitForResponse_ConsumeAll_Test() throws InterruptedException, ExecutionException, TimeoutException {
 
         final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet);
-        Assert.assertNotNull(dto1);
-        Assert.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
+        Assertions.assertNotNull(dto1);
+        Assertions.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
 
         final RestfulResponseDTO dto2 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost);
-        Assert.assertNotNull(dto2);
-        Assert.assertEquals(helloPostDTO.getBody(), dto2.getResponseBody());
+        Assertions.assertNotNull(dto2);
+        Assertions.assertEquals(helloPostDTO.getBody(), dto2.getResponseBody());
 
         final RestfulResponseDTO dto3 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete);
-        Assert.assertNotNull(dto3);
-        Assert.assertEquals(helloDeleteDTO.getBody(), dto3.getResponseBody());
+        Assertions.assertNotNull(dto3);
+        Assertions.assertEquals(helloDeleteDTO.getBody(), dto3.getResponseBody());
 
         final RestfulResponseDTO dto4 = proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet);
-        Assert.assertNotNull(dto4);
-        Assert.assertEquals(fooGetDTO.getBody(), dto4.getResponseBody());
+        Assertions.assertNotNull(dto4);
+        Assertions.assertEquals(fooGetDTO.getBody(), dto4.getResponseBody());
 
     }
 
     @Test
-    public void waitForResponse_ConsumeAndWaitTimeout_Test() throws InterruptedException, ExecutionException, TimeoutException {
+    void waitForResponse_ConsumeAndWaitTimeout_Test() throws InterruptedException, ExecutionException, TimeoutException {
 
         final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet);
-        Assert.assertNotNull(dto1);
-        Assert.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
+        Assertions.assertNotNull(dto1);
+        Assertions.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
 
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet));
+        Assertions.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet));
     }
 
     @Test
-    public void clearSession_Test() throws InterruptedException, ExecutionException, TimeoutException {
+    void clearSession_Test() throws InterruptedException, ExecutionException, TimeoutException {
 
         // Test
         proxyService.clearAllSessions();
 
         // Assertions
-        Assert.assertNull(proxyService.waitForResponse(helloKeyGet.path(), mockReqHelloGet));
+        Assertions.assertNull(proxyService.waitForResponse(helloKeyGet.path(), mockReqHelloGet));
     }
 
     @Test
-    public void clearSession_ByPath_Hello_Test() throws RecordNotFoundException, ValidationException {
+    void clearSession_ByPath_Hello_Test() throws RecordNotFoundException, ValidationException {
 
         // Test
         proxyService.clearSession(mockReqHelloPost.getExtId(), user.getSessionToken());
 
         // Assertions
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet));
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost));
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete));
+        Assertions.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet));
+        Assertions.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost));
+        Assertions.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete));
 
         final RestfulResponseDTO dto4 = proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet);
-        Assert.assertNotNull(dto4);
-        Assert.assertEquals(fooGetDTO.getBody(), dto4.getResponseBody());
+        Assertions.assertNotNull(dto4);
+        Assertions.assertEquals(fooGetDTO.getBody(), dto4.getResponseBody());
     }
 
     @Test
-    public void clearSession_ByPath_Foo_Test() throws RecordNotFoundException, ValidationException {
+    void clearSession_ByPath_Foo_Test() throws RecordNotFoundException, ValidationException {
 
         // Test
         proxyService.clearSession(mockReqFooGet.getExtId(), user.getSessionToken());
 
         // Assertions
-        Assert.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet));
+        Assertions.assertNull(proxyService.waitForResponse(File.separator + user.getCtxPath() + fooKeyGet.path(), mockReqFooGet));
 
         final RestfulResponseDTO dto1 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyGet.path(), mockReqHelloGet);
-        Assert.assertNotNull(dto1);
-        Assert.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
+        Assertions.assertNotNull(dto1);
+        Assertions.assertEquals(helloGetDTO.getBody(), dto1.getResponseBody());
 
         final RestfulResponseDTO dto2 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyPost.path(), mockReqHelloPost);
-        Assert.assertNotNull(dto2);
-        Assert.assertEquals(helloPostDTO.getBody(), dto2.getResponseBody());
+        Assertions.assertNotNull(dto2);
+        Assertions.assertEquals(helloPostDTO.getBody(), dto2.getResponseBody());
 
         final RestfulResponseDTO dto3 = proxyService.waitForResponse(File.separator + user.getCtxPath() + helloKeyDelete.path(), mockReqHelloDelete);
-        Assert.assertNotNull(dto3);
-        Assert.assertEquals(helloDeleteDTO.getBody(), dto3.getResponseBody());
+        Assertions.assertNotNull(dto3);
+        Assertions.assertEquals(helloDeleteDTO.getBody(), dto3.getResponseBody());
     }
 
 }

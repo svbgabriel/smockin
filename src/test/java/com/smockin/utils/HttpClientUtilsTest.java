@@ -4,8 +4,8 @@ import com.smockin.admin.dto.HttpClientCallDTO;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.fluent.Request;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;
@@ -15,10 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HttpClientUtilsTest {
+class HttpClientUtilsTest {
 
     @Test
-    public void handleRequestData_formUrlEncodedBody_Test() {
+    void handleRequestData_formUrlEncodedBody_Test() {
 
         // Setup
         final Request request = Mockito.mock(Request.class);
@@ -39,15 +39,15 @@ public class HttpClientUtilsTest {
         Mockito.verify(request, Mockito.never()).bodyByteArray(Mockito.any());
 
         final List<NameValuePair> params = captor.getValue();
-        Assert.assertEquals(2, params.size());
-        Assert.assertEquals("name", params.get(0).getName());
-        Assert.assertEquals("bob", params.get(0).getValue());
-        Assert.assertEquals("age", params.get(1).getName());
-        Assert.assertEquals("21", params.get(1).getValue());
+        Assertions.assertEquals(2, params.size());
+        Assertions.assertEquals("name", params.get(0).getName());
+        Assertions.assertEquals("bob", params.get(0).getValue());
+        Assertions.assertEquals("age", params.get(1).getName());
+        Assertions.assertEquals("21", params.get(1).getValue());
     }
 
     @Test
-    public void handleRequestData_nonFormBody_UsesByteArray_Test() {
+    void handleRequestData_nonFormBody_UsesByteArray_Test() {
 
         // Setup
         final Request request = Mockito.mock(Request.class);
@@ -64,11 +64,11 @@ public class HttpClientUtilsTest {
         final ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
         Mockito.verify(request).bodyByteArray(captor.capture());
         Mockito.verify(request, Mockito.never()).bodyForm(Mockito.anyList());
-        Assert.assertEquals("plain-text", new String(captor.getValue()));
+        Assertions.assertEquals("plain-text", new String(captor.getValue()));
     }
 
     @Test
-    public void handleRequestData_nullBody_UsesNullBytes_Test() {
+    void handleRequestData_nullBody_UsesNullBytes_Test() {
 
         // Setup
         final Request request = Mockito.mock(Request.class);

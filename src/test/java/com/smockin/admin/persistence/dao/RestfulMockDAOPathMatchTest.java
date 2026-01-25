@@ -5,21 +5,22 @@ import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 
 /**
  * Created by mgallina.
  */
-public class RestfulMockDAOPathMatchTest {
+class RestfulMockDAOPathMatchTest {
 
     private RestfulMock a, b, c, d, e;
     private RestfulMockDAOImpl restfulMockDAOImpl;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
         a = SmockinTestUtils.buildRestfulMock("/js", RestMockTypeEnum.CUSTOM_JS, 1, RestMethodEnum.GET, RecordStatusEnum.ACTIVE, null);
         b = SmockinTestUtils.buildRestfulMock("/js2/{id}", RestMockTypeEnum.CUSTOM_JS, 2, RestMethodEnum.GET, RecordStatusEnum.ACTIVE, null);
@@ -32,35 +33,35 @@ public class RestfulMockDAOPathMatchTest {
     }
 
     @Test
-    public void matchPath_simpleMatch_Test() {
+    void matchPath_simpleMatch_Test() {
 
-        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a,b,c,d,e), "/js", false);
-        Assert.assertNotNull(loadedMock);
-        Assert.assertEquals(a.getPath(), loadedMock.getPath());
+        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a, b, c, d, e), "/js", false);
+        Assertions.assertNotNull(loadedMock);
+        Assertions.assertEquals(a.getPath(), loadedMock.getPath());
     }
 
     @Test
-    public void matchPath_pathVar_Test() {
+    void matchPath_pathVar_Test() {
 
-        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a,b,c,d,e), "/js2/1", false);
-        Assert.assertNotNull(loadedMock);
-        Assert.assertEquals(b.getPath(), loadedMock.getPath());
+        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a, b, c, d, e), "/js2/1", false);
+        Assertions.assertNotNull(loadedMock);
+        Assertions.assertEquals(b.getPath(), loadedMock.getPath());
     }
 
     @Test
-    public void matchPath_pathVar2_Test() {
+    void matchPath_pathVar2_Test() {
 
-        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a,b,c,d,e), "/firstname/bob/lastname", false);
-        Assert.assertNotNull(loadedMock);
-        Assert.assertEquals(d.getPath(), loadedMock.getPath());
+        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a, b, c, d, e), "/firstname/bob/lastname", false);
+        Assertions.assertNotNull(loadedMock);
+        Assertions.assertEquals(d.getPath(), loadedMock.getPath());
     }
 
     @Test
-    public void matchPath_pathVar3_Test() {
+    void matchPath_pathVar3_Test() {
 
-        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a,b,c,d,e), "/hello/mike/howareyou/today", false);
-        Assert.assertNotNull(loadedMock);
-        Assert.assertEquals(e.getPath(), loadedMock.getPath());
+        final RestfulMock loadedMock = restfulMockDAOImpl.matchPath(Arrays.asList(a, b, c, d, e), "/hello/mike/howareyou/today", false);
+        Assertions.assertNotNull(loadedMock);
+        Assertions.assertEquals(e.getPath(), loadedMock.getPath());
     }
 
 }

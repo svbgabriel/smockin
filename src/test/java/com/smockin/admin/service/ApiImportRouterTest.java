@@ -5,13 +5,12 @@ import com.smockin.admin.dto.MockImportConfigDTO;
 import com.smockin.admin.enums.ApiImportTypeEnum;
 import com.smockin.admin.exception.MockImportException;
 import com.smockin.admin.exception.ValidationException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -19,8 +18,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ApiImportRouterTest {
+@ExtendWith(MockitoExtension.class)
+class ApiImportRouterTest {
 
     @Mock
     private ApiImportService ramlApiImportService;
@@ -36,20 +35,17 @@ public class ApiImportRouterTest {
 
     private ApiImportRouter apiImportRouter;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     private ApiImportDTO dto;
     private final String token = "valid-token";
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         apiImportRouter = new ApiImportRouter(ramlApiImportService, openApiImportService);
         dto = new ApiImportDTO(mockFile, mockConfig);
     }
 
     @Test
-    public void route_OpenApi_Success_Test() throws MockImportException, ValidationException {
+    void route_OpenApi_Success_Test() throws MockImportException, ValidationException {
 
         // Test
         apiImportRouter.route(ApiImportTypeEnum.OPENAPI.name(), dto, token);
@@ -60,7 +56,7 @@ public class ApiImportRouterTest {
     }
 
     @Test
-    public void route_Raml_Success_Test() throws MockImportException, ValidationException {
+    void route_Raml_Success_Test() throws MockImportException, ValidationException {
 
         // Test
         apiImportRouter.route(ApiImportTypeEnum.RAML.name(), dto, token);
@@ -71,64 +67,54 @@ public class ApiImportRouterTest {
     }
 
     @Test
-    public void validate_NullImportType_Test() throws ValidationException {
+    void validate_NullImportType_Test() {
 
-        // Assertions
-        thrown.expect(ValidationException.class);
-        thrown.expectMessage("Import Type is required");
-
-        // Test
-        apiImportRouter.validate(null, dto, token);
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportRouter.validate(null, dto, token));
+        Assertions.assertEquals("Import Type is required", ex.getMessage());
     }
 
     @Test
-    public void validate_InvalidImportType_Test() throws ValidationException {
+    void validate_InvalidImportType_Test() {
 
-        // Assertions
-        thrown.expect(ValidationException.class);
-        thrown.expectMessage("Invalid Import Type: INVALID_TYPE");
-
-        // Test
-        apiImportRouter.validate("INVALID_TYPE", dto, token);
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportRouter.validate("INVALID_TYPE", dto, token));
+        Assertions.assertEquals("Invalid Import Type: INVALID_TYPE", ex.getMessage());
     }
 
     @Test
-    public void validate_NullDto_Test() throws ValidationException {
+    void validate_NullDto_Test() {
 
-        // Assertions
-        thrown.expect(ValidationException.class);
-        thrown.expectMessage("Inbound dto is undefined");
-
-        // Test
-        apiImportRouter.validate(ApiImportTypeEnum.OPENAPI.name(), null, token);
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportRouter.validate(ApiImportTypeEnum.OPENAPI.name(), null, token));
+        Assertions.assertEquals("Inbound dto is undefined", ex.getMessage());
     }
 
     @Test
-    public void validate_NullFile_Test() throws ValidationException {
+    void validate_NullFile_Test() {
 
         // Setup
         ApiImportDTO dtoWithNullFile = new ApiImportDTO(null, mockConfig);
 
-        // Assertions
-        thrown.expect(ValidationException.class);
-        thrown.expectMessage("Inbound file (in dto) is undefined");
-
-        // Test
-        apiImportRouter.validate(ApiImportTypeEnum.OPENAPI.name(), dtoWithNullFile, token);
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportRouter.validate(ApiImportTypeEnum.OPENAPI.name(), dtoWithNullFile, token));
+        Assertions.assertEquals("Inbound file (in dto) is undefined", ex.getMessage());
     }
 
     @Test
-    public void validate_NullConfig_Test() throws ValidationException {
+    void validate_NullConfig_Test() {
 
         // Setup
         ApiImportDTO dtoWithNullConfig = new ApiImportDTO(mockFile, null);
 
-        // Assertions
-        thrown.expect(ValidationException.class);
-        thrown.expectMessage("Inbound config (in dto) is undefined");
-
-        // Test
-        apiImportRouter.validate(ApiImportTypeEnum.OPENAPI.name(), dtoWithNullConfig, token);
+        // Test & Assertions
+        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
+                () -> apiImportRouter.validate(ApiImportTypeEnum.OPENAPI.name(), dtoWithNullConfig, token));
+        Assertions.assertEquals("Inbound config (in dto) is undefined", ex.getMessage());
     }
 
 }

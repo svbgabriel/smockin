@@ -4,16 +4,14 @@ import com.smockin.admin.persistence.entity.RestfulMockDefinitionRuleGroupCondit
 import com.smockin.admin.persistence.enums.RuleComparatorEnum;
 import com.smockin.admin.persistence.enums.RuleDataTypeEnum;
 import com.smockin.admin.persistence.enums.RuleMatchingTypeEnum;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by mgallina.
  */
-public class RuleResolverEqualsTest {
+class RuleResolverEqualsTest {
 
     private RuleResolver ruleResolver;
 
@@ -21,31 +19,26 @@ public class RuleResolverEqualsTest {
     private final String inboundNumericWholeValue = "201";
     private final String inboundNumericDecimalValue = "201.321";
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         ruleResolver = new RuleResolverImpl();
     }
 
     @Test
-    public void processRuleComparison_NullComp_Fail() {
-
-        // Assertions
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Invalid rule comparator. Cannot be null");
+    void processRuleComparison_NullComp_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
                 new RestfulMockDefinitionRuleGroupCondition(null, "NAME", RuleDataTypeEnum.TEXT, null, inboundTextValue, RuleMatchingTypeEnum.REQUEST_PARAM, false);
 
-        // Test
-        ruleResolver.processRuleComparison(condition, null);
+        // Test & Assertions
+        final IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> ruleResolver.processRuleComparison(condition, null));
+        Assertions.assertEquals("Invalid rule comparator. Cannot be null", ex.getMessage());
     }
 
     @Test
-    public void processRuleComparison_NullValue_Text_Equals_Fail() {
+    void processRuleComparison_NullValue_Text_Equals_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -55,11 +48,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, null);
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_Text_Equals_Pass() {
+    void processRuleComparison_Text_Equals_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -69,11 +62,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue.toUpperCase());
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Text_Equals_Fail() {
+    void processRuleComparison_Text_Equals_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -83,11 +76,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue + "GHI");
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitiveFieldIsNull_Text_Equals_Pass() {
+    void processRuleComparison_CaseSensitiveFieldIsNull_Text_Equals_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -97,11 +90,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue.toUpperCase());
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitive_Text_Equals_Pass() {
+    void processRuleComparison_CaseSensitive_Text_Equals_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -111,11 +104,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_CaseSensitive_Text_Equals_Fail() {
+    void processRuleComparison_CaseSensitive_Text_Equals_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -125,11 +118,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundTextValue.toUpperCase());
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_Whole_Numeric_Equals_Pass() {
+    void processRuleComparison_Whole_Numeric_Equals_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -139,11 +132,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundNumericWholeValue);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Whole_Numeric_Equals_Fail() {
+    void processRuleComparison_Whole_Numeric_Equals_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -153,11 +146,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "101");
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_Decimal_Numeric_Equals_Pass() {
+    void processRuleComparison_Decimal_Numeric_Equals_Pass() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -167,11 +160,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, inboundNumericDecimalValue);
 
         // Assertions
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
-    public void processRuleComparison_Decimal_Numeric_Equals_Fail() {
+    void processRuleComparison_Decimal_Numeric_Equals_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -181,11 +174,11 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "201.322");
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void processRuleComparison_Invalid_Numeric_Equals_Fail() {
+    void processRuleComparison_Invalid_Numeric_Equals_Fail() {
 
         // Setup
         final RestfulMockDefinitionRuleGroupCondition condition =
@@ -195,7 +188,7 @@ public class RuleResolverEqualsTest {
         final boolean result = ruleResolver.processRuleComparison(condition, "One");
 
         // Assertions
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
 }
