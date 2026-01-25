@@ -1,5 +1,6 @@
 package com.smockin.utils;
 
+import com.smockin.admin.enums.UserModeEnum;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -316,6 +317,52 @@ public class GeneralUtilsTest {
         // Assertions
         Assert.assertNotNull(result);
         Assert.assertEquals("", result);
+    }
+
+    @Test
+    public void findAllPathVars_WildcardAndNamed_Test() {
+
+        // Test
+        final Map<String, String> result = GeneralUtils.findAllPathVars(
+                "/person/123/details/ABC", "/person/*/details/{code}");
+
+        // Assertions
+        Assert.assertNotNull(result);
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals("123", result.get("*1"));
+        Assert.assertEquals("ABC", result.get("code"));
+    }
+
+    @Test
+    public void findAllPathVars_InboundShorter_ReturnsEmpty_Test() {
+
+        // Test
+        final Map<String, String> result = GeneralUtils.findAllPathVars(
+                "/person/123", "/person/123/details");
+
+        // Assertions
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void sanitizeMultiUserPath_activeRemovesContext_Test() {
+
+        // Test
+        final String result = GeneralUtils.sanitizeMultiUserPath(
+                UserModeEnum.ACTIVE, "/ctx/api/ping", "/ctx");
+
+        // Assertions
+        Assert.assertEquals("/api/ping", result);
+    }
+
+    @Test
+    public void prefixPath_handlesBlankAndMissingSlash_Test() {
+
+        // Test & Assertions
+        Assert.assertNull(GeneralUtils.prefixPath(" "));
+        Assert.assertEquals("/test", GeneralUtils.prefixPath("test"));
+        Assert.assertEquals("/test", GeneralUtils.prefixPath("/test"));
     }
 
 }
