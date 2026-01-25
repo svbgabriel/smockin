@@ -7,6 +7,7 @@ import com.smockin.mockserver.dto.MockServerState;
 import com.smockin.utils.HttpClientUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
@@ -119,7 +120,7 @@ public class HttpClientServiceImpl implements HttpClientService {
     }
 
     boolean isHttps(final String url) {
-        return StringUtils.startsWith(url, HTTPS_PROTOCOL);
+        return Strings.CS.startsWith(url, HTTPS_PROTOCOL);
     }
 
     HttpClientResponseDTO get(final HttpClientCallDTO reqDto) throws IOException {
@@ -208,14 +209,11 @@ public class HttpClientServiceImpl implements HttpClientService {
     }
 
     Map<String, String> extractResponseHeaders(final HttpResponse httpResponse) {
-
-        return new HashMap<String, String>() {
-            {
-                for (Header h : httpResponse.getAllHeaders()) {
-                    put(h.getName(), h.getValue());
-                }
-            }
-        };
+        Map<String, String> headers = new HashMap<>();
+        for (Header h : httpResponse.getAllHeaders()) {
+            headers.put(h.getName(), h.getValue());
+        }
+        return headers;
     }
 
     String extractResponseBody(final HttpResponse httpResponse) throws IOException {

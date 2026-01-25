@@ -7,6 +7,7 @@ import com.smockin.utils.GeneralUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -60,9 +61,7 @@ public class MailInboxCache {
                                                          final Optional<Integer> pageStart) {
 
         // Sort by date and find page start...
-        int start = (pageStart.isPresent())
-                ? pageStart.get()
-                : 0;
+        int start = pageStart.orElse(0);
 
         final int startFromRecord = (start * GeneralUtils.DEFAULT_RECORDS_PER_PAGE);
 
@@ -74,7 +73,7 @@ public class MailInboxCache {
                     .stream()
                     .filter(e ->
                             e.getKey().getMockMailId().equals(mailMockExtId)
-                                && StringUtils.contains(
+                                && Strings.CS.contains(
                                     e.getValue().getMailServerMessageInboxDTO().getSubject(),
                                     mailMessageSearchDTO.get().getSubject()))
                     .sorted(Comparator.comparing(e ->
@@ -108,7 +107,7 @@ public class MailInboxCache {
                     .stream()
                     .filter(e ->
                             e.getKey().getMockMailId().equals(mailMockExtId)
-                                && StringUtils.contains(
+                                && Strings.CS.contains(
                                     e.getValue().getMailServerMessageInboxDTO().getSubject(),
                                     mailMessageSearchDTO.get().getSubject()))
                     .count();

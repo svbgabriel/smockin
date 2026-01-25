@@ -6,6 +6,8 @@ import com.smockin.admin.service.SmockinUserService;
 import com.smockin.admin.service.UserKeyValueDataService;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.utils.GeneralUtils;
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.Strings;
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.commons.lang3.StringUtils;
@@ -144,13 +146,13 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
 
         for (int i=0; i < MAX_PASSES; i++) {
 
-            final int startPos = StringUtils.indexOf(handleResponseFunc, keyValuePairFuncPrefix, currentPos);
+            final int startPos = Strings.CS.indexOf(handleResponseFunc, keyValuePairFuncPrefix, currentPos);
 
             if (startPos == -1) {
                 break;
             }
 
-            final int closingParenthesisPos = StringUtils.indexOf(handleResponseFunc, ")", startPos);
+            final int closingParenthesisPos = Strings.CS.indexOf(handleResponseFunc, ")", startPos);
             final String sanitizedKey = findKvpKey(startPos, closingParenthesisPos, req, mock, keyValuePairFuncPrefix, handleResponseFunc);
 
             if (sanitizedKey != null) {
@@ -186,15 +188,15 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
         final String sanitizedKey;
 
         if (keyName.startsWith("'") && keyName.endsWith("'")) {
-            sanitizedKey = StringUtils.remove(keyName, "'");
+            sanitizedKey = Strings.CS.remove(keyName, "'");
         } else if (keyName.startsWith("\"") && keyName.endsWith("\"")) {
-            sanitizedKey = StringUtils.remove(keyName, "\"");
+            sanitizedKey = Strings.CS.remove(keyName, "\"");
         } else if (keyName.contains("request.")) {
 
-            final String requestObjectField = StringUtils.remove(keyName, "request.").trim();
+            final String requestObjectField = Strings.CS.remove(keyName, "request.").trim();
 
             if (requestObjectField.startsWith("pathVars")) {
-                final String pathVarsObjectField = StringUtils.remove(requestObjectField, "pathVars").trim();
+                final String pathVarsObjectField = Strings.CS.remove(requestObjectField, "pathVars").trim();
                 final String sanitizedInboundPath = GeneralUtils.sanitizeMultiUserPath(smockinUserService.getUserMode(), req.getPathInfo(), mock.getCreatedBy().getCtxPath());
                 sanitizedKey = GeneralUtils.findAllPathVars(sanitizedInboundPath, mock.getPath()).get(extractObjectField(StringUtils.lowerCase(pathVarsObjectField)));
             } else if ("body".equals(requestObjectField)) {
@@ -204,9 +206,9 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
                 }
                 sanitizedKey = removeLineBreaks(body);
             } else if (requestObjectField.startsWith("headers")) {
-                sanitizedKey = GeneralUtils.findHeaderIgnoreCase(req, extractObjectField(StringUtils.remove(requestObjectField, "headers").trim()));
+                sanitizedKey = GeneralUtils.findHeaderIgnoreCase(req, extractObjectField(Strings.CS.remove(requestObjectField, "headers").trim()));
             } else if (requestObjectField.startsWith("parameters")) {
-                sanitizedKey = GeneralUtils.extractRequestParamByName(req, extractObjectField(StringUtils.remove(requestObjectField, "parameters").trim()));
+                sanitizedKey = GeneralUtils.extractRequestParamByName(req, extractObjectField(Strings.CS.remove(requestObjectField, "parameters").trim()));
             } else {
                 throw new ScriptException(invalidMsgPrefix + "Unable to determine request based key look up");
             }
@@ -219,11 +221,11 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
 
     private String extractObjectField(final String objectField) {
 
-        if (StringUtils.startsWith(objectField, ".")) {
-            return StringUtils.remove(objectField, ".");
-        } else if (StringUtils.startsWith(objectField, "[")) {
-            final String objectFieldP1 = StringUtils.remove(objectField, "['");
-            return StringUtils.remove(objectFieldP1, "']");
+        if (Strings.CS.startsWith(objectField, ".")) {
+            return Strings.CS.remove(objectField, ".");
+        } else if (Strings.CS.startsWith(objectField, "[")) {
+            final String objectFieldP1 = Strings.CS.remove(objectField, "['");
+            return Strings.CS.remove(objectFieldP1, "']");
         }
 
         return null;
@@ -259,7 +261,7 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
     }
 
     String removeLineBreaks(final String input) {
-        return StringUtils.replaceAll(input, CARRIAGE_RETURN_REGEX, "");
+        return RegExUtils.replaceAll(input, CARRIAGE_RETURN_REGEX, "");
     }
 
 }

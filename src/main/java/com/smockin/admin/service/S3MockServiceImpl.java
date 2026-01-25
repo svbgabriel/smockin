@@ -23,6 +23,7 @@ import com.smockin.mockserver.service.S3Client;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -262,7 +263,7 @@ public class S3MockServiceImpl implements S3MockService {
                     cli -> {
                         mockedS3ServerEngineUtils.initBucketContent(cli, s3Mock);
 
-                        if (!StringUtils.equals(originalBucket, dto.getBucket())) {
+                        if (!Strings.CS.equals(originalBucket, dto.getBucket())) {
                             final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
                             mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' renamed bucket '%s' to '%s'", smockinUser.getUsername(), originalBucket, dto.getBucket()),
                                     s3Mock.getCreatedBy().getExtId());
@@ -606,7 +607,7 @@ public class S3MockServiceImpl implements S3MockService {
 
     @FunctionalInterface
     interface ApplyToMockServerAction {
-        void execute(final S3Client S3Client);
+        void execute(final S3Client s3Client);
     }
 
 }

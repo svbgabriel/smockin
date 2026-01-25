@@ -13,6 +13,7 @@ import com.smockin.mockserver.dto.MailServerMessageInboxAttachmentDTO;
 import com.smockin.mockserver.dto.MailServerMessageInboxAttachmentLiteDTO;
 import com.smockin.mockserver.engine.MockedMailServerEngine;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
 
         if (mailMock == null) {
 
-            logger.error("Error locating mail mock with external ID: " + mailMockExtId);
+            logger.error("Error locating mail mock with external ID: {}", mailMockExtId);
 
             if (tokenOpt.isPresent()) {
                 throw new RecordNotFoundException();
@@ -219,7 +220,7 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
             return mailMockMessage.getAttachments()
                     .stream()
                     .filter(a ->
-                            StringUtils.equalsIgnoreCase(a.getExtId(), attachmentIdOrName))
+                            Strings.CI.equals(a.getExtId(), attachmentIdOrName))
                     .map(a ->
                             new MailServerMessageInboxAttachmentDTO(
                                     a.getExtId(),
@@ -237,7 +238,7 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
                     = mockedMailServerEngine.getMessageAttachmentsFromMailServerInbox(mailMock.getExtId(), messageId)
                         .stream()
                         .filter(a ->
-                            StringUtils.equals(a.getName(), attachmentIdOrName))
+                            Strings.CS.equals(a.getName(), attachmentIdOrName))
                         .findFirst();
 
             if (!attachmentDTO.isPresent()) {
