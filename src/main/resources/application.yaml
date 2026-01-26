@@ -1,26 +1,20 @@
 server:
   port: 8000
 
-#logging.level.com.smockin: ERROR
-
-spring.main.allow-circular-references: true
-
 smockin:
   auth.exclusions: '{"*.html":["GET"],"*.js":["GET"],"*.css":["GET"],"*.woff2":["GET"],"*.png":["GET"],"*.gif":["GET"],"*.ico":["GET"],"/auth":["POST"],"/user/mode":["GET"],"/mockedserver/rest/status":["GET"],"/mockedserver/jms/status":["GET"],"/mockedserver/ftp/status":["GET"],"/password/reset/token/*":["GET","POST"]}'
 
 multi.user.mode: false
 
+---
 spring:
+  profiles:
+    active: production
   servlet:
     multipart:
       enabled: true
       max-file-size: 20971520 #20 MB
       max-request-size: 20971520 #20 MB
-
----
-spring:
-  profiles:
-    active: production
   jpa:
     show-sql: false
     open-in-view: false
@@ -30,8 +24,8 @@ spring:
     password: ${DB_PASSWORD:smockin}
     hikari:
       poolName: smockin-pool
-      idle-timeout: 10000
       maximum-pool-size: 10
       minimum-idle: 10
   main:
+    allow-circular-references: true
     banner-mode: off
