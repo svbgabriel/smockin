@@ -1,0 +1,6 @@
+<div class="alert" *ngFor="let alert of alerts; let i = index" [ngClass]="'alert-' + alert.type">
+  <span>{{ alert.message }}</span>
+  <button type="button" class="alert-close" (click)="dismiss(i)" [attr.aria-label]="'common.close' | t">
+    x
+  </button>
+</div>

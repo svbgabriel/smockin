@@ -1,0 +1,59 @@
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark">S</span>
+    <span class="brand-text">{{ title }}</span>
+  </div>
+  <nav class="nav">
+    <a *ngFor="let link of navLinks" [routerLink]="link.path" routerLinkActive="active">{{
+      link.labelKey | t
+    }}</a>
+    <details class="nav-dropdown" (focusout)="closeToolsMenu($event)">
+      <summary>{{ 'nav.tools' | t }}</summary>
+      <div class="nav-menu">
+        <a href="https://www.smockin.com/help/" target="_blank" rel="noreferrer">{{ 'nav.help' | t }}</a>
+        <a *ngFor="let link of toolLinks" [routerLink]="link.path" routerLinkActive="active">{{
+          link.labelKey | t
+        }}</a>
+        <a *ngIf="isLoggedIn()" routerLink="/manage_user_kvp_data" routerLinkActive="active">{{
+          'nav.kvpData' | t
+        }}</a>
+        <a *ngIf="isLoggedIn()" [routerLink]="accountLink.path" routerLinkActive="active">{{
+          accountLink.labelKey | t
+        }}</a>
+      </div>
+    </details>
+    <ng-container *ngIf="isAdmin()">
+      <a *ngFor="let link of adminLinks" [routerLink]="link.path" routerLinkActive="active">{{
+        link.labelKey | t
+      }}</a>
+    </ng-container>
+  </nav>
+  <div class="auth">
+    <label class="theme-switch">
+      <span>{{ 'app.theme.label' | t }}</span>
+      <select [(ngModel)]="theme" (ngModelChange)="onThemeChange($event)">
+        <option [ngValue]="'light'">{{ 'app.theme.light' | t }}</option>
+        <option [ngValue]="'dark'">{{ 'app.theme.dark' | t }}</option>
+      </select>
+    </label>
+    <label class="lang-switch">
+      <span>{{ 'app.language.label' | t }}</span>
+      <select [(ngModel)]="language">
+        <option *ngFor="let lang of languages" [ngValue]="lang.code">{{ lang.label }}</option>
+      </select>
+    </label>
+    <ng-container *ngIf="authState$ | async as state; else guest">
+      <span class="user">
+        {{ 'auth.greeting' | t: { name: state.payload?.name || state.payload?.username || '' } }}
+      </span>
+      <button type="button" class="auth-button" (click)="logout()">{{ 'auth.logout' | t }}</button>
+    </ng-container>
+    <ng-template #guest>
+      <a class="auth-button" routerLink="/login">{{ 'auth.login' | t }}</a>
+    </ng-template>
+  </div>
+</header>
+
+<main class="app-main">
+  <router-outlet></router-outlet>
+</main>

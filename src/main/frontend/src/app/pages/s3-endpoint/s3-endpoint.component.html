@@ -1,0 +1,272 @@
+<section class="page" *ngIf="viewMode === 'list'">
+  <div class="page-header">
+    <div>
+      <h1>{{ 's3.list.title' | t }}</h1>
+      <div class="status" [class.running]="mockServerStatus === statusRunning" [class.stopped]="mockServerStatus === statusStopped">
+        {{ ('status.' + mockServerStatus.toLowerCase()) | t }}
+      </div>
+    </div>
+    <div class="toolbar">
+      <button
+        class="button"
+        type="button"
+        (click)="startServer()"
+        [disabled]="isBusy || mockServerStatus === statusRunning || isReadOnly"
+      >
+        {{ 'common.startServer' | t }}
+      </button>
+      <button
+        class="button danger"
+        type="button"
+        (click)="stopServer()"
+        [disabled]="isBusy || mockServerStatus !== statusRunning || isReadOnly"
+      >
+        {{ 'common.stopServer' | t }}
+      </button>
+      <button class="button" type="button" (click)="openNewBucket()" [disabled]="isReadOnly">
+        {{ 's3.list.newBucket' | t }}
+      </button>
+      <button class="button secondary" type="button" (click)="toggleImport()">{{ 'common.import' | t }}</button>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="import-panel" *ngIf="showImport">
+    <div class="field">
+      <label for="importFile">{{ 's3.import.zipFile' | t }}</label>
+      <input id="importFile" type="file" accept=".zip" (change)="onFileSelected($event)" />
+    </div>
+    <label class="checkbox">
+      <input type="checkbox" [(ngModel)]="keepExisting" />
+      {{ 's3.import.keepExisting' | t }}
+    </label>
+    <button class="button" type="button" (click)="importMocks()" [disabled]="isBusy">{{ 'common.send' | t }}</button>
+  </div>
+
+  <div class="toolbar spaced">
+    <div class="inline-actions">
+      <button class="button secondary" type="button" (click)="selectAll()">{{ 'common.selectAll' | t }}</button>
+      <button class="button secondary" type="button" (click)="clearSelection()">{{ 'common.clearSelection' | t }}</button>
+    </div>
+    <div class="inline-actions">
+      <button class="button secondary" type="button" (click)="exportSelection()" [disabled]="mockSelection.size === 0">
+        {{ 'common.export' | t }}
+      </button>
+      <button class="button danger" type="button" (click)="deleteSelection()" [disabled]="mockSelection.size === 0 || isReadOnly">
+        {{ 'common.delete' | t }}
+      </button>
+    </div>
+  </div>
+
+  <div class="field search">
+    <label for="searchFilter">{{ 'common.quickFilter' | t }}</label>
+    <input
+      id="searchFilter"
+      type="text"
+      [placeholder]="'s3.filter.placeholder' | t"
+      [(ngModel)]="searchFilter"
+      (input)="filterMocks()"
+    />
+  </div>
+
+  <div class="empty-state" *ngIf="s3Services.length === 0">{{ 'common.noDataFound' | t }}</div>
+
+  <table class="table" *ngIf="s3Services.length > 0">
+    <thead>
+      <tr>
+        <th></th>
+        <th>{{ 's3.table.bucket' | t }}</th>
+        <th>{{ 'common.createdAt' | t }}</th>
+        <th>{{ 's3.table.syncMode' | t }}</th>
+        <th>{{ 'common.status' | t }}</th>
+        <th>{{ 'common.actions' | t }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let bucket of s3Services">
+        <td><input type="checkbox" [checked]="isSelected(bucket.extId)" (change)="toggleSelection(bucket)" /></td>
+        <td>{{ bucket.bucket }}</td>
+        <td>{{ bucket.dateCreated | date: 'dd MMM yyyy HH:mm':'UTC' }}</td>
+        <td>{{ translateSyncMode(bucket.syncMode) }}</td>
+        <td>{{ bucket.status === 'ACTIVE' ? ('common.enabled' | t) : ('common.disabled' | t) }}</td>
+        <td>
+          <button class="button secondary" type="button" (click)="openEditor(bucket.extId)">{{ 'common.edit' | t }}</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="page" *ngIf="viewMode === 'editor'">
+  <div class="page-header">
+    <div>
+      <h1>{{ isNew ? ('s3.editor.newTitle' | t) : ('s3.editor.title' | t) }}</h1>
+      <div class="subtle" *ngIf="endpoint.createdBy">
+        {{ 'common.createdBy' | t: { name: endpoint.createdBy } }}
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" type="button" (click)="closeEditor()">{{ 'common.back' | t }}</button>
+      <button class="button danger" type="button" (click)="deleteBucket()" [disabled]="isEditorReadOnly || isNew">
+        {{ 'common.delete' | t }}
+      </button>
+      <button class="button" type="button" (click)="saveBucket()" [disabled]="isEditorReadOnly">{{ 'common.save' | t }}</button>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="editor-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>{{ 's3.editor.details.title' | t }}</h2>
+        <span class="chip" *ngIf="endpoint.status === activeStatus">{{ 'common.enabled' | t }}</span>
+        <span class="chip" *ngIf="endpoint.status === inactiveStatus">{{ 'common.disabled' | t }}</span>
+      </div>
+
+      <div class="field">
+        <label for="bucketName">{{ 's3.editor.details.bucketName' | t }}</label>
+        <input
+          id="bucketName"
+          type="text"
+          [placeholder]="'s3.editor.details.bucketPlaceholder' | t"
+          [(ngModel)]="endpoint.bucket"
+          [disabled]="!isNew || isEditorReadOnly"
+        />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="bucketStatus">{{ 'common.status' | t }}</label>
+          <select id="bucketStatus" [(ngModel)]="endpoint.status" [disabled]="isEditorReadOnly">
+            <option [value]="activeStatus">{{ 'common.enabled' | t }}</option>
+            <option [value]="inactiveStatus">{{ 'common.disabled' | t }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="syncMode">{{ 's3.editor.details.syncMode' | t }}</label>
+          <select id="syncMode" [(ngModel)]="endpoint.syncMode" [disabled]="isEditorReadOnly">
+            <option *ngFor="let mode of syncModeOptions" [value]="mode.value">
+              {{ mode.labelKey | t }} - {{ mode.descriptionKey | t }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="!isNew">
+      <div class="panel-header">
+        <h2>{{ 's3.editor.content.title' | t }}</h2>
+        <span class="subtle" *ngIf="selectedNode">
+          {{ 's3.editor.content.selected' | t: { name: selectedNode.name } }}
+        </span>
+      </div>
+
+      <div class="tree-actions">
+        <button class="button secondary" type="button" (click)="openAddDirModal()" [disabled]="isEditorReadOnly || !canAddDir">
+          {{ 's3.editor.actions.addDir' | t }}
+        </button>
+        <button class="button secondary" type="button" (click)="openUploadModal()" [disabled]="isEditorReadOnly || !canUploadFile">
+          {{ 's3.editor.actions.uploadFile' | t }}
+        </button>
+        <button class="button secondary" type="button" (click)="openRenameModal()" [disabled]="isEditorReadOnly || !canRenameNode">
+          {{ 'common.rename' | t }}
+        </button>
+        <button class="button danger" type="button" (click)="removeSelectedNode()" [disabled]="isEditorReadOnly || !canRemoveNode">
+          {{ 'common.remove' | t }}
+        </button>
+        <button
+          class="button"
+          type="button"
+          (click)="resetBucketOnServer()"
+          [disabled]="mockServerStatus !== statusRunning"
+        >
+          {{ 's3.editor.actions.resetServer' | t }}
+        </button>
+      </div>
+
+      <div class="tree-view" *ngIf="endpoint.extId">
+        <div
+          class="tree-node root"
+          [class.selected]="isSelectedNode(endpoint.extId || '', 'BUCKET')"
+          (click)="selectBucket($event)"
+        >
+          <button class="tree-toggle" type="button" (click)="toggleRoot($event)" *ngIf="endpoint.children.length || endpoint.files.length">
+            {{ rootExpanded ? '-' : '+' }}
+          </button>
+          <span class="tree-label">{{ endpoint.bucket }}</span>
+          <span class="chip" *ngIf="endpoint.children.length || endpoint.files.length">
+            {{ endpoint.children.length + endpoint.files.length }}
+          </span>
+        </div>
+
+        <div class="tree-children" *ngIf="rootExpanded">
+          <ng-container *ngFor="let node of endpoint.children">
+            <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: node }"></ng-container>
+          </ng-container>
+          <div
+            class="tree-node file"
+            *ngFor="let file of endpoint.files"
+            [class.selected]="isSelectedNode(file.extId, 'FILE')"
+            (click)="selectFile(file, $event)"
+          >
+            <span class="tree-label">{{ file.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!endpoint.extId">{{ 's3.editor.content.saveToManage' | t }}</div>
+    </div>
+  </div>
+
+  <ng-template #nodeTemplate let-node>
+    <div class="tree-node" [class.selected]="isSelectedNode(node.extId, 'DIR')" (click)="selectDir(node, $event)">
+      <button class="tree-toggle" type="button" (click)="toggleNode(node, $event)" *ngIf="node.children.length || node.files.length">
+        {{ node.expanded ? '-' : '+' }}
+      </button>
+      <span class="tree-label">{{ node.name }}</span>
+      <span class="chip" *ngIf="node.children.length || node.files.length">{{ getNodeItemCount(node) }}</span>
+    </div>
+    <div class="tree-children" *ngIf="node.expanded">
+      <ng-container *ngFor="let child of node.children">
+        <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: child }"></ng-container>
+      </ng-container>
+      <div class="tree-node file" *ngFor="let file of node.files" [class.selected]="isSelectedNode(file.extId, 'FILE')" (click)="selectFile(file, $event)">
+        <span class="tree-label">{{ file.name }}</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <app-modal *ngIf="nodeModalOpen" [title]="nodeModalTitleKey | t" size="sm" (close)="closeNodeModal()">
+    <div class="field">
+      <label for="nodeName">{{ 'common.name' | t }}</label>
+      <input id="nodeName" type="text" [(ngModel)]="nodeModalName" />
+    </div>
+    <div class="subtle" *ngIf="nodeModalParentName">
+      {{ 's3.modal.addDirHint' | t: { name: nodeModalParentName } }}
+    </div>
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="closeNodeModal()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="saveNodeModal()" [disabled]="isEditorReadOnly">
+        {{ nodeModalMode === 'add' ? ('common.add' | t) : ('common.update' | t) }}
+      </button>
+    </div>
+  </app-modal>
+
+  <app-modal *ngIf="uploadModalOpen" [title]="'s3.modal.uploadTitle' | t" size="sm" (close)="closeUploadModal()">
+    <div class="field">
+      <label for="uploadFile">{{ 's3.modal.selectFile' | t }}</label>
+      <input id="uploadFile" type="file" (change)="onUploadFileSelected($event)" />
+      <div class="subtle" *ngIf="uploadFile">{{ uploadFile.name }}</div>
+    </div>
+    <div class="subtle" *ngIf="uploadTarget">
+      {{ 's3.modal.uploadHint' | t: { target: uploadTarget.type === 'BUCKET' ? ('s3.modal.bucket' | t) : ('s3.modal.directory' | t) } }}
+      <strong>{{ uploadTarget.name }}</strong>
+    </div>
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="closeUploadModal()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="uploadSelectedFile()" [disabled]="isEditorReadOnly">{{ 'common.upload' | t }}</button>
+    </div>
+  </app-modal>
+</section>

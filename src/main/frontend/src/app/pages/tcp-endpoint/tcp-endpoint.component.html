@@ -1,0 +1,1286 @@
+<section class="page" *ngIf="viewMode === 'list'">
+  <div class="page-header">
+    <div>
+      <h1>{{ 'httpEndpoint.list.title' | t }}</h1>
+      <div
+        class="status"
+        [class.running]="mockServerStatus === statusRunning"
+        [class.stopped]="mockServerStatus === statusStopped"
+        [class.restarting]="mockServerStatus === statusRestarting"
+      >
+        {{ ('status.' + mockServerStatus.toLowerCase()) | t }}
+      </div>
+      <div class="subtle" *ngIf="activeTunnelUrl">
+        {{ 'httpEndpoint.ngrokUrl' | t }}
+        <button type="button" class="link-button" (click)="copyToClipboard(activeTunnelUrl)">
+          {{ activeTunnelUrl }}
+        </button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button
+        class="button"
+        type="button"
+        (click)="startServer()"
+        [disabled]="isBusy || mockServerStatus === statusRunning || isReadOnly"
+      >
+        {{ 'common.startServer' | t }}
+      </button>
+      <button
+        class="button danger"
+        type="button"
+        (click)="stopServer()"
+        [disabled]="isBusy || mockServerStatus !== statusRunning || isReadOnly"
+      >
+        {{ 'common.stopServer' | t }}
+      </button>
+      <button class="button" type="button" (click)="openNewEndpoint()" [disabled]="isReadOnly">
+        {{ 'httpEndpoint.list.newEndpoint' | t }}
+      </button>
+      <button class="button secondary" type="button" (click)="toggleImport()">{{ 'common.import' | t }}</button>
+      <button class="button secondary" type="button" (click)="showServerConfig = true" [disabled]="isReadOnly">
+        {{ 'serverConfig.title' | t }}
+      </button>
+      <button class="button secondary" type="button" (click)="showProxyMappings = true" [disabled]="isReadOnly">
+        {{ 'proxyMappings.title' | t }}
+      </button>
+      <button class="button secondary" type="button" (click)="toggleTunnel()" [disabled]="isReadOnly || tunnelBusy">
+        {{ tunnelEnabled ? ('httpEndpoint.ngrok.disable' | t) : ('httpEndpoint.ngrok.enable' | t) }}
+      </button>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="import-panel" *ngIf="showImport">
+    <div class="field">
+      <label for="importType">{{ 'httpEndpoint.import.type' | t }}</label>
+      <select id="importType" [(ngModel)]="importType">
+        <option value="smockin">sMockin</option>
+        <option value="raml">RAML</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="importFile">{{ 'httpEndpoint.import.zipFile' | t }}</label>
+      <input id="importFile" type="file" accept=".zip" (change)="onFileSelected($event)" />
+    </div>
+    <label class="checkbox">
+      <input type="checkbox" [(ngModel)]="keepExisting" />
+      {{ 'httpEndpoint.import.keepExisting' | t }}
+    </label>
+    <div class="subtle" *ngIf="importType === 'raml'">
+      {{ 'httpEndpoint.import.ramlHint' | t }}
+    </div>
+    <button class="button" type="button" (click)="importMocks()" [disabled]="isBusy">{{ 'common.send' | t }}</button>
+  </div>
+
+  <div class="toolbar spaced">
+    <div class="inline-actions">
+      <button class="button secondary" type="button" (click)="expandAll()">{{ 'common.expandAll' | t }}</button>
+      <button class="button secondary" type="button" (click)="collapseAll()">{{ 'common.collapseAll' | t }}</button>
+      <button class="button secondary" type="button" (click)="selectAll()">{{ 'common.selectAll' | t }}</button>
+      <button class="button secondary" type="button" (click)="clearSelection()">{{ 'common.clearSelection' | t }}</button>
+    </div>
+    <div class="inline-actions">
+      <button class="button secondary" type="button" (click)="exportSelection()" [disabled]="mockSelection.size === 0">
+        {{ 'common.export' | t }}
+      </button>
+      <button
+        class="button danger"
+        type="button"
+        (click)="deleteSelection()"
+        [disabled]="mockSelection.size === 0 || isReadOnly"
+      >
+        {{ 'common.delete' | t }}
+      </button>
+    </div>
+  </div>
+
+  <div class="field search">
+    <label for="searchFilter">{{ 'common.quickFilter' | t }}</label>
+    <input
+      id="searchFilter"
+      type="text"
+      [placeholder]="'httpEndpoint.search.placeholder' | t"
+      [(ngModel)]="searchFilter"
+      (input)="filterMocks()"
+    />
+  </div>
+
+  <div class="empty-state" *ngIf="restServices.length === 0">{{ 'common.noDataFound' | t }}</div>
+
+  <div class="mock-group" *ngFor="let group of restServices">
+    <button class="group-header" type="button" (click)="group.isOpen = !group.isOpen">
+      <span>{{ group.basePath }}</span>
+      <span class="chip">{{ group.data.length }}</span>
+    </button>
+    <div class="group-body" *ngIf="group.isOpen">
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>{{ 'common.path' | t }}</th>
+            <th>{{ 'common.createdAt' | t }}</th>
+            <th>{{ 'httpEndpoint.table.type' | t }}</th>
+            <th>{{ 'common.status' | t }}</th>
+            <th>{{ 'common.actions' | t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let mock of group.data">
+            <td>
+              <input type="checkbox" [checked]="isSelected(mock.extId)" (change)="toggleSelection(mock)" />
+            </td>
+            <td>
+              <div class="subtle">{{ mock.mockType === 'STATEFUL' ? ('httpEndpoint.allMethods' | t) : mock.method }}</div>
+              <strong>{{ mock.userCtxPath ? '/' + mock.userCtxPath : '' }}{{ mock.path }}</strong>
+            </td>
+            <td>{{ mock.dateCreated | date: 'dd MMM yyyy HH:mm':'UTC' }}</td>
+            <td>{{ translateMockType(mock.mockType) }}</td>
+            <td>{{ mock.status === activeStatus ? ('common.enabled' | t) : ('common.disabled' | t) }}</td>
+            <td>
+              <div class="inline-actions">
+                <button class="button secondary small" type="button" (click)="openEditor(mock.extId)">{{ 'common.edit' | t }}</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-server-config-panel
+    *ngIf="showServerConfig"
+    serverType="RESTFUL"
+    (close)="onServerConfigClose($event)"
+  ></app-server-config-panel>
+  <app-proxy-mappings-panel
+    *ngIf="showProxyMappings"
+    serverType="RESTFUL"
+    (close)="onProxyMappingsClose()"
+  ></app-proxy-mappings-panel>
+</section>
+
+<section class="page" *ngIf="viewMode === 'editor'">
+  <div class="page-header">
+    <div>
+      <h1>{{ isNew ? ('httpEndpoint.editor.newTitle' | t) : ('httpEndpoint.editor.title' | t) }}</h1>
+      <div class="subtle" *ngIf="endpoint.createdBy">
+        {{ 'common.createdBy' | t: { name: endpoint.createdBy } }}
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" type="button" (click)="closeEditor()">{{ 'common.back' | t }}</button>
+      <button class="button danger" type="button" (click)="deleteEndpoint()" [disabled]="isEditorReadOnly || isNew">
+        {{ 'common.delete' | t }}
+      </button>
+      <button class="button" type="button" (click)="saveEndpoint()" [disabled]="isEditorReadOnly">{{ 'common.save' | t }}</button>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="editor-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>{{ 'httpEndpoint.editor.endpoint.title' | t }}</h2>
+        <span class="chip" *ngIf="endpoint.status === activeStatus">{{ 'common.enabled' | t }}</span>
+        <span class="chip" *ngIf="endpoint.status === inactiveStatus">{{ 'common.disabled' | t }}</span>
+      </div>
+
+      <div class="field">
+        <label for="endpointPath">{{ 'common.path' | t }}</label>
+        <input
+          id="endpointPath"
+          type="text"
+          [placeholder]="pathPlaceholderKey | t"
+          [(ngModel)]="endpoint.path"
+          [disabled]="isEditorReadOnly"
+        />
+        <div class="subtle" *ngIf="defaultCtxPathPrefix">
+          {{ 'httpEndpoint.editor.actualPath' | t: { path: defaultCtxPathPrefix + (endpoint.path || '') } }}
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="endpointMethod">{{ 'httpEndpoint.editor.endpoint.method' | t }}</label>
+          <select
+            id="endpointMethod"
+            [(ngModel)]="endpoint.method"
+            [disabled]="
+              isEditorReadOnly ||
+              endpoint.mockType === 'PROXY_WS' ||
+              endpoint.mockType === 'PROXY_SSE' ||
+              endpoint.mockType === 'RULE_WS' ||
+              endpoint.mockType === 'STATEFUL'
+            "
+          >
+            <option [ngValue]="null">{{ 'common.select' | t }}</option>
+            <option value="ALL METHODS">{{ 'httpEndpoint.allMethods' | t }}</option>
+            <option *ngFor="let method of httpMethods" [value]="method">{{ method }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="endpointStatus">{{ 'common.status' | t }}</label>
+          <select id="endpointStatus" [(ngModel)]="endpoint.status" [disabled]="isEditorReadOnly">
+            <option [value]="activeStatus">{{ 'common.enabled' | t }}</option>
+            <option [value]="inactiveStatus">{{ 'common.disabled' | t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="mockType">{{ 'httpEndpoint.editor.endpoint.mockType' | t }}</label>
+        <select
+          id="mockType"
+          [(ngModel)]="endpoint.mockType"
+          (ngModelChange)="onMockTypeChange()"
+          [disabled]="isEditorReadOnly"
+        >
+          <option *ngFor="let type of mockTypes" [value]="type.value">{{ type.name | t }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'RULE' || endpoint.mockType === 'RULE_WS'">
+      <h2>{{ 'httpEndpoint.editor.defaultResponse.title' | t }}</h2>
+      <div class="field">
+        <label for="defaultContentType">{{ 'httpEndpoint.editor.defaultResponse.contentType' | t }}</label>
+        <input
+          id="defaultContentType"
+          type="text"
+          list="contentTypeOptions"
+          [(ngModel)]="endpoint.contentType"
+          [disabled]="isEditorReadOnly"
+        />
+      </div>
+      <div class="field" *ngIf="endpoint.mockType === 'RULE'">
+        <label for="defaultHttpStatus">{{ 'httpEndpoint.editor.defaultResponse.httpStatus' | t }}</label>
+        <input
+          id="defaultHttpStatus"
+          type="number"
+          [(ngModel)]="endpoint.httpStatusCode"
+          [disabled]="isEditorReadOnly"
+        />
+      </div>
+      <div class="field">
+        <div class="field-header">
+          <label for="defaultResponseBody">{{ 'httpEndpoint.editor.defaultResponse.body' | t }}</label>
+          <div class="inline-actions">
+            <button
+              class="link-button"
+              type="button"
+              *ngIf="endpoint.contentType === 'application/json'"
+              (click)="formatEndpointJson()"
+              [disabled]="isEditorReadOnly"
+            >
+              {{ 'common.formatJson' | t }}
+            </button>
+            <button
+              class="link-button"
+              type="button"
+              *ngIf="endpoint.contentType === 'application/xml'"
+              (click)="validateXmlResponse(endpoint.responseBody || '')"
+            >
+              {{ 'common.validateXml' | t }}
+            </button>
+          </div>
+        </div>
+        <textarea
+          id="defaultResponseBody"
+          class="textarea-lg"
+          [(ngModel)]="endpoint.responseBody"
+          [disabled]="isEditorReadOnly"
+        ></textarea>
+      </div>
+
+      <div class="panel-nested" *ngIf="endpoint.mockType === 'RULE'">
+        <div class="panel-header">
+          <h3>{{ 'httpEndpoint.editor.defaultResponse.headers' | t }}</h3>
+          <button
+            class="button secondary small"
+            type="button"
+            (click)="addResponseHeaderRow()"
+            [disabled]="isEditorReadOnly"
+          >
+            {{ 'common.addHeader' | t }}
+          </button>
+        </div>
+        <table class="table" *ngIf="responseHeaderList.length > 0">
+          <thead>
+            <tr>
+              <th>{{ 'common.name' | t }}</th>
+              <th>{{ 'common.value' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of responseHeaderList; let idx = index">
+              <td>
+                <input type="text" [(ngModel)]="row.name" [disabled]="isEditorReadOnly" />
+              </td>
+              <td>
+                <input type="text" [(ngModel)]="row.value" [disabled]="isEditorReadOnly" />
+              </td>
+              <td class="action-cell">
+                <button
+                  class="button danger small"
+                  type="button"
+                  (click)="removeResponseHeaderRow(idx)"
+                  [disabled]="isEditorReadOnly"
+                >
+                  {{ 'common.remove' | t }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="responseHeaderList.length === 0">
+          {{ 'httpEndpoint.editor.defaultResponse.noHeaders' | t }}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'STATEFUL'">
+      <h2>{{ 'httpEndpoint.editor.stateful.title' | t }}</h2>
+      <div class="field">
+        <label for="statefulContentType">{{ 'httpEndpoint.editor.stateful.contentType' | t }}</label>
+        <input id="statefulContentType" type="text" value="application/json" disabled />
+      </div>
+      <div class="field">
+        <label for="statefulIdField">{{ 'httpEndpoint.editor.stateful.idField' | t }}</label>
+        <input
+          id="statefulIdField"
+          type="text"
+          [(ngModel)]="endpoint.statefulIdFieldName"
+          [disabled]="isEditorReadOnly"
+        />
+      </div>
+      <div class="field">
+        <div class="field-header">
+          <label for="statefulBody">{{ 'httpEndpoint.editor.stateful.initialState' | t }}</label>
+          <div class="inline-actions">
+            <button class="link-button" type="button" (click)="formatEndpointJson()" [disabled]="isEditorReadOnly">
+              {{ 'common.formatJson' | t }}
+            </button>
+          </div>
+        </div>
+        <textarea
+          id="statefulBody"
+          class="textarea-lg"
+          [(ngModel)]="endpoint.responseBody"
+          [disabled]="isEditorReadOnly"
+        ></textarea>
+      </div>
+      <div class="action-row">
+        <button class="button secondary" type="button" (click)="clearDataState()" [disabled]="isEditorReadOnly || isNew">
+          {{ 'httpEndpoint.editor.stateful.reset' | t }}
+        </button>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'SEQ'">
+      <div class="panel-header">
+        <h2>{{ 'httpEndpoint.editor.sequence.title' | t }}</h2>
+        <button class="button secondary" type="button" (click)="openSeqEditor()" [disabled]="isEditorReadOnly">
+          {{ 'httpEndpoint.editor.sequence.add' | t }}
+        </button>
+      </div>
+
+      <div class="empty-state" *ngIf="endpoint.definitions.length === 0">
+        {{ 'httpEndpoint.editor.sequence.empty' | t }}
+      </div>
+      <table class="table" *ngIf="endpoint.definitions.length > 0">
+        <thead>
+          <tr>
+            <th>{{ 'httpEndpoint.editor.sequence.seq' | t }}</th>
+            <th>{{ 'httpEndpoint.editor.sequence.code' | t }}</th>
+            <th>{{ 'httpEndpoint.editor.sequence.freq' | t }}</th>
+            <th>{{ 'httpEndpoint.editor.sequence.body' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let seq of endpoint.definitions; let idx = index" [class.suspended]="seq.suspend">
+            <td>{{ seq.orderNo }}</td>
+            <td>{{ seq.httpStatusCode }}</td>
+            <td>{{ seq.frequencyCount }}</td>
+            <td>{{ seq.responseBody ? (seq.responseBody | slice: 0:responseBodyLimit) : ('common.na' | t) }}</td>
+            <td class="action-cell">
+              <div class="inline-actions">
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="moveSeqUp(idx)"
+                  [disabled]="isEditorReadOnly || seq.suspend || idx === 0"
+                >
+                  {{ 'common.up' | t }}
+                </button>
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="moveSeqDown(idx)"
+                  [disabled]="isEditorReadOnly || seq.suspend || idx === endpoint.definitions.length - 1"
+                >
+                  {{ 'common.down' | t }}
+                </button>
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="toggleSeqSuspend(idx)"
+                  [disabled]="isEditorReadOnly"
+                >
+                  {{ seq.suspend ? ('common.resume' | t) : ('common.suspend' | t) }}
+                </button>
+                <button
+                  class="button danger small"
+                  type="button"
+                  (click)="removeSeq(idx)"
+                  [disabled]="isEditorReadOnly || seq.suspend"
+                >
+                  {{ 'common.remove' | t }}
+                </button>
+                <button
+                  class="button small"
+                  type="button"
+                  (click)="openSeqEditor(seq, idx)"
+                  [disabled]="seq.suspend"
+                >
+                  {{ isEditorReadOnly ? ('common.view' | t) : ('common.edit' | t) }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <label class="checkbox" *ngIf="endpoint.definitions.length > 1">
+        <input
+          type="checkbox"
+          [(ngModel)]="endpoint.randomiseDefinitions"
+          [disabled]="isEditorReadOnly || endpoint.definitions.length < 2"
+        />
+        {{ 'httpEndpoint.editor.sequence.shuffle' | t }}
+      </label>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'RULE' || endpoint.mockType === 'RULE_WS'">
+      <div class="panel-header">
+        <h2>{{ 'httpEndpoint.editor.rules.title' | t }}</h2>
+        <button class="button secondary" type="button" (click)="openRuleEditor()" [disabled]="isEditorReadOnly">
+          {{ 'httpEndpoint.editor.rules.add' | t }}
+        </button>
+      </div>
+      <div class="empty-state" *ngIf="endpoint.rules.length === 0">{{ 'httpEndpoint.editor.rules.empty' | t }}</div>
+      <table class="table" *ngIf="endpoint.rules.length > 0">
+        <thead>
+          <tr>
+            <th>{{ 'httpEndpoint.editor.rules.order' | t }}</th>
+            <th>{{ 'httpEndpoint.editor.rules.code' | t }}</th>
+            <th>{{ 'httpEndpoint.editor.rules.body' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rule of endpoint.rules; let idx = index" [class.suspended]="rule.suspend">
+            <td>{{ rule.orderNo }}</td>
+            <td>{{ rule.httpStatusCode }}</td>
+            <td>{{ rule.responseBody ? (rule.responseBody | slice: 0:responseBodyLimit) : ('common.na' | t) }}</td>
+            <td class="action-cell">
+              <div class="inline-actions">
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="moveRuleUp(idx)"
+                  [disabled]="isEditorReadOnly || rule.suspend || idx === 0"
+                >
+                  {{ 'common.up' | t }}
+                </button>
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="moveRuleDown(idx)"
+                  [disabled]="isEditorReadOnly || rule.suspend || idx === endpoint.rules.length - 1"
+                >
+                  {{ 'common.down' | t }}
+                </button>
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="toggleRuleSuspend(idx)"
+                  [disabled]="isEditorReadOnly"
+                >
+                  {{ rule.suspend ? ('common.resume' | t) : ('common.suspend' | t) }}
+                </button>
+                <button
+                  class="button danger small"
+                  type="button"
+                  (click)="removeRule(idx)"
+                  [disabled]="isEditorReadOnly || rule.suspend"
+                >
+                  {{ 'common.remove' | t }}
+                </button>
+                <button
+                  class="button small"
+                  type="button"
+                  (click)="openRuleEditor(rule, idx)"
+                  [disabled]="rule.suspend"
+                >
+                  {{ isEditorReadOnly ? ('common.view' | t) : ('common.edit' | t) }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'PROXY_HTTP'">
+      <h2>{{ 'httpEndpoint.editor.proxy.title' | t }}</h2>
+      <div class="field">
+        <label for="proxyTimeout">{{ 'httpEndpoint.editor.proxy.timeout' | t }}</label>
+        <input
+          id="proxyTimeout"
+          type="number"
+          [(ngModel)]="endpoint.proxyTimeout"
+          [disabled]="isEditorReadOnly"
+        />
+        <div class="helper-text">
+          {{ 'httpEndpoint.editor.proxy.timeoutHint' | t }}
+        </div>
+      </div>
+
+      <div class="panel-nested" *ngIf="!isNew">
+        <div class="field">
+          <label for="proxyQueue">{{ 'httpEndpoint.editor.proxy.queue' | t }}</label>
+          <div class="inline-input">
+            <input id="proxyQueue" type="text" [value]="proxyQueuePath" readonly />
+            <button
+              class="button secondary small"
+              type="button"
+              (click)="copyToClipboard(proxyQueuePath)"
+              [disabled]="!proxyQueuePath"
+            >
+              {{ 'common.copy' | t }}
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="proxyContentType">{{ 'common.contentType' | t }}</label>
+          <input
+            id="proxyContentType"
+            type="text"
+            list="contentTypeOptions"
+            [(ngModel)]="proxyEndpoint.contentType"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+        <div class="field">
+          <label for="proxyStatusCode">{{ 'httpEndpoint.editor.proxy.statusCode' | t }}</label>
+          <input
+            id="proxyStatusCode"
+            type="number"
+            [(ngModel)]="proxyEndpoint.httpStatusCode"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+        <div class="field">
+          <div class="field-header">
+            <label for="proxyResponseBody">{{ 'common.responseBody' | t }}</label>
+            <div class="inline-actions">
+              <button
+                class="link-button"
+                type="button"
+                *ngIf="proxyEndpoint.contentType === 'application/json'"
+                (click)="formatProxyJson()"
+                [disabled]="isEditorReadOnly"
+              >
+                {{ 'common.formatJson' | t }}
+              </button>
+              <button
+                class="link-button"
+                type="button"
+                *ngIf="proxyEndpoint.contentType === 'application/xml'"
+                (click)="validateXmlResponse(proxyEndpoint.responseBody || '')"
+              >
+                {{ 'common.validateXml' | t }}
+              </button>
+            </div>
+          </div>
+          <textarea
+            id="proxyResponseBody"
+            class="textarea-sm"
+            [(ngModel)]="proxyEndpoint.responseBody"
+            [disabled]="isEditorReadOnly"
+          ></textarea>
+        </div>
+
+        <div class="action-row">
+          <button
+            class="button secondary"
+            type="button"
+            (click)="clearProxyFields()"
+            [disabled]="isEditorReadOnly"
+          >
+            {{ 'httpEndpoint.editor.proxy.clearFields' | t }}
+          </button>
+          <button
+            class="button"
+            type="button"
+            (click)="postProxyResponse()"
+            [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+          >
+            {{ 'httpEndpoint.editor.proxy.postResponse' | t }}
+          </button>
+        </div>
+
+        <div class="action-row">
+          <button
+            class="button secondary"
+            type="button"
+            (click)="clearProxyQueue()"
+            [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+          >
+            {{ 'httpEndpoint.editor.proxy.clearQueue' | t }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'PROXY_WS' || endpoint.mockType === 'RULE_WS'">
+      <h2>{{ 'httpEndpoint.editor.websocket.title' | t }}</h2>
+      <div class="field">
+        <label for="wsTimeout">{{ 'httpEndpoint.editor.websocket.timeout' | t }}</label>
+        <input id="wsTimeout" type="number" [(ngModel)]="endpoint.webSocketTimeout" [disabled]="isEditorReadOnly" />
+      </div>
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="endpoint.wsPushIdOnConnect" [disabled]="isEditorReadOnly" />
+        {{ 'httpEndpoint.editor.websocket.pushSessionId' | t }}
+      </label>
+
+      <div class="panel-nested" *ngIf="!isNew">
+        <div class="panel-header">
+          <h3>{{ 'httpEndpoint.editor.websocket.activeConnections' | t }}</h3>
+          <div class="inline-actions">
+            <button
+              class="button secondary small"
+              type="button"
+              (click)="refreshWsClients()"
+              [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+            >
+              {{ 'common.refresh' | t }}
+            </button>
+            <button
+              class="button secondary small"
+              type="button"
+              (click)="openWsMessage()"
+              [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+            >
+              {{ 'httpEndpoint.editor.websocket.broadcast' | t }}
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="activeWsClients.length === 0">{{ 'httpEndpoint.editor.websocket.empty' | t }}</div>
+        <table class="table" *ngIf="activeWsClients.length > 0">
+          <thead>
+            <tr>
+              <th>{{ 'common.sessionId' | t }}</th>
+              <th>{{ 'httpEndpoint.editor.websocket.joinedAt' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ws of activeWsClients">
+              <td>{{ ws.id }}</td>
+              <td>{{ ws.dateJoined | date: 'dd MMM yyyy HH:mm':'UTC' }}</td>
+              <td class="action-cell">
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="openWsMessage(ws.id)"
+                  [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+                >
+                  {{ 'common.message' | t }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'PROXY_SSE'">
+      <h2>{{ 'httpEndpoint.editor.sse.title' | t }}</h2>
+      <div class="field">
+        <label for="sseHeartbeat">{{ 'httpEndpoint.editor.sse.heartbeat' | t }}</label>
+        <input id="sseHeartbeat" type="number" [(ngModel)]="endpoint.sseHeartbeat" [disabled]="isEditorReadOnly" />
+      </div>
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="endpoint.ssePushIdOnConnect" [disabled]="isEditorReadOnly" />
+        {{ 'httpEndpoint.editor.sse.pushSessionId' | t }}
+      </label>
+
+      <div class="panel-nested" *ngIf="!isNew">
+        <div class="panel-header">
+          <h3>{{ 'httpEndpoint.editor.sse.activeConnections' | t }}</h3>
+          <div class="inline-actions">
+            <button
+              class="button secondary small"
+              type="button"
+              (click)="refreshSseClients()"
+              [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+            >
+              {{ 'common.refresh' | t }}
+            </button>
+            <button
+              class="button secondary small"
+              type="button"
+              (click)="openSseMessage()"
+              [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+            >
+              {{ 'httpEndpoint.editor.sse.broadcast' | t }}
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="activeSseClients.length === 0">{{ 'httpEndpoint.editor.sse.empty' | t }}</div>
+        <table class="table" *ngIf="activeSseClients.length > 0">
+          <thead>
+            <tr>
+              <th>{{ 'common.sessionId' | t }}</th>
+              <th>{{ 'httpEndpoint.editor.sse.joinedAt' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sse of activeSseClients">
+              <td>{{ sse.id }}</td>
+              <td>{{ sse.dateJoined | date: 'dd MMM yyyy HH:mm':'UTC' }}</td>
+              <td class="action-cell">
+                <button
+                  class="button secondary small"
+                  type="button"
+                  (click)="openSseMessage(sse.id)"
+                  [disabled]="isEditorReadOnly || endpoint.status === inactiveStatus"
+                >
+                  {{ 'common.message' | t }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" *ngIf="endpoint.mockType === 'CUSTOM_JS'">
+      <h2>{{ 'httpEndpoint.editor.customJs.title' | t }}</h2>
+      <div class="field">
+        <div class="field-header">
+          <label for="customJsSyntax">{{ 'httpEndpoint.editor.customJs.logic' | t }}</label>
+          <button class="link-button" type="button" (click)="formatCustomJs()" [disabled]="isEditorReadOnly">
+            {{ 'common.formatJs' | t }}
+          </button>
+        </div>
+        <div class="code-editor" [class.disabled]="isEditorReadOnly">
+          <pre #customJsHighlightEl class="code-highlight" [innerHTML]="customJsHighlight"></pre>
+          <textarea
+            id="customJsSyntax"
+            class="textarea-lg code-input"
+            [(ngModel)]="endpoint.customJsSyntax"
+            (ngModelChange)="updateCustomJsHighlight($event)"
+            (scroll)="syncCustomJsScroll($event)"
+            [disabled]="isEditorReadOnly"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="panel"
+      *ngIf="
+        endpoint.mockType === 'PROXY_HTTP' ||
+        endpoint.mockType === 'SEQ' ||
+        endpoint.mockType === 'RULE' ||
+        endpoint.mockType === 'CUSTOM_JS'
+      "
+    >
+      <h2>{{ 'httpEndpoint.editor.latency.title' | t }}</h2>
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="endpoint.randomiseLatency" [disabled]="isEditorReadOnly" />
+        {{ 'httpEndpoint.editor.latency.delay' | t }}
+      </label>
+      <div class="field-row" *ngIf="endpoint.randomiseLatency">
+        <div class="field">
+          <label for="latencyMin">{{ 'httpEndpoint.editor.latency.min' | t }}</label>
+          <input
+            id="latencyMin"
+            type="number"
+            [(ngModel)]="endpoint.randomiseLatencyRangeMinMillis"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+        <div class="field">
+          <label for="latencyMax">{{ 'httpEndpoint.editor.latency.max' | t }}</label>
+          <input
+            id="latencyMax"
+            type="number"
+            [(ngModel)]="endpoint.randomiseLatencyRangeMaxMillis"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="contentTypeOptions">
+    <option *ngFor="let ct of contentTypes" [value]="ct"></option>
+  </datalist>
+
+  <app-modal *ngIf="ruleEditorOpen" [title]="'httpEndpoint.ruleModal.title' | t" size="lg" (close)="closeRuleEditor()">
+    <div class="modal-grid">
+      <div>
+        <div class="field">
+          <label for="ruleContentType">{{ 'common.contentType' | t }}</label>
+          <input
+            id="ruleContentType"
+            type="text"
+            list="contentTypeOptions"
+            [(ngModel)]="ruleDraft.responseContentType"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+        <div class="field">
+          <label for="ruleStatusCode">{{ 'httpEndpoint.ruleModal.statusCode' | t }}</label>
+          <input
+            id="ruleStatusCode"
+            type="number"
+            [(ngModel)]="ruleDraft.httpStatusCode"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+        <div class="field">
+          <div class="field-header">
+            <label for="ruleResponseBody">{{ 'common.responseBody' | t }}</label>
+            <div class="inline-actions">
+              <button
+                class="link-button"
+                type="button"
+                *ngIf="ruleDraft.responseContentType === 'application/json'"
+                (click)="formatRuleJson()"
+                [disabled]="isEditorReadOnly"
+              >
+                {{ 'common.formatJson' | t }}
+              </button>
+              <button
+                class="link-button"
+                type="button"
+                *ngIf="ruleDraft.responseContentType === 'application/xml'"
+                (click)="validateXmlResponse(ruleDraft.responseBody || '')"
+              >
+                {{ 'common.validateXml' | t }}
+              </button>
+            </div>
+          </div>
+          <textarea
+            id="ruleResponseBody"
+            class="textarea-sm"
+            [(ngModel)]="ruleDraft.responseBody"
+            [disabled]="isEditorReadOnly"
+          ></textarea>
+        </div>
+
+        <div class="panel-nested" *ngIf="endpoint.mockType === 'RULE'">
+          <div class="panel-header">
+            <h3>{{ 'common.responseHeaders' | t }}</h3>
+            <button
+              class="button secondary small"
+              type="button"
+              (click)="ruleHeaderList.push({ name: null, value: null })"
+              [disabled]="isEditorReadOnly"
+            >
+              {{ 'common.addHeader' | t }}
+            </button>
+          </div>
+          <table class="table" *ngIf="ruleHeaderList.length > 0">
+            <thead>
+              <tr>
+                <th>{{ 'common.name' | t }}</th>
+                <th>{{ 'common.value' | t }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of ruleHeaderList; let idx = index">
+                <td>
+                  <input type="text" [(ngModel)]="row.name" [disabled]="isEditorReadOnly" />
+                </td>
+                <td>
+                  <input type="text" [(ngModel)]="row.value" [disabled]="isEditorReadOnly" />
+                </td>
+                <td class="action-cell">
+                <button
+                  class="button danger small"
+                  type="button"
+                  (click)="ruleHeaderList.splice(idx, 1)"
+                  [disabled]="isEditorReadOnly"
+                >
+                  {{ 'common.remove' | t }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+          <div class="empty-state" *ngIf="ruleHeaderList.length === 0">{{ 'httpEndpoint.ruleModal.noHeaders' | t }}</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-header">
+          <h3>{{ 'httpEndpoint.ruleModal.conditionsTitle' | t }}</h3>
+          <button class="button secondary" type="button" (click)="openGroupEditor()" [disabled]="isEditorReadOnly">
+            {{ 'httpEndpoint.ruleModal.addGroup' | t }}
+          </button>
+        </div>
+
+        <div class="empty-state" *ngIf="ruleDraft.groups.length === 0">{{ 'httpEndpoint.ruleModal.noConditions' | t }}</div>
+
+        <div class="condition-group" *ngFor="let group of ruleDraft.groups; let idx = index">
+          <div class="condition-header">
+            <div class="inline-actions">
+              <span class="chip">{{ idx + 1 }}</span>
+              <span class="condition-logic">{{ idx === 0 ? ('common.if' | t) : ('common.or' | t) }}</span>
+            </div>
+            <div class="inline-actions">
+              <button
+                class="button secondary small"
+                type="button"
+                (click)="moveConditionUp(idx)"
+                [disabled]="isEditorReadOnly || idx === 0"
+              >
+                {{ 'common.up' | t }}
+              </button>
+              <button
+                class="button secondary small"
+                type="button"
+                (click)="moveConditionDown(idx)"
+                [disabled]="isEditorReadOnly || idx === ruleDraft.groups.length - 1"
+              >
+                {{ 'common.down' | t }}
+              </button>
+              <button
+                class="button secondary small"
+                type="button"
+                (click)="openGroupEditor(group, idx)"
+                [disabled]="isEditorReadOnly"
+              >
+                {{ 'common.edit' | t }}
+              </button>
+              <button
+                class="button danger small"
+                type="button"
+                (click)="removeCondition(idx)"
+                [disabled]="isEditorReadOnly"
+              >
+                {{ 'common.remove' | t }}
+              </button>
+            </div>
+          </div>
+
+          <div class="condition-lines" *ngFor="let cond of group.conditions; let cIdx = index">
+            <div class="condition-line">
+              <span class="condition-logic" *ngIf="cIdx > 0">{{ 'common.and' | t }}</span>
+              <span>{{ cond.matchType.name | t }}</span>
+              <span *ngIf="cond.matchType.value !== 'REQUEST_BODY'">:</span>
+              <strong *ngIf="cond.matchType.value !== 'REQUEST_BODY'">
+                <span *ngIf="cond.matchType.value === 'PATH_VARIABLE_WILD'">var</span>
+                {{ cond.fieldName }}
+              </strong>
+              <span class="condition-meta">
+                {{ cond.comparator.tableName | t }}
+                <span *ngIf="cond.comparator.value === 'EQUALS' && cond.comparator.dataType === 'TEXT' && !cond.caseSensitive">
+                  {{ 'common.ignoreCase' | t }}
+                </span>
+              </span>
+              <span *ngIf="cond.matchValue" class="condition-meta">
+                {{ cond.dataType === 'TEXT' ? "('" + cond.matchValue + "')" : cond.matchValue }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="closeRuleEditor()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="saveRule()" [disabled]="isEditorReadOnly">{{ 'httpEndpoint.ruleModal.save' | t }}</button>
+    </div>
+  </app-modal>
+
+  <app-modal *ngIf="groupEditorOpen" [title]="'httpEndpoint.groupModal.title' | t" size="lg" (close)="closeGroupEditor()">
+    <div class="modal-grid">
+      <div>
+        <div class="field">
+          <label for="matchType">{{ 'httpEndpoint.groupModal.matchOn' | t }}</label>
+          <select
+            id="matchType"
+            [(ngModel)]="conditionDraft.matchType"
+            (ngModelChange)="onMatchTypeChange($event)"
+            [disabled]="isEditorReadOnly"
+          >
+            <option *ngFor="let mt of matchingTypes" [ngValue]="mt">{{ mt.name | t }}</option>
+          </select>
+          <input
+            *ngIf="conditionDraft.matchType?.value !== 'REQUEST_BODY'"
+            type="text"
+            [(ngModel)]="conditionDraft.fieldName"
+            [placeholder]="conditionDraft.matchType.fieldPlaceholderText | t"
+            [disabled]="isEditorReadOnly"
+          />
+        </div>
+
+        <div class="field">
+          <label for="comparator">{{ 'httpEndpoint.groupModal.comparator' | t }}</label>
+          <select
+            id="comparator"
+            [(ngModel)]="conditionDraft.comparator"
+            (ngModelChange)="onComparatorChange($event)"
+            [disabled]="isEditorReadOnly"
+          >
+            <option *ngFor="let comp of getComparators(conditionDraft.matchType)" [ngValue]="comp">
+              {{ comp.dropDownName | t }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field" *ngIf="conditionDraft.comparator?.value !== 'IS_MISSING'">
+          <label for="matchValue">{{ 'httpEndpoint.groupModal.matchValue' | t }}</label>
+          <textarea
+            id="matchValue"
+            class="textarea-sm"
+            [(ngModel)]="conditionDraft.matchValue"
+            [disabled]="isEditorReadOnly"
+          ></textarea>
+        </div>
+
+        <label
+          class="checkbox"
+          *ngIf="
+            conditionDraft.comparator?.value !== 'IS_MISSING' && conditionDraft.comparator?.dataType !== 'NUMERIC'
+          "
+        >
+          <input type="checkbox" [(ngModel)]="conditionDraft.caseSensitive" [disabled]="isEditorReadOnly" />
+          {{ 'httpEndpoint.groupModal.caseSensitive' | t }}
+        </label>
+
+        <div class="action-row">
+          <button class="button secondary" type="button" (click)="addConditionArg()" [disabled]="isEditorReadOnly">
+            {{ 'httpEndpoint.groupModal.addCondition' | t }}
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-header">
+          <h3>{{ 'httpEndpoint.groupModal.argumentsTitle' | t }}</h3>
+        </div>
+        <div class="empty-state" *ngIf="conditionArgs.length === 0">{{ 'httpEndpoint.groupModal.noArguments' | t }}</div>
+        <div class="condition-group" *ngFor="let arg of conditionArgs; let idx = index">
+          <div class="condition-header">
+            <span class="chip">{{ idx + 1 }}</span>
+            <div class="inline-actions">
+              <button
+                class="button secondary small"
+                type="button"
+                (click)="moveConditionArgUp(idx)"
+                [disabled]="isEditorReadOnly || idx === 0"
+              >
+                {{ 'common.up' | t }}
+              </button>
+              <button
+                class="button secondary small"
+                type="button"
+                (click)="moveConditionArgDown(idx)"
+                [disabled]="isEditorReadOnly || idx === conditionArgs.length - 1"
+              >
+                {{ 'common.down' | t }}
+              </button>
+              <button
+                class="button danger small"
+                type="button"
+                (click)="removeConditionArg(idx)"
+                [disabled]="isEditorReadOnly"
+              >
+                {{ 'common.remove' | t }}
+              </button>
+            </div>
+          </div>
+          <div class="condition-line">
+            <span class="condition-logic">{{ idx === 0 ? ('common.if' | t) : ('common.and' | t) }}</span>
+            <span>{{ arg.matchType.name | t }}</span>
+            <span *ngIf="arg.matchType.value !== 'REQUEST_BODY'">:</span>
+            <strong *ngIf="arg.matchType.value !== 'REQUEST_BODY'">
+              <span *ngIf="arg.matchType.value === 'PATH_VARIABLE_WILD'">var</span>
+              {{ arg.fieldName }}
+            </strong>
+            <span class="condition-meta">
+              {{ arg.comparator.tableName | t }}
+              <span *ngIf="arg.comparator.value === 'EQUALS' && arg.comparator.dataType === 'TEXT' && !arg.caseSensitive">
+                {{ 'common.ignoreCase' | t }}
+              </span>
+            </span>
+            <span *ngIf="arg.matchValue" class="condition-meta">
+              {{ arg.dataType === 'TEXT' ? "('" + arg.matchValue + "')" : arg.matchValue }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="closeGroupEditor()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="saveGroup()" [disabled]="isEditorReadOnly">{{ 'httpEndpoint.groupModal.save' | t }}</button>
+    </div>
+  </app-modal>
+
+  <app-modal *ngIf="seqEditorOpen" [title]="'httpEndpoint.sequenceModal.title' | t" size="md" (close)="closeSeqEditor()">
+    <div class="field">
+      <label for="seqContentType">{{ 'common.contentType' | t }}</label>
+      <input
+        id="seqContentType"
+        type="text"
+        list="contentTypeOptions"
+        [(ngModel)]="seqDraft.responseContentType"
+        [disabled]="isEditorReadOnly"
+      />
+    </div>
+    <div class="field">
+      <label for="seqStatusCode">{{ 'httpEndpoint.sequenceModal.statusCode' | t }}</label>
+      <input id="seqStatusCode" type="number" [(ngModel)]="seqDraft.httpStatusCode" [disabled]="isEditorReadOnly" />
+    </div>
+    <div class="field">
+      <div class="field-header">
+        <label for="seqResponseBody">{{ 'common.responseBody' | t }}</label>
+        <div class="inline-actions">
+          <button
+            class="link-button"
+            type="button"
+            *ngIf="seqDraft.responseContentType === 'application/json'"
+            (click)="formatSeqJson()"
+            [disabled]="isEditorReadOnly"
+          >
+            {{ 'common.formatJson' | t }}
+          </button>
+          <button
+            class="link-button"
+            type="button"
+            *ngIf="seqDraft.responseContentType === 'application/xml'"
+            (click)="validateXmlResponse(seqDraft.responseBody || '')"
+          >
+            {{ 'common.validateXml' | t }}
+          </button>
+        </div>
+      </div>
+      <textarea
+        id="seqResponseBody"
+        class="textarea-sm"
+        [(ngModel)]="seqDraft.responseBody"
+        [disabled]="isEditorReadOnly"
+      ></textarea>
+    </div>
+    <div class="field">
+      <label for="seqFrequency">{{ 'httpEndpoint.sequenceModal.occurrence' | t }}</label>
+      <input id="seqFrequency" type="number" [(ngModel)]="seqDraft.frequencyCount" [disabled]="isEditorReadOnly" />
+    </div>
+
+    <div class="panel-nested">
+      <div class="panel-header">
+        <h3>{{ 'common.responseHeaders' | t }}</h3>
+        <button
+          class="button secondary small"
+          type="button"
+          (click)="seqHeaderList.push({ name: null, value: null })"
+          [disabled]="isEditorReadOnly"
+        >
+          {{ 'common.addHeader' | t }}
+        </button>
+      </div>
+      <table class="table" *ngIf="seqHeaderList.length > 0">
+        <thead>
+          <tr>
+            <th>{{ 'common.name' | t }}</th>
+            <th>{{ 'common.value' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of seqHeaderList; let idx = index">
+            <td>
+              <input type="text" [(ngModel)]="row.name" [disabled]="isEditorReadOnly" />
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="row.value" [disabled]="isEditorReadOnly" />
+            </td>
+            <td class="action-cell">
+              <button
+                class="button danger small"
+                type="button"
+                (click)="seqHeaderList.splice(idx, 1)"
+                [disabled]="isEditorReadOnly"
+              >
+                {{ 'common.remove' | t }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="seqHeaderList.length === 0">{{ 'httpEndpoint.sequenceModal.noHeaders' | t }}</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="closeSeqEditor()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="saveSeq()" [disabled]="isEditorReadOnly">{{ 'httpEndpoint.sequenceModal.save' | t }}</button>
+    </div>
+  </app-modal>
+
+  <app-modal *ngIf="wsMessageOpen" [title]="'httpEndpoint.wsMessage.title' | t" size="md" (close)="wsMessageOpen = false">
+    <div class="field">
+      <label for="wsMessagePath">{{ 'common.path' | t }}</label>
+      <input id="wsMessagePath" type="text" [(ngModel)]="messageDraft.path" readonly />
+    </div>
+    <div class="field" *ngIf="messageDraft.sessionId">
+      <label for="wsMessageSession">{{ 'common.sessionId' | t }}</label>
+      <input id="wsMessageSession" type="text" [(ngModel)]="messageDraft.sessionId" readonly />
+    </div>
+    <div class="field">
+      <label for="wsMessageBody">{{ 'common.messageBody' | t }}</label>
+      <textarea id="wsMessageBody" class="textarea-sm" [(ngModel)]="messageDraft.body"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="wsMessageOpen = false">{{ 'common.close' | t }}</button>
+      <button class="button" type="button" (click)="sendWsMessage()" [disabled]="isEditorReadOnly">{{ 'common.send' | t }}</button>
+    </div>
+  </app-modal>
+
+  <app-modal *ngIf="sseMessageOpen" [title]="'httpEndpoint.sseMessage.title' | t" size="md" (close)="sseMessageOpen = false">
+    <div class="field">
+      <label for="sseMessagePath">{{ 'common.path' | t }}</label>
+      <input id="sseMessagePath" type="text" [(ngModel)]="messageDraft.path" readonly />
+    </div>
+    <div class="field" *ngIf="messageDraft.sessionId">
+      <label for="sseMessageSession">{{ 'common.sessionId' | t }}</label>
+      <input id="sseMessageSession" type="text" [(ngModel)]="messageDraft.sessionId" readonly />
+    </div>
+    <div class="field">
+      <label for="sseMessageBody">{{ 'common.messageBody' | t }}</label>
+      <textarea id="sseMessageBody" class="textarea-sm" [(ngModel)]="messageDraft.body"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="sseMessageOpen = false">{{ 'common.close' | t }}</button>
+      <button class="button" type="button" (click)="sendSseMessage()" [disabled]="isEditorReadOnly">{{ 'common.send' | t }}</button>
+    </div>
+  </app-modal>
+</section>

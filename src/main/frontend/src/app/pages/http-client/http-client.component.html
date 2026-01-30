@@ -1,0 +1,71 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h1>{{ 'httpClient.title' | t }}</h1>
+      <p class="subtle">{{ 'httpClient.subtitle' | t }}</p>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" type="button" (click)="clear()">{{ 'common.clear' | t }}</button>
+      <button class="button" type="button" (click)="send()" [disabled]="isBusy">{{ 'common.send' | t }}</button>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="client-grid">
+    <div class="panel">
+      <h2>{{ 'httpClient.request.title' | t }}</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="method">{{ 'httpClient.request.method' | t }}</label>
+          <select id="method" [(ngModel)]="clientRequest.method">
+            <option [ngValue]="null">{{ 'common.select' | t }}</option>
+            <option *ngFor="let method of httpMethods" [value]="method">{{ method }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="url">{{ 'common.path' | t }}</label>
+          <input id="url" type="text" [(ngModel)]="clientRequest.url" [placeholder]="'httpClient.request.pathPlaceholder' | t" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="requestBody">{{ 'httpClient.request.body' | t }}</label>
+        <textarea id="requestBody" rows="6" [(ngModel)]="clientRequest.body"></textarea>
+      </div>
+
+      <div class="field">
+        <label>{{ 'httpClient.request.headers' | t }}</label>
+        <div class="empty-state" *ngIf="clientRequest.headers.length === 0">{{ 'httpClient.request.noHeaders' | t }}</div>
+        <table class="table" *ngIf="clientRequest.headers.length > 0">
+          <thead>
+            <tr>
+              <th>{{ 'httpClient.request.headerName' | t }}</th>
+              <th>{{ 'httpClient.request.headerValue' | t }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let header of clientRequest.headers; let i = index">
+              <td>
+                <input type="text" [(ngModel)]="header.name" />
+              </td>
+              <td>
+                <input type="text" [(ngModel)]="header.value" />
+              </td>
+              <td class="actions-cell">
+                <button class="button secondary small" type="button" (click)="removeHeaderRow(i)">{{ 'common.remove' | t }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="button secondary" type="button" (click)="addHeaderRow()">{{ 'httpClient.request.addHeader' | t }}</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>{{ 'httpClient.response.title' | t }}</h2>
+      <textarea class="response" rows="18" [value]="clientResponse" readonly></textarea>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,44 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h1>{{ 'wsClient.title' | t }}</h1>
+      <p class="subtle">{{ 'wsClient.subtitle' | t }}</p>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="client-grid">
+    <div class="panel">
+      <h2>{{ 'wsClient.connection.title' | t }}</h2>
+      <div class="field">
+        <label for="wsPath">{{ 'common.path' | t }}</label>
+        <input
+          id="wsPath"
+          type="text"
+          [(ngModel)]="clientRequest.url"
+          [placeholder]="'wsClient.connection.pathPlaceholder' | t"
+          [disabled]="isConnected"
+        />
+      </div>
+      <button class="button" type="button" (click)="connect()" [disabled]="isBusy || isConnected">{{ 'wsClient.connection.connect' | t }}</button>
+
+      <div class="field">
+        <label for="wsBody">{{ 'wsClient.message.label' | t }}</label>
+        <textarea id="wsBody" rows="6" [(ngModel)]="clientRequest.body"></textarea>
+      </div>
+      <button class="button secondary" type="button" (click)="send()" [disabled]="!isConnected">{{ 'common.send' | t }}</button>
+    </div>
+
+    <div class="panel">
+      <h2>{{ 'wsClient.response.title' | t }}</h2>
+      <textarea class="response" rows="18" [value]="remoteResponse" readonly></textarea>
+      <div class="panel-actions">
+        <button class="button secondary" type="button" (click)="clearResponse()">{{ 'common.clear' | t }}</button>
+        <button class="button danger" type="button" (click)="terminate()" [disabled]="!isConnected">
+          {{ 'wsClient.terminate' | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,76 @@
+<app-modal [title]="'proxyMappings.title' | t" size="lg" (close)="close.emit()">
+  <div class="modal-stack">
+    <app-alerts [alerts]="alerts"></app-alerts>
+
+    <div class="form-grid">
+      <label class="checkbox" *ngIf="!isReadOnly">
+        <input type="checkbox" [(ngModel)]="config.proxyMode" />
+        {{ 'proxyMappings.enableProxyMode' | t }}
+      </label>
+
+      <div class="field">
+        <label>{{ 'proxyMappings.modeType' | t }}</label>
+        <select [(ngModel)]="config.proxyModeType">
+          <option value="ACTIVE">{{ 'proxyMappings.mode.active' | t }}</option>
+          <option value="REACTIVE">{{ 'proxyMappings.mode.reactive' | t }}</option>
+        </select>
+      </div>
+
+      <label class="checkbox" *ngIf="config.proxyModeType === 'ACTIVE'">
+        <input type="checkbox" [(ngModel)]="config.doNotForwardWhen404Mock" />
+        {{ 'proxyMappings.doNotForward404' | t }}
+      </label>
+    </div>
+
+    <div class="mapping-toolbar">
+      <h4>{{ 'proxyMappings.mappingsTitle' | t }}</h4>
+      <div class="inline-actions">
+        <button class="button secondary" type="button" (click)="exportMappings()" [disabled]="config.proxyForwardMappings.length === 0">
+          {{ 'common.export' | t }}
+        </button>
+        <label class="button secondary file-button">
+          {{ 'common.import' | t }}
+          <input type="file" accept=".json" (change)="selectImportFile($event)" />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="keepExisting" />
+          {{ 'proxyMappings.keepExisting' | t }}
+        </label>
+        <button class="button" type="button" (click)="importMappings()" [disabled]="isBusy">{{ 'common.upload' | t }}</button>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ 'proxyMappings.table.path' | t }}</th>
+          <th>{{ 'proxyMappings.table.downstreamUrl' | t }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let mapping of config.proxyForwardMappings; let i = index">
+          <td>
+            <input type="text" [(ngModel)]="mapping.path" [disabled]="mapping.disabled" placeholder="/v1/products" />
+          </td>
+          <td>
+            <input type="text" [(ngModel)]="mapping.proxyForwardUrl" [disabled]="mapping.disabled" placeholder="http://localhost:9000" />
+          </td>
+          <td class="inline-actions">
+            <button class="button secondary" type="button" (click)="toggleMapping(mapping.path)">
+              {{ mapping.disabled ? ('proxyMappings.table.resume' | t) : ('proxyMappings.table.pause' | t) }}
+            </button>
+            <button class="button danger" type="button" (click)="removeRow(i)">{{ 'common.remove' | t }}</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button class="button secondary" type="button" (click)="addRow()">{{ 'proxyMappings.addRow' | t }}</button>
+
+    <div class="inline-actions">
+      <button class="button secondary" type="button" (click)="close.emit()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="save()" [disabled]="isBusy">{{ 'proxyMappings.update' | t }}</button>
+    </div>
+  </div>
+</app-modal>

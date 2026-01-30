@@ -1,0 +1,24 @@
+.page {
+  padding: 2rem;
+  background: var(--panel);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.page h1 {
+  margin-top: 0;
+}
+
+.page p {
+  color: var(--muted);
+}
+
+.cta {
+  display: inline-flex;
+  margin-top: 1rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}

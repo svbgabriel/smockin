@@ -27,3 +27,8 @@ build_all_distributions.sh
 sMockin.app
 *.zip
 debug.sh
+
+# Frontend
+src/main/frontend/node_modules
+src/main/frontend/dist
+src/main/frontend/.angular

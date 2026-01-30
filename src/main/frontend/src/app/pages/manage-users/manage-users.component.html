@@ -1,0 +1,84 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h1>{{ 'manageUsers.title' | t }}</h1>
+      <p class="subtle">{{ 'manageUsers.subtitle' | t }}</p>
+    </div>
+    <button class="button secondary" type="button" (click)="startNewUser()">{{ 'manageUsers.new' | t }}</button>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="split">
+    <div class="list-panel">
+      <table class="table" *ngIf="users.length > 0">
+        <thead>
+          <tr>
+            <th>{{ 'manageUsers.table.username' | t }}</th>
+            <th>{{ 'manageUsers.table.name' | t }}</th>
+            <th>{{ 'manageUsers.table.role' | t }}</th>
+            <th>{{ 'manageUsers.table.created' | t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users" (click)="selectUser(user)" [class.active]="selectedUser?.extId === user.extId">
+            <td>{{ user.username }}</td>
+            <td>{{ user.fullName }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.dateCreated | date: 'dd/MM/yyyy HH:mm':'UTC' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="users.length === 0">{{ 'manageUsers.empty' | t }}</div>
+    </div>
+
+    <div class="form-panel">
+      <h2>{{ selectedUser ? ('manageUsers.form.editTitle' | t) : ('manageUsers.form.newTitle' | t) }}</h2>
+      <form [formGroup]="form" class="form-grid">
+        <label class="field">
+          {{ 'manageUsers.form.username' | t }}
+          <input type="text" formControlName="username" />
+        </label>
+        <label class="field">
+          {{ 'manageUsers.form.fullName' | t }}
+          <input type="text" formControlName="fullName" />
+        </label>
+        <div class="field">
+          <span>{{ 'manageUsers.form.role' | t }}</span>
+          <strong>{{ selectedUser?.role || 'REGULAR' }}</strong>
+        </div>
+        <label class="field" *ngIf="!selectedUser">
+          {{ 'manageUsers.form.password' | t }}
+          <input type="password" formControlName="password" />
+        </label>
+        <label class="field" *ngIf="!selectedUser">
+          {{ 'manageUsers.form.confirmPassword' | t }}
+          <input type="password" formControlName="confirmPassword" />
+        </label>
+
+        <div class="field" *ngIf="selectedUser && selectedUser.role !== 'SYS_ADMIN'">
+          <button class="button secondary" type="button" (click)="resetPassword()">
+            {{ 'manageUsers.form.resetPassword' | t }}
+          </button>
+        </div>
+
+        <div class="field" *ngIf="passwordResetLink">
+          <span>{{ 'manageUsers.form.resetLink' | t }}</span>
+          <input type="text" [value]="passwordResetLink" readonly />
+        </div>
+      </form>
+
+      <div class="inline-actions">
+        <button class="button" type="button" (click)="saveUser()" [disabled]="isBusy">{{ 'common.save' | t }}</button>
+        <button
+          class="button danger"
+          type="button"
+          (click)="deleteUser()"
+          [disabled]="!selectedUser || selectedUser.role === 'SYS_ADMIN' || isBusy"
+        >
+          {{ 'common.delete' | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

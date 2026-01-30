@@ -1,0 +1,43 @@
+<section class="page account">
+  <div class="page-header">
+    <div>
+      <h1>{{ 'account.title' | t }}</h1>
+      <p class="subtle">{{ 'account.subtitle' | t }}</p>
+    </div>
+  </div>
+
+  <app-alerts [alerts]="alerts"></app-alerts>
+
+  <div class="account-grid">
+    <div class="account-panel">
+      <h2>{{ 'account.profile.title' | t }}</h2>
+      <div class="account-row">
+        <span class="label">{{ 'account.profile.username' | t }}</span>
+        <span>{{ username || '-' }}</span>
+      </div>
+      <div class="account-row">
+        <span class="label">{{ 'account.profile.name' | t }}</span>
+        <span>{{ fullName || '-' }}</span>
+      </div>
+    </div>
+
+    <form class="account-panel" (ngSubmit)="submit()" [formGroup]="form">
+      <h2>{{ 'account.password.title' | t }}</h2>
+      <div class="field">
+        <label for="currentPassword">{{ 'account.password.current' | t }}</label>
+        <input id="currentPassword" type="password" formControlName="currentPassword" />
+      </div>
+      <div class="field">
+        <label for="newPassword">{{ 'account.password.new' | t }}</label>
+        <input id="newPassword" type="password" formControlName="newPassword" />
+      </div>
+      <div class="field">
+        <label for="confirmPassword">{{ 'account.password.confirm' | t }}</label>
+        <input id="confirmPassword" type="password" formControlName="confirmPassword" />
+      </div>
+      <div class="actions">
+        <button class="button" type="submit" [disabled]="isBusy">{{ 'account.password.update' | t }}</button>
+      </div>
+    </form>
+  </div>
+</section>

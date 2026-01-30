@@ -1,0 +1,155 @@
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 2rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.6rem;
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.brand-text {
+  font-size: 1.1rem;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.nav a {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.nav a.active {
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropdown summary {
+  list-style: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.nav-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-dropdown[open] summary {
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+.nav-menu {
+  position: absolute;
+  top: 2.2rem;
+  left: 0;
+  min-width: 180px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  box-shadow: var(--shadow-strong);
+  display: grid;
+  gap: 0.25rem;
+  z-index: 10;
+}
+
+.nav-menu a {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.7rem;
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lang-switch,
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.lang-switch select,
+.theme-switch select {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  background: var(--panel);
+  color: inherit;
+  font-weight: 600;
+}
+
+.auth-button {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.user {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.app-main {
+  padding: 2rem;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-main {
+    padding: 1.5rem;
+  }
+}
