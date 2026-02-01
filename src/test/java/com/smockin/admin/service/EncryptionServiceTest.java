@@ -1,11 +1,14 @@
 package com.smockin.admin.service;
 
+import org.jasypt.util.password.StrongPasswordEncryptor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class EncryptionServiceTest {
 
-    private final EncryptionServiceImpl encryptionService = new EncryptionServiceImpl();
+    StrongPasswordEncryptor strongPasswordEncryptor = new StrongPasswordEncryptor();
+
+    private final EncryptionServiceImpl encryptionService = new EncryptionServiceImpl(strongPasswordEncryptor);
 
     @Test
     void encryptAndVerifyTest() {

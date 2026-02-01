@@ -1,6 +1,9 @@
-package com.smockin.admin.persistence.dao;
+package com.smockin.integration.admin.persistence.dao;
 
+import com.smockin.E2ETestBase;
 import com.smockin.SmockinTestUtils;
+import com.smockin.admin.persistence.dao.RestfulMockDAO;
+import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
@@ -11,26 +14,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
 /**
  * Created by mgallina.
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootConfiguration
-@EnableAutoConfiguration
-@EnableJpaRepositories("com.smockin.admin.persistence.dao")
-@EntityScan("com.smockin.admin.persistence.entity")
-class RestfulMockDAOTest {
+class RestfulMockDAOTest extends E2ETestBase {
 
     @Autowired
     private RestfulMockDAO restfulMockDAO;
@@ -227,11 +219,11 @@ class RestfulMockDAOTest {
 
     private SmockinUser buildPathDuplicatesUser(final String username, final SmockinUserRoleEnum role) {
 
-        SmockinUser user = SmockinTestUtils.buildSmockinUser();
-        user.setUsername(username);
-        user.setRole(role);
-        user.setCtxPath(user.getUsername());
-        return smockinUserDAO.saveAndFlush(user);
+        SmockinUser duplicateUser = SmockinTestUtils.buildSmockinUser();
+        duplicateUser.setUsername(username);
+        duplicateUser.setRole(role);
+        duplicateUser.setCtxPath(duplicateUser.getUsername());
+        return smockinUserDAO.saveAndFlush(duplicateUser);
     }
 
 }

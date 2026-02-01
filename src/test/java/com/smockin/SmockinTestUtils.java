@@ -31,4 +31,8 @@ public final class SmockinTestUtils {
         return new SmockinUser("admin", "letmein", "admin", "admin", SmockinUserRoleEnum.SYS_ADMIN, RecordStatusEnum.ACTIVE, GeneralUtils.generateUUID(), GeneralUtils.generateUUID());
     }
 
+    public static SmockinUser buildAdminSmockinUser(String username, String password) {
+        return new SmockinUser(username, password, "admin", username, SmockinUserRoleEnum.SYS_ADMIN, RecordStatusEnum.ACTIVE, GeneralUtils.generateUUID(), GeneralUtils.generateUUID());
+    }
+
 }
