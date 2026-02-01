@@ -27,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -716,7 +715,7 @@ public class MockedServerEngineServiceImpl implements MockedServerEngineService 
                 startMail();
                 break;
             default:
-                logger.warn("Found auto start instruction for discontinued server type: " + serverType);
+                logger.warn("Found auto start instruction for discontinued server type: {}", serverType);
         }
 
     }
