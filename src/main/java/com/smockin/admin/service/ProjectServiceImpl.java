@@ -6,13 +6,13 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.dao.RestfulProjectDAO;
 import com.smockin.admin.persistence.entity.RestfulProject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -28,7 +28,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         return restfulProjectDAO.findAll()
                 .stream().map(p -> new ProjectDTO(p.getExtId(), p.getName()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -50,7 +50,7 @@ public class ProjectServiceImpl implements ProjectService {
     public void update(final String extId, final ProjectDTO projectDTO, final String token) throws RecordNotFoundException, ValidationException {
 
         // Validation
-        if (!StringUtils.equals(extId, projectDTO.getExtId())) {
+        if (!Strings.CS.equals(extId, projectDTO.getExtId())) {
             throw new ValidationException("Invalid Identifier");
         }
         if (StringUtils.isBlank(projectDTO.getName())) {

@@ -99,7 +99,7 @@ class HttpProxyServiceTest {
             final Object response = future.get(Long.valueOf(3), TimeUnit.SECONDS);
 
             // Assertions
-            Assertions.assertTrue(response instanceof RestfulResponseDTO);
+            Assertions.assertInstanceOf(RestfulResponseDTO.class, response);
             final RestfulResponseDTO restfulResponse = (RestfulResponseDTO) response;
 
             Assertions.assertEquals(pxDto.getHttpStatusCode(), restfulResponse.getHttpStatusCode());

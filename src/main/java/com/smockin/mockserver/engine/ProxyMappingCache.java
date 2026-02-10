@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProxyMappingCache {
 
-    private final AtomicReference<Map<String, ProxyForwardConfigCacheDTO>> proxyForwardConfigRef = new AtomicReference();
+    private final AtomicReference<Map<String, ProxyForwardConfigCacheDTO>> proxyForwardConfigRef = new AtomicReference<>();
 
     public void init(final List<ProxyForwardConfigCacheDTO> allProxyForwardConfig) {
 
@@ -21,10 +21,9 @@ public class ProxyMappingCache {
 
             allProxyForwardConfig
                 .stream()
-                .map(pm ->
-                    filterProxyConfigMappings(pm))
+                .map(this::filterProxyConfigMappings)
                 .filter(Optional::isPresent)
-                .collect(Collectors.toMap(k -> k.get().getUserCtxPath(), v -> v.get()))
+                .collect(Collectors.toMap(k -> k.get().getUserCtxPath(), Optional::get))
 
         );
 
@@ -35,7 +34,7 @@ public class ProxyMappingCache {
 
         final Optional<ProxyForwardConfigCacheDTO> filteredProxyForwardConfigCacheOpt = filterProxyConfigMappings(proxyForwardConfigDTO);
 
-        // Only add to cache if active mappings were found
+        // Only add to the cache if active mappings were found
         if (filteredProxyForwardConfigCacheOpt.isPresent()) {
 
             proxyForwardConfigRef.getAndUpdate(pfm -> {
@@ -76,7 +75,7 @@ public class ProxyMappingCache {
                         .stream()
                         .filter(p ->
                                 !p.isDisabled())
-                        .collect(Collectors.toList())
+                        .toList()
 
         );
 

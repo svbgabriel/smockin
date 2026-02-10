@@ -28,7 +28,7 @@ public class TunnelServiceImpl implements TunnelService {
     private final UserTokenServiceUtils userTokenServiceUtils;
     private final MockedServerEngineService mockedServerEngineService;
 
-    private final AtomicReference<NgrokClient> ngrokClientRef = new AtomicReference();
+    private final AtomicReference<NgrokClient> ngrokClientRef = new AtomicReference<>();
 
 
     @Autowired
@@ -59,7 +59,7 @@ public class TunnelServiceImpl implements TunnelService {
         }
 
         final String uri = (isRunning)
-                ? ngrokClient.getTunnels().get(0).getPublicUrl()
+                ? ngrokClient.getTunnels().getFirst().getPublicUrl()
                 : null;
 
         return new TunnelResponseDTO(isRunning, uri);
@@ -74,7 +74,8 @@ public class TunnelServiceImpl implements TunnelService {
         NgrokClient ngrokClient = getNgrokClientInstance();
 
         if (ngrokClient == null) {
-            ngrokClientRef.set(ngrokClient = instanceNgrokClient());
+            ngrokClient = instanceNgrokClient();
+            ngrokClientRef.set(ngrokClient);
         }
 
         if (!dto.isEnabled()) {
@@ -88,7 +89,7 @@ public class TunnelServiceImpl implements TunnelService {
 
         if (ngrokClient.getNgrokProcess().isRunning()) {
             // Already running
-            return new TunnelResponseDTO(true, ngrokClient.getTunnels().get(0).getPublicUrl());
+            return new TunnelResponseDTO(true, ngrokClient.getTunnels().getFirst().getPublicUrl());
         }
 
         final MockedServerConfigDTO mockedServerConfig = mockedServerEngineService.loadServerConfig(ServerTypeEnum.RESTFUL);

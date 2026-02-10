@@ -27,7 +27,7 @@ public class RestfulMockDAOImpl implements RestfulMockDAOCustom {
     public List<RestfulMock> findAllByStatus(final RecordStatusEnum status) {
         return entityManager.createQuery("FROM RestfulMock rm "
                 + " WHERE rm.status = :status "
-                + " ORDER BY rm.initializationOrder ASC")
+                + " ORDER BY rm.initializationOrder ASC", RestfulMock.class)
                 .setParameter("status", status)
                 .getResultList();
     }
@@ -35,7 +35,7 @@ public class RestfulMockDAOImpl implements RestfulMockDAOCustom {
     @Override
     public List<RestfulMock> findAll() {
         return entityManager.createQuery("FROM RestfulMock rm "
-                + " ORDER BY rm.initializationOrder ASC")
+                + " ORDER BY rm.initializationOrder ASC", RestfulMock.class)
                 .getResultList();
     }
 
@@ -43,7 +43,7 @@ public class RestfulMockDAOImpl implements RestfulMockDAOCustom {
     public List<RestfulMock> findAllByUser(final long userId) {
         return entityManager.createQuery("FROM RestfulMock rm "
                 + " WHERE rm.createdBy.id = :userId "
-                + " ORDER BY rm.initializationOrder ASC")
+                + " ORDER BY rm.initializationOrder ASC", RestfulMock.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
@@ -59,7 +59,7 @@ public class RestfulMockDAOImpl implements RestfulMockDAOCustom {
                     .setParameter("method", method)
                     .setParameter("userId", user.getId())
                     .getSingleResult();
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             return null;
         }
     }
