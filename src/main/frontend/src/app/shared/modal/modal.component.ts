@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { NgIf } from '@angular/common';
 
 @Component({
@@ -13,6 +13,13 @@ export class ModalComponent {
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
   @Input() showClose = true;
   @Output() close = new EventEmitter<void>();
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(): void {
+    if (this.showClose) {
+      this.close.emit();
+    }
+  }
 
   onBackdropClick(): void {
     this.close.emit();

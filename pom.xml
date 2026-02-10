@@ -36,7 +36,7 @@
         <s3proxy.version>2.6.0</s3proxy.version>
         <greenmail.version>1.6.15</greenmail.version>
         <java-ngrok.version>2.1.0</java-ngrok.version>
-        <nashorn.version>15.7</nashorn.version>
+        <graaljs.version>25.0.2</graaljs.version>
     </properties>
 
     <dependencies>
@@ -199,11 +199,22 @@
             <version>${java-ngrok.version}</version>
         </dependency>
 
-        <!-- Nashorn -->
+        <!-- GraalJS -->
         <dependency>
-            <groupId>org.openjdk.nashorn</groupId>
-            <artifactId>nashorn-core</artifactId>
-            <version>${nashorn.version}</version>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>${graaljs.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>js</artifactId>
+            <version>${graaljs.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js-scriptengine</artifactId>
+            <version>${graaljs.version}</version>
         </dependency>
 
         <!-- Testing Related -->

@@ -16,6 +16,15 @@ export function validateJson(input: string): string | null {
   }
 }
 
+export function validateJs(input: string): string | null {
+  try {
+    new Function(input);
+    return null;
+  } catch (err) {
+    return (err as Error).message;
+  }
+}
+
 export function validateXml(input: string): string | null {
   try {
     const parser = new DOMParser();

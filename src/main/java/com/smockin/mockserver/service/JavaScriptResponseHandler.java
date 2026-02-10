@@ -7,11 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface JavaScriptResponseHandler {
 
-    String[] engineSecurityArgs = {
-            "-strict",
-            "--no-java",
-            "--no-syntax-extensions"
-    };
 
     String defaultRequestObject =
             " var request = { "

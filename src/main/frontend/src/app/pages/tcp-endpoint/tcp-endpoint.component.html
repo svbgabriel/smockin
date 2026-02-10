@@ -776,25 +776,18 @@
     </div>
 
     <div class="panel" *ngIf="endpoint.mockType === 'CUSTOM_JS'">
-      <h2>{{ 'httpEndpoint.editor.customJs.title' | t }}</h2>
+      <div class="panel-header">
+        <h2>{{ 'httpEndpoint.editor.customJs.title' | t }}</h2>
+        <button class="button secondary" type="button" (click)="openJsEditor()" [disabled]="isEditorReadOnly">
+          {{ 'httpEndpoint.editor.customJs.edit' | t }}
+        </button>
+      </div>
       <div class="field">
-        <div class="field-header">
-          <label for="customJsSyntax">{{ 'httpEndpoint.editor.customJs.logic' | t }}</label>
-          <button class="link-button" type="button" (click)="formatCustomJs()" [disabled]="isEditorReadOnly">
-            {{ 'common.formatJs' | t }}
-          </button>
+        <div class="code-preview" *ngIf="endpoint.customJsSyntax">
+          <pre [innerHTML]="customJsHighlight"></pre>
         </div>
-        <div class="code-editor" [class.disabled]="isEditorReadOnly">
-          <pre #customJsHighlightEl class="code-highlight" [innerHTML]="customJsHighlight"></pre>
-          <textarea
-            id="customJsSyntax"
-            class="textarea-lg code-input"
-            [(ngModel)]="endpoint.customJsSyntax"
-            (ngModelChange)="updateCustomJsHighlight($event)"
-            (scroll)="syncCustomJsScroll($event)"
-            [disabled]="isEditorReadOnly"
-            spellcheck="false"
-          ></textarea>
+        <div class="empty-state" *ngIf="!endpoint.customJsSyntax">
+          {{ 'httpEndpoint.validation.jsLogicRequired' | t }}
         </div>
       </div>
     </div>
@@ -1281,6 +1274,34 @@
     <div class="modal-actions">
       <button class="button secondary" type="button" (click)="sseMessageOpen = false">{{ 'common.close' | t }}</button>
       <button class="button" type="button" (click)="sendSseMessage()" [disabled]="isEditorReadOnly">{{ 'common.send' | t }}</button>
+    </div>
+  </app-modal>
+
+  <app-modal *ngIf="jsEditorOpen" [title]="'httpEndpoint.editor.customJs.modalTitle' | t" size="lg" (close)="closeJsEditor()">
+    <div class="field">
+      <div class="field-header">
+        <label for="jsDraft">{{ 'httpEndpoint.editor.customJs.logic' | t }}</label>
+        <button class="link-button" type="button" (click)="formatCustomJs()" [disabled]="isEditorReadOnly">
+          {{ 'common.formatJs' | t }}
+        </button>
+      </div>
+      <div class="code-editor" [class.disabled]="isEditorReadOnly">
+        <pre #customJsHighlightEl class="code-highlight" [innerHTML]="customJsHighlight"></pre>
+        <textarea
+          id="jsDraft"
+          class="textarea-lg code-input"
+          [(ngModel)]="jsDraft"
+          (ngModelChange)="updateCustomJsHighlight($event)"
+          (scroll)="syncCustomJsScroll($event)"
+          (keydown)="onJsKeyDown($event)"
+          [disabled]="isEditorReadOnly"
+          spellcheck="false"
+        ></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="button secondary" type="button" (click)="closeJsEditor()">{{ 'common.cancel' | t }}</button>
+      <button class="button" type="button" (click)="saveJs()" [disabled]="isEditorReadOnly">{{ 'httpEndpoint.editor.customJs.save' | t }}</button>
     </div>
   </app-modal>
 </section>

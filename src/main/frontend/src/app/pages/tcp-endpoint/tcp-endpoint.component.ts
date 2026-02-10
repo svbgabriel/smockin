@@ -33,7 +33,7 @@ import {
   RULE_MATCHING_TYPES,
   WEBSOCKET_RULE_MATCHING_TYPES
 } from '../../core/constants';
-import { formatJs, formatJson, highlightJs, validateJson, validateXml } from '../../core/formatters';
+import { formatJs, formatJson, highlightJs, validateJs, validateJson, validateXml } from '../../core/formatters';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { ServerConfigPanelComponent } from '../../shared/panels/server-config-panel.component';
 import { ProxyMappingsPanelComponent } from '../../shared/panels/proxy-mappings-panel.component';
@@ -145,7 +145,9 @@ export class TcpEndpointComponent implements OnInit {
 
   wsMessageOpen = false;
   sseMessageOpen = false;
+  jsEditorOpen = false;
   messageDraft = { path: '', sessionId: '', body: '' };
+  jsDraft = '';
   customJsHighlight = '';
 
   readonly statusRunning = 'Running';
@@ -829,16 +831,37 @@ export class TcpEndpointComponent implements OnInit {
   }
 
   formatCustomJs(): void {
-    if (!this.endpoint.customJsSyntax) {
+    if (!this.jsDraft) {
       return;
     }
-    const result = formatJs(this.endpoint.customJsSyntax);
+    const result = formatJs(this.jsDraft);
     if (!result.ok) {
       this.showAlert(this.i18n.t('common.errors.generic'));
       return;
     }
-    this.endpoint.customJsSyntax = result.value;
+    this.jsDraft = result.value;
+    this.updateCustomJsHighlight(this.jsDraft);
+  }
+
+  openJsEditor(): void {
+    this.jsDraft = this.endpoint.customJsSyntax || '';
+    this.updateCustomJsHighlight(this.jsDraft);
+    this.jsEditorOpen = true;
+  }
+
+  closeJsEditor(): void {
+    this.jsEditorOpen = false;
+  }
+
+  saveJs(): void {
+    const error = validateJs(this.jsDraft);
+    if (error) {
+      this.showAlert(this.i18n.t('httpEndpoint.validation.jsSyntaxError', { error }));
+      return;
+    }
+    this.endpoint.customJsSyntax = this.jsDraft;
     this.updateCustomJsHighlight(this.endpoint.customJsSyntax);
+    this.jsEditorOpen = false;
   }
 
   updateCustomJsHighlight(value: string | null): void {
@@ -854,6 +877,21 @@ export class TcpEndpointComponent implements OnInit {
     }
     highlight.scrollTop = target.scrollTop;
     highlight.scrollLeft = target.scrollLeft;
+  }
+
+  onJsKeyDown(event: KeyboardEvent): void {
+    const target = event.target as HTMLTextAreaElement;
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      this.jsDraft = this.jsDraft.substring(0, start) + '  ' + this.jsDraft.substring(end);
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = start + 2;
+      });
+    } else if (event.key === 'End') {
+      event.stopPropagation();
+    }
   }
 
   validateXmlResponse(text: string): void {

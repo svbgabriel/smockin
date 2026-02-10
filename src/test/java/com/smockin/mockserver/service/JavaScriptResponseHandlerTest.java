@@ -8,7 +8,6 @@ import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.service.SmockinUserService;
 import com.smockin.admin.service.UserKeyValueDataService;
 import org.junit.jupiter.api.BeforeEach;
-import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -105,14 +104,14 @@ class JavaScriptResponseHandlerTest {
                         + JavaScriptResponseHandler.userResponseFunctionInvoker);
 
         Assertions.assertNotNull(response);
-        Assertions.assertTrue(response instanceof ScriptObjectMirror);
+        Assertions.assertTrue(response instanceof Map);
 
-        Assertions.assertEquals("coming soon", ((ScriptObjectMirror) response).get("body"));
-        Assertions.assertEquals(202, ((ScriptObjectMirror) response).get("status"));
-        Assertions.assertEquals("text/plain", ((ScriptObjectMirror) response).get("contentType"));
+        Assertions.assertEquals("coming soon", ((Map) response).get("body"));
+        Assertions.assertEquals(202, ((Map) response).get("status"));
+        Assertions.assertEquals("text/plain", ((Map) response).get("contentType"));
 
-        Assertions.assertEquals("aa", ((ScriptObjectMirror) ((ScriptObjectMirror) response).get("headers")).get("a"));
-        Assertions.assertNull(((ScriptObjectMirror) ((ScriptObjectMirror) response).get("headers")).get("b"));
+        Assertions.assertEquals("aa", ((Map) ((Map) response).get("headers")).get("a"));
+        Assertions.assertNull(((Map) ((Map) response).get("headers")).get("b"));
     }
 
     @Test
@@ -129,11 +128,11 @@ class JavaScriptResponseHandlerTest {
                         + JavaScriptResponseHandler.userResponseFunctionInvoker);
 
         Assertions.assertNotNull(response);
-        Assertions.assertTrue(response instanceof ScriptObjectMirror);
+        Assertions.assertTrue(response instanceof Map);
 
-        Assertions.assertNull(((ScriptObjectMirror) response).get("body"));
-        Assertions.assertEquals(404, ((ScriptObjectMirror) response).get("status"));
-        Assertions.assertEquals("text/plain", ((ScriptObjectMirror) response).get("contentType"));
+        Assertions.assertNull(((Map) response).get("body"));
+        Assertions.assertEquals(404, ((Map) response).get("status"));
+        Assertions.assertEquals("text/plain", ((Map) response).get("contentType"));
     }
 
     @Test
@@ -145,10 +144,10 @@ class JavaScriptResponseHandlerTest {
                         + JavaScriptResponseHandler.userResponseFunctionInvoker);
 
         Assertions.assertNotNull(response);
-        Assertions.assertTrue(response instanceof ScriptObjectMirror);
+        Assertions.assertTrue(response instanceof Map);
 
-        Assertions.assertEquals("Expected handleResponse(request, response) function is undefined!", ((ScriptObjectMirror) response).get("body"));
-        Assertions.assertEquals(404, ((ScriptObjectMirror) response).get("status"));
+        Assertions.assertEquals("Expected handleResponse(request, response) function is undefined!", ((Map) response).get("body"));
+        Assertions.assertEquals(404, ((Map) response).get("status"));
     }
 
     @Test
@@ -224,7 +223,7 @@ class JavaScriptResponseHandlerTest {
 
         final ScriptException ex = Assertions.assertThrows(ScriptException.class,
                 () -> javaScriptResponseHandler.executeJS("java.lang.System.nanoTime();"));
-        Assertions.assertEquals("ReferenceError: \"java\" is not defined in <eval> at line number 1", ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("ReferenceError: java is not defined"));
     }
 
     @Test
@@ -232,7 +231,7 @@ class JavaScriptResponseHandlerTest {
 
         final ScriptException ex = Assertions.assertThrows(ScriptException.class,
                 () -> javaScriptResponseHandler.executeJS("java.lang.Runtime.getRuntime().exec(\"java.lang.System.nanoTime();\");"));
-        Assertions.assertEquals("ReferenceError: \"java\" is not defined in <eval> at line number 1", ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("ReferenceError: java is not defined"));
     }
 
     @Test
@@ -240,7 +239,7 @@ class JavaScriptResponseHandlerTest {
 
         final ScriptException ex = Assertions.assertThrows(ScriptException.class,
                 () -> javaScriptResponseHandler.executeJS("exit(1);"));
-        Assertions.assertEquals("ReferenceError: \"exit\" is not defined in <eval> at line number 1", ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("ReferenceError: exit is not defined"));
     }
 
     @Test

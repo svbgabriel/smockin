@@ -8,8 +8,6 @@ import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.Strings;
-import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
-import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
+import javax.script.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -41,8 +36,7 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
     @Autowired
     private UserKeyValueDataService userKeyValueDataService;
 
-    private final static String CARRIAGE_RETURN_REGEX = "\\r\\n|\\r|\\n";
-    private final String extensionsDir = "js-extensions/";
+    private static final String CARRIAGE_RETURN_REGEX = "\\r\\n|\\r|\\n";
 
     @Override
     public RestfulResponseDTO executeUserResponse(final HttpServletRequest req, final RestfulMock mock) {
@@ -65,9 +59,11 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
             return new RestfulResponseDTO(500, "text/plain", "Looks like there is an issue with the Javascript driving this mock " + ex.getMessage());
         }
 
-        if (!(engineResponse instanceof ScriptObjectMirror response)) {
+        if (!(engineResponse instanceof Map)) {
             return new RestfulResponseDTO(500, "text/plain", "Looks like there is an issue with the Javascript driving this mock!");
         }
+
+        final Map<String, Object> response = (Map<String, Object>) engineResponse;
 
         return new RestfulResponseDTO(
                 (int) response.get("status"),
@@ -121,13 +117,13 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
                 .append(";"));
     }
 
-    Set<Map.Entry<String, String>> convertResponseHeaders(final ScriptObjectMirror response) {
+    Set<Map.Entry<String, String>> convertResponseHeaders(final Map<String, Object> response) {
 
         final Object headersJS = response.get("headers");
         final Map<String, String> responseHeaders = new HashMap<>();
 
-        if (headersJS instanceof ScriptObjectMirror) {
-            ((ScriptObjectMirror) headersJS).forEach((key, value) -> responseHeaders.put(key, (String) value));
+        if (headersJS instanceof Map) {
+            ((Map<String, Object>) headersJS).forEach((key, value) -> responseHeaders.put(key, (String) value));
         }
 
         return responseHeaders.entrySet();
@@ -233,7 +229,7 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
 
     private ScriptEngine buildEngine() {
 
-        final ScriptEngine engine = new NashornScriptEngineFactory().getScriptEngine(engineSecurityArgs, null, (s) -> false);
+        final ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
         loadEngineExtensions(engine);
         applyEngineBindings(engine);
 
@@ -249,6 +245,7 @@ public class JavaScriptResponseHandlerImpl implements JavaScriptResponseHandler 
     }
 
     private String getExtensionsFilePath(final String extensionsFileName) {
+        String extensionsDir = "js-extensions/";
         return getClass().getClassLoader().getResource(extensionsDir + extensionsFileName).getFile();
     }
 
