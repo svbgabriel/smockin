@@ -372,3 +372,27 @@ main {
 .field.search {
   margin-bottom: 1.5rem;
 }
+
+.token.comment {
+  color: var(--code-comment);
+}
+
+.token.string {
+  color: var(--code-string);
+}
+
+.token.keyword {
+  color: var(--code-keyword);
+}
+
+.token.number {
+  color: var(--code-number);
+}
+
+.token.regex {
+  color: var(--code-regex);
+}
+
+.token.punctuation {
+  color: var(--code-punctuation);
+}

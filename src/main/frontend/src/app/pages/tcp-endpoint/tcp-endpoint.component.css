@@ -107,8 +107,8 @@
 .code-input {
   position: relative;
   width: 100%;
-  background: transparent;
-  color: transparent;
+  background: transparent !important;
+  color: transparent !important;
   caret-color: var(--code-text);
   border: 1px solid transparent;
   font-family: "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
@@ -116,8 +116,12 @@
   line-height: 1.5;
   min-height: 180px;
   resize: vertical;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent !important;
+  white-space: pre-wrap;
+  word-break: break-word;
   tab-size: 2;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
 }
 
 .code-input:focus {
@@ -130,30 +134,6 @@
 
 .code-editor.disabled .code-highlight {
   opacity: 0.7;
-}
-
-.token.comment {
-  color: var(--code-comment);
-}
-
-.token.string {
-  color: var(--code-string);
-}
-
-.token.keyword {
-  color: var(--code-keyword);
-}
-
-.token.number {
-  color: var(--code-number);
-}
-
-.token.regex {
-  color: var(--code-regex);
-}
-
-.token.punctuation {
-  color: var(--code-punctuation);
 }
 
 .textarea-lg {
