@@ -3,18 +3,20 @@ package com.smockin.admin.persistence.entity;
 import lombok.Data;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by mgallina.
- *
- * Defines a group of conditions, associated to one another by 'AND'.
+ * Defines a group of conditions, associated with one another by 'AND'.
  *
  */
 @Entity
 @Table(name = "REST_MOCK_RULE_GRP")
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class RestfulMockDefinitionRuleGroup extends Identifier {
 
     @ManyToOne(fetch = FetchType.LAZY)

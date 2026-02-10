@@ -2,6 +2,7 @@ package com.smockin.admin.dto.response;
 
 import com.smockin.admin.dto.S3MockDirDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class S3MockDirResponseDTO extends S3MockDirDTO {
 
     private String extId;

@@ -2,6 +2,7 @@ package com.smockin.admin.persistence.entity;
 
 import com.smockin.admin.persistence.enums.ServerTypeEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
 
 import jakarta.persistence.*;
@@ -14,6 +15,7 @@ import java.util.Map;
 @Entity
 @Table(name = "SERVER_CONFIG")
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class ServerConfig extends Identifier {
 
     @Enumerated(EnumType.STRING)

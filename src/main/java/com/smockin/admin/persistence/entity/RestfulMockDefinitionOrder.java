@@ -1,6 +1,7 @@
 package com.smockin.admin.persistence.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.*;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Map;
 @Entity
 @Table(name = "REST_MOCK_DEF")
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class RestfulMockDefinitionOrder extends Identifier {
 
     @ManyToOne(fetch = FetchType.LAZY)

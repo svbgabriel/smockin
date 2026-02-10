@@ -2,6 +2,7 @@ package com.smockin.admin.persistence.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
@@ -14,6 +15,7 @@ import jakarta.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class MailMockMessageAttachmentContent extends Identifier {
 
     @OneToOne(fetch = FetchType.LAZY)

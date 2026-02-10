@@ -3,6 +3,7 @@ package com.smockin.admin.persistence.entity;
 import lombok.Data;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 
 
 /**
@@ -11,6 +12,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "REST_MOCK_STATEFUL_META")
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class RestfulMockStatefulMeta extends Identifier {
 
     @OneToOne(fetch = FetchType.LAZY)

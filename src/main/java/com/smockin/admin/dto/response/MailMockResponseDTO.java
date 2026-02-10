@@ -2,10 +2,12 @@ package com.smockin.admin.dto.response;
 
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class MailMockResponseDTO extends MailMockResponseLiteDTO {
 
     private PagingResponseDTO<MailMockMessageResponseDTO> messages;

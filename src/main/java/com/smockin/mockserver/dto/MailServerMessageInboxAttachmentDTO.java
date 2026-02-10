@@ -1,10 +1,10 @@
 package com.smockin.mockserver.dto;
 
 import lombok.Data;
-
-import java.util.Optional;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class MailServerMessageInboxAttachmentDTO extends MailServerMessageInboxAttachmentLiteDTO {
 
     private String base64Content;

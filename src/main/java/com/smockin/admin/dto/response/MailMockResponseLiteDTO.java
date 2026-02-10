@@ -3,12 +3,14 @@ package com.smockin.admin.dto.response;
 import com.smockin.admin.dto.MailMockDTO;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class MailMockResponseLiteDTO extends MailMockDTO {
 
     private String externalId;

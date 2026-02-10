@@ -2,6 +2,7 @@ package com.smockin.mockserver.dto;
 
 import com.smockin.admin.persistence.enums.ProxyModeTypeEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class ProxyForwardConfigResponseDTO extends ProxyForwardConfigDTO {
 
     private boolean proxyMode;

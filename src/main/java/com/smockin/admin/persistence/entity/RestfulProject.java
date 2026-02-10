@@ -3,12 +3,15 @@ package com.smockin.admin.persistence.entity;
 import lombok.Data;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "REST_PROJ")
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class RestfulProject extends Identifier {
 
     @Column(name="NAME", length = 100, nullable = false, unique = true)

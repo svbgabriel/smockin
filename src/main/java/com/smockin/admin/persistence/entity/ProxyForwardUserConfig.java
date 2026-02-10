@@ -2,6 +2,7 @@ package com.smockin.admin.persistence.entity;
 
 import com.smockin.admin.persistence.enums.ProxyModeTypeEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
 
 import jakarta.persistence.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "PROXY_FORWARD_USER_CONFIG")
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class ProxyForwardUserConfig extends Identifier {
 
     @ManyToOne(fetch = FetchType.LAZY)

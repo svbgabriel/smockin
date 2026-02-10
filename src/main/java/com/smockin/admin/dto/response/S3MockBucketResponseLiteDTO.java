@@ -4,6 +4,7 @@ import com.smockin.admin.dto.S3MockBucketDTO;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.S3SyncModeEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.Date;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class S3MockBucketResponseLiteDTO extends S3MockBucketDTO {
 
     private String extId;

@@ -3,6 +3,7 @@ package com.smockin.admin.dto.response;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.S3SyncModeEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class S3MockBucketResponseDTO extends S3MockBucketResponseLiteDTO {
 
     private List<S3MockDirResponseDTO> children = new ArrayList<>();

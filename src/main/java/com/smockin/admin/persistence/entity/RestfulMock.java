@@ -4,6 +4,7 @@ import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.*;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
     @UniqueConstraint(columnNames = {"PATH", "HTTP_METHOD", "CREATED_BY"})
 })
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class RestfulMock extends Identifier {
 
     @Column(name = "PATH", nullable = false, length = 1000)
