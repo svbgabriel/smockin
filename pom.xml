@@ -40,7 +40,6 @@
     </properties>
 
     <dependencies>
-
         <!-- Spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -277,7 +276,7 @@
                         </goals>
                         <configuration>
                             <nodeVersion>v20.20.0</nodeVersion>
-                            <npmVersion>10.5.0</npmVersion>
+                            <npmVersion>11.9.0</npmVersion>
                         </configuration>
                     </execution>
                     <execution>
