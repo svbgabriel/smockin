@@ -5,12 +5,14 @@ import com.smockin.admin.exception.RecordNotFoundException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.dao.RestfulProjectDAO;
 import com.smockin.admin.persistence.entity.RestfulProject;
+import com.smockin.admin.service.mapper.ProjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -18,6 +20,9 @@ class ProjectServiceTest {
 
     @Mock
     private RestfulProjectDAO restfulProjectDAO;
+
+    @Spy
+    private ProjectMapper projectMapper = new ProjectMapper();
 
     @InjectMocks
     private ProjectServiceImpl projectService;

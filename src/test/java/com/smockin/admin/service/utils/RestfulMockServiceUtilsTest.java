@@ -6,6 +6,7 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.service.SmockinUserService;
+import com.smockin.admin.service.mapper.RestfulMockMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ class RestfulMockServiceUtilsTest {
     @Mock
     private SmockinUserDAO smockinUserDAO;
 
+    @Spy
+    private RestfulMockMapper restfulMockMapper = new RestfulMockMapper();
 
     @Spy
     @InjectMocks

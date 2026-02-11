@@ -23,11 +23,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private RestfulProjectDAO restfulProjectDAO;
 
+    @Autowired
+    private com.smockin.admin.service.mapper.ProjectMapper projectMapper;
+
     @Override
     public List<ProjectDTO> loadAll(final String token) throws RecordNotFoundException {
 
         return restfulProjectDAO.findAll()
-                .stream().map(p -> new ProjectDTO(p.getExtId(), p.getName()))
+                .stream().map(projectMapper::toProjectDTO)
                 .toList();
     }
 
@@ -40,8 +43,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // Create
-        final RestfulProject project = new RestfulProject();
-        project.setName(projectDTO.getName());
+        final RestfulProject project = projectMapper.toRestfulProject(projectDTO);
 
         return restfulProjectDAO.save(project).getExtId();
     }

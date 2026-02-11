@@ -47,6 +47,9 @@ public class SmockinUserServiceImpl implements SmockinUserService {
     @Autowired
     private RestfulMockDAO restfulMockDAO;
 
+    @Autowired
+    private com.smockin.admin.service.mapper.SmockinUserMapper smockinUserMapper;
+
     @Value("${multi.user.mode:false}")
     private boolean multiUserMode;
 
@@ -58,7 +61,7 @@ public class SmockinUserServiceImpl implements SmockinUserService {
         return smockinUserDAO
                 .findAll()
                 .stream()
-                .map(u -> new SmockinUserResponseDTO(u.getExtId(), (isPasswordResetTokenValid(u)) ? u.getPasswordResetToken() : null, u.getDateCreated(), u.getUsername(), u.getFullName(), u.getRole()))
+                .map(smockinUserMapper::toSmockinUserResponseDTO)
                 .collect(Collectors.toList());
 
     }
@@ -270,12 +273,6 @@ public class SmockinUserServiceImpl implements SmockinUserService {
         }
 
         return smockinUser;
-    }
-
-    boolean isPasswordResetTokenValid(final SmockinUser user) {
-        return (user.getPasswordResetToken() != null
-                    && user.getPasswordResetTokenExpiry() != null
-                    && GeneralUtils.getCurrentDate().before(user.getPasswordResetTokenExpiry()));
     }
 
 }

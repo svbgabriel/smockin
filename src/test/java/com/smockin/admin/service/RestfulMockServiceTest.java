@@ -7,6 +7,7 @@ import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.dao.RestfulMockDefinitionRuleDAO;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.persistence.entity.SmockinUser;
+import com.smockin.admin.service.mapper.RestfulMockMapper;
 import com.smockin.admin.service.utils.RestfulMockServiceUtils;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import org.junit.jupiter.api.Assertions;
@@ -31,6 +32,9 @@ class RestfulMockServiceTest {
 
     @Mock
     private UserTokenServiceUtils userTokenServiceUtils;
+
+    @Mock
+    private RestfulMockMapper restfulMockMapper;
 
     @InjectMocks
     private RestfulMockServiceImpl restfulMockService;

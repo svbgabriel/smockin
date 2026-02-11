@@ -11,16 +11,15 @@ import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.service.ProjectService;
 import com.smockin.admin.service.SmockinUserService;
+import com.smockin.admin.service.mapper.RestfulMockMapper;
 import com.smockin.mockserver.engine.MockedRestServerEngine;
 import com.smockin.mockserver.service.MockOrderingCounterService;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +49,12 @@ public class RestfulMockServiceUtils {
     @Autowired
     private SmockinUserDAO smockinUserDAO;
 
+    @Autowired
+    private RestfulMockMapper restfulMockMapper;
+
+    @Autowired
+    private PathVariableUtils pathVariableUtils;
+
 
     @Transactional
     public List<RestfulMockResponseDTO> buildRestfulMockDefinitionDTOs(final List<RestfulMock> restfulMockDefinitions) {
@@ -63,101 +68,11 @@ public class RestfulMockServiceUtils {
     @Transactional
     public RestfulMockResponseDTO buildRestfulMockDefinitionDTO(final RestfulMock rmd) {
 
-        final String path = formatOutboundPathVarArgs(rmd.getPath());
+        final RestfulMockResponseDTO dto = restfulMockMapper.toRestfulMockResponseDTO(rmd);
 
-        final boolean isStatefulParent = (RestMockTypeEnum.STATEFUL.equals(rmd.getMockType()) && rmd.getStatefulParent() == null);
-
-        final RestfulMockResponseDTO dto = new RestfulMockResponseDTO(rmd.getExtId(), path, rmd.getCreatedBy().getCtxPath(), rmd.getMethod(), rmd.getStatus(),
-                rmd.getMockType(), isStatefulParent, rmd.getDateCreated(), rmd.getCreatedBy().getUsername(), rmd.getProxyTimeOutInMillis(), rmd.getWebSocketTimeoutInMillis(), rmd.getSseHeartBeatInMillis(), rmd.isProxyPushIdOnConnect(),
-                rmd.isRandomiseDefinitions(), rmd.isProxyForwardWhenNoRuleMatch(), rmd.isRandomiseLatency(), rmd.getRandomiseLatencyRangeMinMillis(), rmd.getRandomiseLatencyRangeMaxMillis(), (rmd.getProject() != null) ? rmd.getProject().getExtId() : null,
-                (rmd.getJavaScriptHandler() != null) ? rmd.getJavaScriptHandler().getSyntax() : null,
-                (isStatefulParent && rmd.getRestfulMockStatefulMeta() != null) ? rmd.getRestfulMockStatefulMeta().getInitialResponseBody() : null,
-                (isStatefulParent && rmd.getRestfulMockStatefulMeta() != null) ? rmd.getRestfulMockStatefulMeta().getIdFieldName() : null,
-                (isStatefulParent && rmd.getRestfulMockStatefulMeta() != null) ? rmd.getRestfulMockStatefulMeta().getIdFieldLocation() : null);
-
-        // Definitions
-        for (RestfulMockDefinitionOrder order : rmd.getDefinitions()) {
-            final RestfulMockDefinitionDTO restfulMockDefinitionDTO = new RestfulMockDefinitionDTO(order.getExtId(), order.getOrderNo(), order.getHttpStatusCode(), order.getResponseContentType(), order.getResponseBody(), order.getSleepInMillis(), order.isSuspend(), order.getFrequencyCount(), order.getFrequencyPercentage());
-
-            for (Map.Entry<String, String> responseHeader : order.getResponseHeaders().entrySet()) {
-                restfulMockDefinitionDTO.getResponseHeaders().put(responseHeader.getKey(), responseHeader.getValue());
-            }
-
-            dto.getDefinitions().add(restfulMockDefinitionDTO);
-        }
-
-        // Rules
-        for (RestfulMockDefinitionRule rule : rmd.getRules()) {
-
-            final RuleDTO ruleDto = new RuleDTO(rule.getExtId(), rule.getOrderNo(), rule.getHttpStatusCode(), rule.getResponseContentType(), rule.getResponseBody(), rule.getSleepInMillis(), rule.isSuspend());
-
-            for (Map.Entry<String, String> responseHeader : rule.getResponseHeaders().entrySet()) {
-                ruleDto.getResponseHeaders().put(responseHeader.getKey(), responseHeader.getValue());
-            }
-
-            for (RestfulMockDefinitionRuleGroup group : rule.getConditionGroups()) {
-
-                final RuleGroupDTO groupDto = new RuleGroupDTO(group.getExtId(), group.getOrderNo());
-
-                for (RestfulMockDefinitionRuleGroupCondition condition : group.getConditions()) {
-                    groupDto.getConditions().add(new RuleConditionDTO(condition.getExtId(), condition.getField(), condition.getDataType(), condition.getComparator(), condition.getMatchValue(), condition.getRuleMatchingType(), condition.getCaseSensitive()));
-                }
-
-                ruleDto.getGroups().add(groupDto);
-            }
-
-            dto.getRules().add(ruleDto);
-        }
+        dto.setPath(pathVariableUtils.formatOutboundPathVarArgs(rmd.getPath()));
 
         return dto;
-    }
-
-    public void buildRuleGroups(final RuleDTO dto, final RestfulMockDefinitionRule rule) {
-
-        for (RuleGroupDTO groupDTO : dto.getGroups()) {
-
-            final RestfulMockDefinitionRuleGroup group = new RestfulMockDefinitionRuleGroup(rule, groupDTO.getOrderNo());
-
-            for (RuleConditionDTO conditionDTO : groupDTO.getConditions()) {
-                group.getConditions().add(new RestfulMockDefinitionRuleGroupCondition(group, conditionDTO.getField(), conditionDTO.getDataType(), conditionDTO.getComparator(), conditionDTO.getValue(), conditionDTO.getRuleMatchingType(), conditionDTO.isCaseSensitive()));
-            }
-
-            rule.getConditionGroups().add(group);
-        }
-
-    }
-
-    public void populateEndpointDefinitionsAndRules(final RestfulMockDTO dtoSource, final RestfulMock mockDest) {
-
-        // Endpoint Sequenced Definition
-        for (RestfulMockDefinitionDTO restMockOrderDto : dtoSource.getDefinitions()) {
-
-            final RestfulMockDefinitionOrder restfulMockDefinitionOrder =
-                    new RestfulMockDefinitionOrder(mockDest, restMockOrderDto.getHttpStatusCode(), restMockOrderDto.getResponseContentType(), restMockOrderDto.getResponseBody(), restMockOrderDto.getOrderNo(), restMockOrderDto.getSleepInMillis(), restMockOrderDto.isSuspend(), restMockOrderDto.getFrequencyCount(), restMockOrderDto.getFrequencyPercentage());
-
-            if (restMockOrderDto.getResponseHeaders() != null) {
-                for (Map.Entry<String, String> responseHeader : restMockOrderDto.getResponseHeaders().entrySet()) {
-                    restfulMockDefinitionOrder.getResponseHeaders().put(responseHeader.getKey(), responseHeader.getValue());
-                }
-            }
-
-            mockDest.getDefinitions().add(restfulMockDefinitionOrder);
-        }
-
-        // Endpoint Rules
-        for (RuleDTO ruleDto : dtoSource.getRules()) {
-
-            final RestfulMockDefinitionRule rule = new RestfulMockDefinitionRule(mockDest, ruleDto.getOrderNo(), ruleDto.getHttpStatusCode(), ruleDto.getResponseContentType(), ruleDto.getResponseBody(), ruleDto.getSleepInMillis(), ruleDto.isSuspend());
-
-            for (Map.Entry<String, String> responseHeader : ruleDto.getResponseHeaders().entrySet()) {
-                rule.getResponseHeaders().put(responseHeader.getKey(), responseHeader.getValue());
-            }
-
-            buildRuleGroups(ruleDto, rule);
-
-            mockDest.getRules().add(rule);
-        }
-
     }
 
     public void handleCustomJsSyntax(final RestfulMockDTO dto, final RestfulMock mock) throws ValidationException {
@@ -252,55 +167,6 @@ public class RestfulMockServiceUtils {
 
     }
 
-    public String formatInboundPathVarArgs(final String inboundPath) {
-
-        if (StringUtils.isBlank(inboundPath)) {
-            return null;
-        }
-
-        final int varArgStart = Strings.CS.indexOf(inboundPath, ":");
-
-        if (varArgStart > -1) {
-
-            final int varArgEnd = Strings.CS.indexOf(inboundPath, GeneralUtils.URL_PATH_SEPARATOR, varArgStart);
-
-            final String varArg = (varArgEnd > -1)
-                    ? StringUtils.substring(inboundPath, varArgStart, varArgEnd)
-                    : StringUtils.substring(inboundPath, varArgStart);
-
-            final String result = Strings.CS.replace(inboundPath, varArg, "{" + StringUtils.remove(varArg, ':') + "}");
-
-            return formatInboundPathVarArgs(result);
-        }
-
-        return inboundPath;
-    }
-
-    public String formatOutboundPathVarArgs(final String outboundPath) {
-
-        if (StringUtils.isBlank(outboundPath)) {
-            return null;
-        }
-
-        final int varArgStart = Strings.CS.indexOf(outboundPath, "{");
-
-        if (varArgStart > -1) {
-
-            final int varArgEnd = Strings.CS.indexOf(outboundPath, "}", varArgStart);
-
-            final String varArg = (varArgEnd > -1)
-                    ? StringUtils.substring(outboundPath, varArgStart, varArgEnd + 1)
-                    : StringUtils.substring(outboundPath, varArgStart);
-
-            final String result = Strings.CS.replace(outboundPath, varArg,
-                    ":" + StringUtils.remove(StringUtils.remove(varArg, '{'), '}'));
-
-            return formatOutboundPathVarArgs(result);
-        }
-
-        return outboundPath;
-    }
-
     void updateExistingStatefulMockTypeFields(final RestfulMockDTO dto, final RestfulMock mock) {
 
         final RestMethodEnum method = mock.getMethod();
@@ -319,9 +185,9 @@ public class RestfulMockServiceUtils {
                 || RestMethodEnum.PUT.equals(method)
                 || RestMethodEnum.PATCH.equals(method)
                 || RestMethodEnum.DELETE.equals(method))) {
-            mock.setPath(formatInboundPathVarArgs(varPath));
+            mock.setPath(pathVariableUtils.formatInboundPathVarArgs(varPath));
         } else {
-            mock.setPath(formatInboundPathVarArgs(originalPath));
+            mock.setPath(pathVariableUtils.formatInboundPathVarArgs(originalPath));
         }
 
         mock.setStatus(dto.getStatus());
@@ -391,23 +257,11 @@ public class RestfulMockServiceUtils {
 
     public RestfulMock buildRestfulMock(final RestfulMockDTO dto, final SmockinUser smockinUser) {
 
-        return new RestfulMock(
-                formatInboundPathVarArgs(dto.getPath()),
-                dto.getMethod(),
-                dto.getStatus(),
-                dto.getMockType(),
-                dto.getProxyTimeoutInMillis(),
-                dto.getWebSocketTimeoutInMillis(),
-                dto.getSseHeartBeatInMillis(),
-                dto.isProxyPushIdOnConnect(),
-                dto.isRandomiseDefinitions(),
-                dto.isProxyForwardWhenNoRuleMatch(),
-                smockinUser,
-                dto.isRandomiseLatency(),
-                dto.getRandomiseLatencyRangeMinMillis(),
-                dto.getRandomiseLatencyRangeMaxMillis(),
-                (dto.getProjectId() != null) ? projectService.loadByExtId(dto.getProjectId()) : null);
+        final RestfulMock mock = restfulMockMapper.toRestfulMock(dto, smockinUser);
 
+        mock.setPath(pathVariableUtils.formatInboundPathVarArgs(dto.getPath()));
+
+        return mock;
     }
 
     public void handleMockFieldsUpdate(final RestfulMockDTO dto, final RestfulMock mock)
@@ -418,7 +272,7 @@ public class RestfulMockServiceUtils {
         restfulMockDAO.saveAndFlush(mock);
 
         mock.setMockType(dto.getMockType());
-        mock.setPath(formatInboundPathVarArgs(dto.getPath()));
+        mock.setPath(pathVariableUtils.formatInboundPathVarArgs(dto.getPath()));
         mock.setMethod(dto.getMethod());
         mock.setStatus(dto.getStatus());
         mock.setProxyTimeOutInMillis(dto.getProxyTimeoutInMillis());
@@ -439,7 +293,7 @@ public class RestfulMockServiceUtils {
 
         handleCustomJsSyntax(dto, mock);
 
-        populateEndpointDefinitionsAndRules(dto, mock);
+        restfulMockMapper.populateEndpointDefinitionsAndRules(dto, mock);
 
         restfulMockDAO.save(mock);
 

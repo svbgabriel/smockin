@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.smockin.admin.config.JwtConfig;
 import com.smockin.admin.dto.AuthDTO;
 import com.smockin.admin.exception.AuthException;
 import com.smockin.admin.exception.ValidationException;
@@ -13,6 +14,7 @@ import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.utils.GeneralUtils;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,18 +36,21 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private EncryptionService encryptionService;
 
-    private final String jwtRoleKey = "role";
-    private final String jwtFullNameKey = "name";
-    private final String jwtUserNameKey = "username";
-    private final String jwtSubjectKey = "smockin-access";
-    private final String jwtIssuer = "smockin";
-    private final String jwtSecret = "somesobsecuresecretkey";
+    @Autowired
+    private JwtConfig jwtConfig;
 
-    private final Algorithm jwtAlgorithm = Algorithm.HMAC256(jwtSecret);
-    private final JWTVerifier jwtVerifier = JWT.require(jwtAlgorithm)
-            .withIssuer(jwtIssuer)
-            .build();
+    private Algorithm jwtAlgorithm;
+    private JWTVerifier jwtVerifier;
 
+    @PostConstruct
+    public void init() {
+        jwtAlgorithm = Algorithm.HMAC256(jwtConfig.getSecret());
+        jwtVerifier = JWT.require(jwtAlgorithm)
+                .withIssuer(jwtConfig.getIssuer())
+                .build();
+    }
+
+    @Override
     public String authenticate(final AuthDTO dto) throws ValidationException, AuthException {
         logger.debug("authenticate called");
 
@@ -72,28 +77,18 @@ public class AuthServiceImpl implements AuthService {
         return token;
     }
 
-    String generateJWT(final SmockinUser user) {
-        return JWT.create()
-                .withIssuer(jwtIssuer)
-                .withClaim(jwtRoleKey, user.getRole().name())
-                .withClaim(jwtFullNameKey, user.getFullName())
-                .withClaim(jwtUserNameKey, user.getUsername())
-                .withSubject(jwtSubjectKey)
-                .withIssuedAt(GeneralUtils.getCurrentDate())
-                .withExpiresAt(GeneralUtils.toDate(GeneralUtils.getCurrentDateTime().plusDays(99)))
-                .sign(jwtAlgorithm);
-    }
-
+    @Override
     public void checkTokenRoles(final String jwt, SmockinUserRoleEnum... roles) throws AuthException {
 
         final DecodedJWT decodedJWT = jwtVerifier.verify(jwt);
-        final Claim roleClaim = decodedJWT.getClaim(jwtRoleKey);
+        final Claim roleClaim = decodedJWT.getClaim(jwtConfig.getRoleKey());
 
         if (roleClaim == null || !Stream.of(roles).anyMatch(r -> r.name().equals(roleClaim.asString()))) {
             throw new AuthException();
         }
     }
 
+    @Override
     public void verifyToken(final String jwt) throws AuthException {
 
         try {
@@ -102,6 +97,18 @@ public class AuthServiceImpl implements AuthService {
             logger.debug("JWT authorization failed", ex);
             throw new AuthException();
         }
+    }
+
+    String generateJWT(final SmockinUser user) {
+        return JWT.create()
+                .withIssuer(jwtConfig.getIssuer())
+                .withClaim(jwtConfig.getRoleKey(), user.getRole().name())
+                .withClaim(jwtConfig.getFullNameKey(), user.getFullName())
+                .withClaim(jwtConfig.getUserNameKey(), user.getUsername())
+                .withSubject(jwtConfig.getSubject())
+                .withIssuedAt(GeneralUtils.getCurrentDate())
+                .withExpiresAt(GeneralUtils.toDate(GeneralUtils.getCurrentDateTime().plusDays(99)))
+                .sign(jwtAlgorithm);
     }
 
 }

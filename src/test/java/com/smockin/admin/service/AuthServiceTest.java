@@ -15,6 +15,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.smockin.admin.config.JwtConfig;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -24,8 +28,16 @@ class AuthServiceTest {
     @Mock
     private EncryptionService encryptionService;
 
+    @Spy
+    private JwtConfig jwtConfig = new JwtConfig();
+
     @InjectMocks
     private AuthServiceImpl authService;
+
+    @BeforeEach
+    void setUp() {
+        authService.init();
+    }
 
     @Test
     void authenticate_validCredentials_returnsTokenAndSavesUser() throws ValidationException, AuthException {

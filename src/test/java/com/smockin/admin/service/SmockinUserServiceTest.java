@@ -9,12 +9,14 @@ import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
+import com.smockin.admin.service.mapper.SmockinUserMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +33,9 @@ class SmockinUserServiceTest {
 
     @Mock
     private RestfulMockDAO restfulMockDAO;
+
+    @Spy
+    private SmockinUserMapper smockinUserMapper = new SmockinUserMapper();
 
     @InjectMocks
     private SmockinUserServiceImpl smockinUserService;

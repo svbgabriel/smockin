@@ -10,6 +10,7 @@ import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
+import com.smockin.admin.service.mapper.RestfulMockMapper;
 import com.smockin.admin.service.utils.RestfulMockServiceUtils;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import org.slf4j.Logger;
@@ -37,6 +38,9 @@ public class RestfulMockServiceImpl implements RestfulMockService {
 
     @Autowired
     private RestfulMockServiceUtils restfulMockServiceUtils;
+
+    @Autowired
+    private RestfulMockMapper restfulMockMapper;
 
     @Autowired
     private UserTokenServiceUtils userTokenServiceUtils;
@@ -68,7 +72,7 @@ public class RestfulMockServiceImpl implements RestfulMockService {
 
         mainMock = restfulMockServiceUtils.handleCreateStatefulMockType(dto, mainMock, smockinUser);
         restfulMockServiceUtils.handleCustomJsSyntax(dto, mainMock);
-        restfulMockServiceUtils.populateEndpointDefinitionsAndRules(dto, mainMock);
+        restfulMockMapper.populateEndpointDefinitionsAndRules(dto, mainMock);
 
         mainMock = restfulMockDAO.save(mainMock);
 
