@@ -1,11 +1,11 @@
 package com.smockin.admin.persistence.entity;
 
 import com.smockin.admin.persistence.enums.ProxyModeTypeEnum;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
 
-import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

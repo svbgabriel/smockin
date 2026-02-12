@@ -1,9 +1,9 @@
 package com.smockin.admin.persistence.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
-import jakarta.persistence.*;
 
 /**
  * Created by mgallina.

@@ -1,8 +1,7 @@
 package com.smockin.admin.persistence.entity;
 
-import lombok.Data;
-
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;

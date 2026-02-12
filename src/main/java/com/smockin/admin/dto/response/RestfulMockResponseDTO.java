@@ -2,9 +2,9 @@ package com.smockin.admin.dto.response;
 
 import com.smockin.admin.dto.RestfulMockDTO;
 import com.smockin.admin.dto.RuleDTO;
-import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
+import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 

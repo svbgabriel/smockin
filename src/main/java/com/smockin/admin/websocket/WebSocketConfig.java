@@ -5,6 +5,7 @@ import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.service.SmockinUserService;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.utils.GeneralUtils;
+import jakarta.servlet.ServletContext;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -22,7 +23,6 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.socket.server.jetty.JettyRequestUpgradeStrategy;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
-import jakarta.servlet.ServletContext;
 import java.util.Map;
 
 @Configuration

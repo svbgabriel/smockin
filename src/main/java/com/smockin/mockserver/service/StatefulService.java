@@ -4,7 +4,6 @@ import com.smockin.admin.exception.RecordNotFoundException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface StatefulService {

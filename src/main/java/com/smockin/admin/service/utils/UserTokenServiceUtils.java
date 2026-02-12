@@ -3,7 +3,7 @@ package com.smockin.admin.service.utils;
 import com.smockin.admin.enums.UserModeEnum;
 import com.smockin.admin.exception.RecordNotFoundException;
 import com.smockin.admin.exception.ValidationException;
-import com.smockin.admin.persistence.entity.*;
+import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.service.SmockinUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

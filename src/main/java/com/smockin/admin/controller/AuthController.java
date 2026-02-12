@@ -1,6 +1,6 @@
 package com.smockin.admin.controller;
 
-import com.smockin.admin.dto.*;
+import com.smockin.admin.dto.AuthDTO;
 import com.smockin.admin.dto.response.SimpleMessageResponseDTO;
 import com.smockin.admin.exception.AuthException;
 import com.smockin.admin.exception.RecordNotFoundException;
@@ -10,7 +10,10 @@ import com.smockin.admin.service.SmockinUserService;
 import com.smockin.utils.GeneralUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Created by mgallina.

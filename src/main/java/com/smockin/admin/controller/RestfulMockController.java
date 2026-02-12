@@ -1,8 +1,8 @@
 package com.smockin.admin.controller;
 
 import com.smockin.admin.dto.RestfulMockDTO;
-import com.smockin.admin.dto.response.SimpleMessageResponseDTO;
 import com.smockin.admin.dto.response.RestfulMockResponseDTO;
+import com.smockin.admin.dto.response.SimpleMessageResponseDTO;
 import com.smockin.admin.exception.RecordNotFoundException;
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.service.RestfulMockService;

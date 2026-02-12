@@ -1,7 +1,6 @@
 package com.smockin.admin.persistence.dao;
 
 import com.smockin.admin.persistence.entity.Identifier;
-
 import jakarta.persistence.Query;
 
 /**

@@ -1,11 +1,11 @@
 package com.smockin.admin.persistence.entity;
 
 import com.smockin.admin.persistence.enums.ServerTypeEnum;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.ColumnDefault;
 
-import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 

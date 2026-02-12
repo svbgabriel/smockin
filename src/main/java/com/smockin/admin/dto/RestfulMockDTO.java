@@ -1,8 +1,9 @@
 package com.smockin.admin.dto;
 
-import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.persistence.enums.RecordStatusEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
+import com.smockin.admin.persistence.enums.RestMockTypeEnum;
+
 import java.util.ArrayList;
 import java.util.List;
 

@@ -1,9 +1,9 @@
 package com.smockin.admin.persistence.entity;
 
 import com.smockin.utils.GeneralUtils;
+import jakarta.persistence.*;
 import lombok.Data;
 
-import jakarta.persistence.*;
 import java.util.Date;
 
 
