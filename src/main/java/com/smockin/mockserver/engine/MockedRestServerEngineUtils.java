@@ -159,7 +159,7 @@ public class MockedRestServerEngineUtils {
                 return handleMockLookup(request, response, isMultiUserMode, false);
             }
 
-            if (configOpt.isPresent() && ProxyModeTypeEnum.ACTIVE.equals(configOpt.get().getProxyModeType())) {
+            if (ProxyModeTypeEnum.ACTIVE.equals(configOpt.get().getProxyModeType())) {
                 final Optional<String> result = handleMockLookup(request, response, isMultiUserMode, !configOpt.get().isDoNotForwardWhen404Mock());
                 if (result.isPresent()) return result;
 
@@ -314,7 +314,7 @@ public class MockedRestServerEngineUtils {
 
     String lookUpProxyMappingDownstreamUrl(final String path, final List<ProxyForwardMappingDTO> mappings) {
         return mappings.stream()
-                .filter(p -> (StringUtils.endsWith(p.getPath(), GeneralUtils.PATH_WILDCARD) && StringUtils.startsWith(path, StringUtils.removeEnd(p.getPath(), GeneralUtils.PATH_WILDCARD))) || StringUtils.equals(path, p.getPath()))
+                .filter(p -> (Strings.CS.endsWith(p.getPath(), GeneralUtils.PATH_WILDCARD) && StringUtils.startsWith(path, StringUtils.removeEnd(p.getPath(), GeneralUtils.PATH_WILDCARD))) || StringUtils.equals(path, p.getPath()))
                 .map(ProxyForwardMappingDTO::getProxyForwardUrl)
                 .findFirst().orElse(null);
     }

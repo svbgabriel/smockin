@@ -32,7 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * Created by mgallina.
@@ -168,9 +167,7 @@ public class MockedRestServerEngine {
             // Live Logging - Outbound
             broadcastOutboundLogging(request, response, finalBody, traceId);
 
-            if (finalBody != null) {
-                response.getWriter().write(finalBody);
-            }
+            response.getWriter().write(finalBody);
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -355,7 +352,7 @@ public class MockedRestServerEngine {
                         .filter(p -> !(Strings.CI.equals(p.getPath(), path)
                                 && p.getMethod().equals(method)
                                 && Strings.CI.equals(p.getOwnerUserId(), ownerUserId)))
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 
     public long countLiveBlockingPathsForUser(final RestMethodEnum method, final String path, final String ownerUserId) {

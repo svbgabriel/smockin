@@ -8,7 +8,7 @@ import com.amazonaws.services.s3.model.*;
 import com.smockin.mockserver.engine.MockedS3ServerEngineUtils;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class S3Client {
 
@@ -37,13 +36,13 @@ public class S3Client {
     }
 
     public boolean doesBucketExist(final String bucketName) {
-        logger.debug(String.format("does bucket '%s' exist", bucketName));
+        logger.debug("does bucket '{}' exist", bucketName);
 
         return createS3Client().doesBucketExistV2(SMOCKIN_INTERNAL_UPDATE_CALL_PREFIX + bucketName);
     }
 
     public void createBucket(final String bucketName) {
-        logger.debug(String.format("creating bucket '%s'", bucketName));
+        logger.debug("creating bucket '{}'", bucketName);
 
         createS3Client().createBucket(SMOCKIN_INTERNAL_UPDATE_CALL_PREFIX + bucketName);
     }
@@ -65,14 +64,14 @@ public class S3Client {
 
     String handleSeparatorSuffix(final String folderPath) {
 
-        return ((StringUtils.endsWith(folderPath, MockedS3ServerEngineUtils.SEPARATOR_CHAR))
+        return ((Strings.CS.endsWith(folderPath, MockedS3ServerEngineUtils.SEPARATOR_CHAR))
                 ? ""
                 : MockedS3ServerEngineUtils.SEPARATOR_CHAR);
     }
 
     public void deleteBucket(final String bucketName,
                              final boolean muteFailure) {
-        logger.debug(String.format("deleting bucket '%s'", bucketName));
+        logger.debug("deleting bucket '{}'", bucketName);
 
         try {
 
@@ -85,7 +84,7 @@ public class S3Client {
                             .stream()
                             .map(e ->
                                     new DeleteObjectsRequest.KeyVersion(e.getKey()))
-                            .collect(Collectors.toList());
+                            .toList();
 
             if (!files.isEmpty()) {
 
@@ -114,7 +113,7 @@ public class S3Client {
     }
 
     public void uploadObject(final String bucketName, final String filePath, final InputStream is, final String mimeType) {
-        logger.debug(String.format("uploading file '%s' to bucket '%s'", filePath, bucketName));
+        logger.debug("uploading file '{}' to bucket '{}'", filePath, bucketName);
 
         try {
             final ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -126,7 +125,7 @@ public class S3Client {
     }
 
     public void deleteObject(final String bucketName, final String filePath) {
-        logger.debug(String.format("deleting file '%s' from bucket '%s'", filePath, bucketName));
+        logger.debug("deleting file '{}' from bucket '{}'", filePath, bucketName);
 
         createS3Client().deleteObject(SMOCKIN_INTERNAL_UPDATE_CALL_PREFIX + bucketName, filePath);
 
