@@ -13,12 +13,12 @@ import java.util.Optional;
 
 class StatefulServiceTest {
 
-    private StatefulServiceImpl statefulServiceImpl;
+    private StatefulJsonHandler statefulJsonHandler;
 
     @BeforeEach
     void setUp() {
 
-        statefulServiceImpl = new StatefulServiceImpl();
+        statefulJsonHandler = new StatefulJsonHandler();
 
     }
 
@@ -36,7 +36,7 @@ class StatefulServiceTest {
         final String targetId = "2";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -59,7 +59,7 @@ class StatefulServiceTest {
         final String targetId = "3";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -82,7 +82,7 @@ class StatefulServiceTest {
         final String targetId = "3";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -105,7 +105,7 @@ class StatefulServiceTest {
         final String targetId = "2";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -128,7 +128,7 @@ class StatefulServiceTest {
         final String targetId = "5";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -151,7 +151,7 @@ class StatefulServiceTest {
         final String targetId = "7";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -167,14 +167,14 @@ class StatefulServiceTest {
         final String json = "[{\"foo1\":\"bar1\",\"foo2\":1,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"4\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"5\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"6\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]},{\"foo1\":\"bar2\",\"foo2\":2,\"foo3\":true,\"jsonapi\":{\"version\":\"1.0\"},\"data\":[{\"data1\":[{\"id\":\"7\",\"type\":\"customers\",\"name\":\"Bob\"}]},{\"data1\":[{\"id\":\"8\",\"type\":\"customers\",\"name\":\"Max\"},{\"id\":\"9\",\"type\":\"customers\",\"name\":\"Jane\"},{\"id\":\"10\",\"type\":\"customers\",\"name\":\"Sam\"}]},{\"data1\":[{\"id\":\"11\",\"type\":\"customers\",\"name\":\"Darren\"},{\"id\":\"12\",\"type\":\"customers\",\"name\":\"Mandy\"}]}],\"included\":[]}]";
 
         final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
-                new TypeReference<List<Map<String, Object>>>() {
+                new TypeReference<>() {
                 });
 
         final String[] pathArray = {"data", "data1", "id"};
         final String targetId = "10";
 
         // Test
-        final Optional<StatefulServiceImpl.StatefulPath> outcome = statefulServiceImpl.findDataStateRecordPath(allState, pathArray, targetId);
+        final Optional<StatefulJsonHandler.StatefulPath> outcome = statefulJsonHandler.findDataStateRecordPath(allState, pathArray, targetId);
 
         // Assertions
         Assertions.assertTrue(outcome.isPresent());
@@ -187,8 +187,8 @@ class StatefulServiceTest {
     void extractArrayPositionTest() {
 
         // Test
-        final int positionOutcome1 = statefulServiceImpl.extractArrayPosition("[1]");
-        final int positionOutcome2 = statefulServiceImpl.extractArrayPosition("[2]");
+        final int positionOutcome1 = statefulJsonHandler.extractArrayPosition("[1]");
+        final int positionOutcome2 = statefulJsonHandler.extractArrayPosition("[2]");
 
         // Assertions
         Assertions.assertEquals(1, positionOutcome1);
@@ -199,21 +199,21 @@ class StatefulServiceTest {
     void extractArrayPositionNullTest() {
 
         // Test & Assertions
-        Assertions.assertNull(statefulServiceImpl.extractArrayPosition(null));
+        Assertions.assertNull(statefulJsonHandler.extractArrayPosition(null));
     }
 
     @Test
     void extractArrayPositionInvalidCharTest() {
 
         // Test & Assertions
-        Assertions.assertNull(statefulServiceImpl.extractArrayPosition("[x]"));
+        Assertions.assertNull(statefulJsonHandler.extractArrayPosition("[x]"));
     }
 
     @Test
     void extractArrayPositionInvalidPathTest() {
 
         // Test & Assertions
-        Assertions.assertNull(statefulServiceImpl.extractArrayPosition("xxx"));
+        Assertions.assertNull(statefulJsonHandler.extractArrayPosition("xxx"));
     }
 
     @Test
@@ -229,7 +229,7 @@ class StatefulServiceTest {
         final String jsonPath = "[0].data.[1].id=2";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertTrue(result.isPresent());
@@ -243,8 +243,8 @@ class StatefulServiceTest {
 
         // Ensure cached state list remains unmodified.
         Assertions.assertEquals(1, allState.size());
-        Assertions.assertTrue(allState.get(0).get("data") instanceof List);
-        Assertions.assertEquals(4, ((List) allState.get(0).get("data")).size());
+        Assertions.assertInstanceOf(List.class, allState.getFirst().get("data"));
+        Assertions.assertEquals(4, ((List) allState.getFirst().get("data")).size());
 
     }
 
@@ -255,13 +255,13 @@ class StatefulServiceTest {
         final String json = "[{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"1\",\"type\":\"customers\",\"name\":\"Bob\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"2\",\"type\":\"customers\",\"name\":\"Mike\"},\"included\":[]},{\"jsonapi\":{\"version\":\"1.0\"},\"data\":{\"id\":\"3\",\"type\":\"customers\",\"name\":\"Pete\"},\"included\":[]}]";
 
         final List<Map<String, Object>> allState = GeneralUtils.deserializeJson(json,
-                new TypeReference<List<Map<String, Object>>>() {
+                new TypeReference<>() {
                 });
 
         final String jsonPath = "[1].data.id=2";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertTrue(result.isPresent());
@@ -286,7 +286,7 @@ class StatefulServiceTest {
         final String jsonPath = "[2].data.[0].id=3";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertTrue(result.isPresent());
@@ -312,7 +312,7 @@ class StatefulServiceTest {
         final String jsonPath = "[0].data.[1].id=2";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertTrue(result.isPresent());
@@ -338,7 +338,7 @@ class StatefulServiceTest {
         final String jsonPath = "[1].data.[2].data1.[0].id=11";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertTrue(result.isPresent());
@@ -368,7 +368,7 @@ class StatefulServiceTest {
         final String jsonPath = "[1].data.[1].data1.[1].id=9";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertTrue(result.isPresent());
@@ -398,7 +398,7 @@ class StatefulServiceTest {
         final String jsonPath = "[2].data.[0].id=2";
 
         // Test
-        final Optional<Map<String, Object>> result = statefulServiceImpl.findDataStateRecordByPath(allState, jsonPath);
+        final Optional<Map<String, Object>> result = statefulJsonHandler.findDataStateRecordByPath(allState, jsonPath);
 
         // Assertions
         Assertions.assertFalse(result.isPresent());
@@ -416,7 +416,7 @@ class StatefulServiceTest {
                 });
 
         // Test
-        final Optional<Map<String, Object>> record = statefulServiceImpl.findDataStateRecord(allState, "data.id", "2");
+        final Optional<Map<String, Object>> record = statefulJsonHandler.findDataStateRecord(allState, "data.id", "2");
 
         // Assertions
         Assertions.assertTrue(record.isPresent());
@@ -437,7 +437,7 @@ class StatefulServiceTest {
                 });
 
         // Test
-        final Optional<Map<String, Object>> record = statefulServiceImpl.findDataStateRecord(allState, "data.keys.name", "Will");
+        final Optional<Map<String, Object>> record = statefulJsonHandler.findDataStateRecord(allState, "data.keys.name", "Will");
 
         // Assertions
         Assertions.assertTrue(record.isPresent());
@@ -465,7 +465,7 @@ class StatefulServiceTest {
         restfulMockStatefulMeta.setIdFieldLocation("data.keys.id");
 
         // Test
-        statefulServiceImpl.appendIdToJson(newState, restfulMockStatefulMeta);
+        statefulJsonHandler.appendIdToJson(newState, restfulMockStatefulMeta);
 
         // Assertions
         Assertions.assertNotNull(newState);
@@ -498,7 +498,7 @@ class StatefulServiceTest {
         restfulMockStatefulMeta.setIdFieldLocation("data.keys.id");
 
         // Test
-        statefulServiceImpl.appendIdToJson(newState, restfulMockStatefulMeta);
+        statefulJsonHandler.appendIdToJson(newState, restfulMockStatefulMeta);
 
         // Assertions
         Assertions.assertNotNull(newState);
@@ -529,7 +529,7 @@ class StatefulServiceTest {
         restfulMockStatefulMeta.setIdFieldName("id");
 
         // Test
-        statefulServiceImpl.appendIdToJson(newState, restfulMockStatefulMeta);
+        statefulJsonHandler.appendIdToJson(newState, restfulMockStatefulMeta);
 
         // Assertions
         Assertions.assertNotNull(newState);
@@ -551,7 +551,7 @@ class StatefulServiceTest {
         restfulMockStatefulMeta.setIdFieldName("id");
 
         // Test
-        statefulServiceImpl.appendIdToJson(newState, restfulMockStatefulMeta);
+        statefulJsonHandler.appendIdToJson(newState, restfulMockStatefulMeta);
 
         // Assertions
         Assertions.assertNotNull(newState);

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class MockedS3ServerEngineUtilsTest {
 
@@ -20,6 +21,7 @@ class MockedS3ServerEngineUtilsTest {
     void setUp() {
 
         mockedS3ServerEngineUtils = new MockedS3ServerEngineUtils();
+        ReflectionTestUtils.setField(mockedS3ServerEngineUtils, "s3BucketInitializer", new S3BucketInitializer());
 
         // Setup
         final S3Mock s3MockParent = new S3Mock("A", RecordStatusEnum.ACTIVE, S3SyncModeEnum.NO_SYNC, null);

@@ -7,7 +7,6 @@ import com.smockin.admin.persistence.dao.ProxyForwardMappingDAO;
 import com.smockin.admin.persistence.dao.ProxyForwardUserConfigDAO;
 import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.dao.ServerConfigDAO;
-import com.smockin.admin.persistence.entity.ServerConfig;
 import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.persistence.enums.ServerTypeEnum;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
@@ -23,8 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Arrays;
 
 /**
  * Created by mgallina on 21/07/17.
@@ -53,13 +50,23 @@ class MockedServerEngineServiceTest {
     @Mock
     private ProxyForwardMappingDAO proxyForwardMappingDAO;
 
-    @Spy
-    @InjectMocks
-    private MockedServerEngineService mockedServerEngineService = new MockedServerEngineServiceImpl();
+    @Mock
+    private RestServerManager restServerManager;
 
-    @Spy
+    @Mock
+    private S3ServerManager s3ServerManager;
+
+    @Mock
+    private MailServerManager mailServerManager;
+
+    @Mock
+    private ServerConfigManager serverConfigManager;
+
+    @Mock
+    private ProxyMappingManager proxyMappingManager;
+
     @InjectMocks
-    private MockedServerEngineServiceImpl mockedServerEngineServiceImpl = new MockedServerEngineServiceImpl();
+    private MockedServerEngineServiceImpl mockedServerEngineService = new MockedServerEngineServiceImpl();
 
     private String token;
     private SmockinUser smockinUser;
@@ -76,6 +83,8 @@ class MockedServerEngineServiceTest {
     @Test
     void loadServerConfig_NotFound_Test() throws RecordNotFoundException {
 
+        Mockito.when(serverConfigManager.loadServerConfig(Mockito.any(ServerTypeEnum.class))).thenThrow(new RecordNotFoundException());
+
         Assertions.assertThrows(RecordNotFoundException.class,
                 () -> mockedServerEngineService.loadServerConfig(ServerTypeEnum.RESTFUL));
 
@@ -85,15 +94,15 @@ class MockedServerEngineServiceTest {
     void loadServerConfig_Found_Test() throws RecordNotFoundException {
 
         // Setup
-        final ServerConfig serverConfig = new ServerConfig(ServerTypeEnum.RESTFUL);
-        serverConfig.setPort(8001);
-        serverConfig.setMaxThreads(10);
-        serverConfig.setMinThreads(5);
-        serverConfig.setTimeOutMillis(30000);
-        serverConfig.setAutoStart(true);
-        serverConfig.getNativeProperties().put("serverName", "foo");
+        final MockedServerConfigDTO configDTO = new MockedServerConfigDTO();
+        configDTO.setPort(8001);
+        configDTO.setMaxThreads(10);
+        configDTO.setMinThreads(5);
+        configDTO.setTimeOutMillis(30000);
+        configDTO.setAutoStart(true);
+        configDTO.getNativeProperties().put("serverName", "foo");
 
-        Mockito.when(serverConfigDAO.findByServerType(Mockito.any(ServerTypeEnum.class))).thenReturn(serverConfig);
+        Mockito.when(serverConfigManager.loadServerConfig(Mockito.any(ServerTypeEnum.class))).thenReturn(configDTO);
 
         // Test
         final MockedServerConfigDTO dto = mockedServerEngineService.loadServerConfig(ServerTypeEnum.RESTFUL);
@@ -101,11 +110,11 @@ class MockedServerEngineServiceTest {
         // Assertions
         Assertions.assertNotNull(dto);
 
-        Assertions.assertEquals(serverConfig.getPort(), dto.getPort());
-        Assertions.assertEquals(serverConfig.getMaxThreads(), dto.getMaxThreads());
-        Assertions.assertEquals(serverConfig.getMinThreads(), dto.getMinThreads());
-        Assertions.assertEquals(serverConfig.getTimeOutMillis(), dto.getTimeOutMillis());
-        Assertions.assertEquals(serverConfig.isAutoStart(), dto.isAutoStart());
+        Assertions.assertEquals(configDTO.getPort(), dto.getPort());
+        Assertions.assertEquals(configDTO.getMaxThreads(), dto.getMaxThreads());
+        Assertions.assertEquals(configDTO.getMinThreads(), dto.getMinThreads());
+        Assertions.assertEquals(configDTO.getTimeOutMillis(), dto.getTimeOutMillis());
+        Assertions.assertEquals(configDTO.isAutoStart(), dto.isAutoStart());
 
         Assertions.assertEquals(1, dto.getNativeProperties().size());
         Assertions.assertEquals("foo", dto.getNativeProperties().get("serverName"));
@@ -113,7 +122,7 @@ class MockedServerEngineServiceTest {
     }
 
     @Test
-    void saveServerConfig_NotFoundCreateNew_Test() throws ValidationException, AuthException, RecordNotFoundException {
+    void saveServerConfig_Test() throws ValidationException, AuthException, RecordNotFoundException {
 
         // Setup
         final MockedServerConfigDTO dto = new MockedServerConfigDTO();
@@ -128,56 +137,15 @@ class MockedServerEngineServiceTest {
         mockedServerEngineService.saveServerConfig(ServerTypeEnum.RESTFUL, dto, token);
 
         // Assertions
-        final ArgumentCaptor<ServerConfig> argument = ArgumentCaptor.forClass(ServerConfig.class);
-        Mockito.verify(serverConfigDAO).saveAndFlush(argument.capture());
-
-        Assertions.assertEquals(dto.getPort(), argument.getValue().getPort());
-        Assertions.assertEquals(dto.getMaxThreads(), argument.getValue().getMaxThreads());
-        Assertions.assertEquals(dto.getMinThreads(), argument.getValue().getMinThreads());
-        Assertions.assertEquals(dto.getTimeOutMillis(), argument.getValue().getTimeOutMillis());
-        Assertions.assertEquals(dto.isAutoStart(), argument.getValue().isAutoStart());
-        Assertions.assertEquals(dto.isAutoStart(), argument.getValue().isAutoStart());
-
-        Assertions.assertNotNull(argument.getValue().getNativeProperties());
-        Assertions.assertEquals(1, argument.getValue().getNativeProperties().size());
-        Assertions.assertEquals(dto.getNativeProperties().get("serverName"), argument.getValue().getNativeProperties().get("serverName"));
-
-    }
-
-    @Test
-    void saveServerConfig_UpdateExisting_Test() throws ValidationException, AuthException, RecordNotFoundException {
-
-        // Setup
-        final MockedServerConfigDTO dto = new MockedServerConfigDTO();
-        dto.setPort(8001);
-        dto.setMaxThreads(10);
-        dto.setMinThreads(1);
-        dto.setTimeOutMillis(30000);
-        dto.setAutoStart(true);
-        dto.getNativeProperties().put("serverName", "foo");
-
-        final ServerConfig serverConfig = new ServerConfig();
-        Mockito.when(serverConfigDAO.findByServerType(Mockito.any(ServerTypeEnum.class))).thenReturn(serverConfig);
-
-        // Test
-        mockedServerEngineService.saveServerConfig(ServerTypeEnum.RESTFUL, dto, token);
-
-        // Assertions
-        Assertions.assertEquals(dto.getPort(), serverConfig.getPort());
-        Assertions.assertEquals(dto.getMaxThreads(), serverConfig.getMaxThreads());
-        Assertions.assertEquals(dto.getMinThreads(), serverConfig.getMinThreads());
-        Assertions.assertEquals(dto.getTimeOutMillis(), serverConfig.getTimeOutMillis());
-        Assertions.assertEquals(dto.isAutoStart(), serverConfig.isAutoStart());
-        Assertions.assertEquals(dto.isAutoStart(), serverConfig.isAutoStart());
-
-        Assertions.assertNotNull(serverConfig.getNativeProperties());
-        Assertions.assertEquals(1, serverConfig.getNativeProperties().size());
-        Assertions.assertEquals(dto.getNativeProperties().get("serverName"), serverConfig.getNativeProperties().get("serverName"));
+        Mockito.verify(serverConfigManager).saveServerConfig(ServerTypeEnum.RESTFUL, dto, token);
 
     }
 
     @Test
     void saveServerConfig_ValidationFailure_Test() throws ValidationException, AuthException, RecordNotFoundException {
+
+        Mockito.doThrow(new ValidationException("config is required"))
+                .when(serverConfigManager).saveServerConfig(Mockito.eq(ServerTypeEnum.RESTFUL), Mockito.isNull(), Mockito.eq(token));
 
         // Test & Assertions
         final ValidationException ex = Assertions.assertThrows(ValidationException.class,
@@ -187,82 +155,24 @@ class MockedServerEngineServiceTest {
     }
 
     @Test
-    void validateServerConfig_Null_Test() throws ValidationException {
-
-        // Test & Assertions
-        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
-                () -> mockedServerEngineServiceImpl.validateServerConfig(null));
-        Assertions.assertEquals("config is required", ex.getMessage());
-
-    }
-
-    @Test
-    void validateServerConfig_MissingPort_Test() throws ValidationException {
-
-        // Test & Assertions
-        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
-                () -> mockedServerEngineServiceImpl.validateServerConfig(new MockedServerConfigDTO()));
-        Assertions.assertEquals("'port' config value is required", ex.getMessage());
-
-    }
-
-    @Test
-    void validateServerConfig_MissingMaxThreads_Test() throws ValidationException {
-
-        // Setup
-        final MockedServerConfigDTO dto = new MockedServerConfigDTO();
-        dto.setPort(8001);
-
-        // Test & Assertions
-        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
-                () -> mockedServerEngineServiceImpl.validateServerConfig(dto));
-        Assertions.assertEquals("'maxThreads' config value is required", ex.getMessage());
-
-    }
-
-    @Test
-    void validateServerConfig_MissingMinThreads_Test() throws ValidationException {
-
-        // Setup
-        final MockedServerConfigDTO dto = new MockedServerConfigDTO();
-        dto.setPort(8001);
-        dto.setMaxThreads(10);
-
-        // Test & Assertions
-        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
-                () -> mockedServerEngineServiceImpl.validateServerConfig(dto));
-        Assertions.assertEquals("'minThreads' config value is required", ex.getMessage());
-
-    }
-
-    @Test
-    void validateServerConfig_MissingTimeOutMillis_Test() throws ValidationException {
-
-        // Setup
-        final MockedServerConfigDTO dto = new MockedServerConfigDTO();
-        dto.setPort(8001);
-        dto.setMaxThreads(10);
-        dto.setMinThreads(1);
-
-        // Test & Assertions
-        final ValidationException ex = Assertions.assertThrows(ValidationException.class,
-                () -> mockedServerEngineServiceImpl.validateServerConfig(dto));
-        Assertions.assertEquals("'timeOutMillis' config value is required", ex.getMessage());
-
-    }
-
-    @Test
-    void validateServerConfigTest() throws ValidationException {
-
-        // Setup
-        final MockedServerConfigDTO dto = new MockedServerConfigDTO();
-        dto.setPort(8001);
-        dto.setMaxThreads(10);
-        dto.setMinThreads(1);
-        dto.setTimeOutMillis(30000);
+    void handleServerAutoStartTest() {
 
         // Test
-        mockedServerEngineServiceImpl.validateServerConfig(dto);
+        mockedServerEngineService.handleServerAutoStart();
+
+        // Assertions
+        Mockito.verify(serverConfigManager).handleServerAutoStart();
+
+    }
+
+    @Test
+    void updateProxyModeTest() throws AuthException {
+
+        // Test
+        mockedServerEngineService.updateProxyMode(true, token);
+
+        // Assertions
+        Mockito.verify(proxyMappingManager).updateProxyMode(true, token);
 
     }
 
@@ -270,16 +180,15 @@ class MockedServerEngineServiceTest {
     void startRestTest() throws MockServerException, AuthException, RecordNotFoundException {
 
         // Setup
-        final ServerConfig serverConfig = new ServerConfig(ServerTypeEnum.RESTFUL);
-        serverConfig.setPort(8001);
-        serverConfig.setMaxThreads(10);
-        serverConfig.setMinThreads(5);
-        serverConfig.setTimeOutMillis(30000);
-        serverConfig.setAutoStart(true);
-        serverConfig.getNativeProperties().put("serverName", "foo");
+        final MockedServerConfigDTO configDTO = new MockedServerConfigDTO();
+        configDTO.setPort(8001);
+        configDTO.setMaxThreads(10);
+        configDTO.setMinThreads(5);
+        configDTO.setTimeOutMillis(30000);
+        configDTO.setAutoStart(true);
+        configDTO.getNativeProperties().put("serverName", "foo");
 
-        Mockito.when(serverConfigDAO.findByServerType(Mockito.any(ServerTypeEnum.class))).thenReturn(serverConfig);
-        Mockito.when(proxyForwardUserConfigDAO.findAll()).thenReturn(Arrays.asList());
+        Mockito.when(restServerManager.startRest(token)).thenReturn(configDTO);
 
         // Test
         final MockedServerConfigDTO dto = mockedServerEngineService.startRest(token);
@@ -287,18 +196,20 @@ class MockedServerEngineServiceTest {
         // Assertions
         Assertions.assertNotNull(dto);
 
-        Assertions.assertEquals(serverConfig.getPort(), dto.getPort());
-        Assertions.assertEquals(serverConfig.getMaxThreads(), dto.getMaxThreads());
-        Assertions.assertEquals(serverConfig.getMinThreads(), dto.getMinThreads());
-        Assertions.assertEquals(serverConfig.getTimeOutMillis(), dto.getTimeOutMillis());
-        Assertions.assertEquals(serverConfig.isAutoStart(), dto.isAutoStart());
-        Assertions.assertEquals(serverConfig.getNativeProperties().size(), dto.getNativeProperties().size());
-        Assertions.assertEquals(serverConfig.getNativeProperties().get("serverName"), dto.getNativeProperties().get("serverName"));
+        Assertions.assertEquals(configDTO.getPort(), dto.getPort());
+        Assertions.assertEquals(configDTO.getMaxThreads(), dto.getMaxThreads());
+        Assertions.assertEquals(configDTO.getMinThreads(), dto.getMinThreads());
+        Assertions.assertEquals(configDTO.getTimeOutMillis(), dto.getTimeOutMillis());
+        Assertions.assertEquals(configDTO.isAutoStart(), dto.isAutoStart());
+        Assertions.assertEquals(configDTO.getNativeProperties().size(), dto.getNativeProperties().size());
+        Assertions.assertEquals(configDTO.getNativeProperties().get("serverName"), dto.getNativeProperties().get("serverName"));
 
     }
 
     @Test
     void startRest_ConfigNotFound_Test() throws MockServerException, AuthException, RecordNotFoundException {
+
+        Mockito.when(restServerManager.startRest(token)).thenThrow(new MockServerException("Missing mock REST server config"));
 
         // Test & Assertions
         final MockServerException ex = Assertions.assertThrows(MockServerException.class,
@@ -310,11 +221,7 @@ class MockedServerEngineServiceTest {
     @Test
     void startRest_GeneralFailure_Test() throws MockServerException, AuthException, RecordNotFoundException {
 
-        // Setup
-        final ServerConfig serverConfig = Mockito.mock(ServerConfig.class);
-        Mockito.when(serverConfigDAO.findByServerType(Mockito.any(ServerTypeEnum.class))).thenReturn(serverConfig);
-        Mockito.doThrow(new MockServerException("Startup Boom")).when(mockedRestServerEngine).start(Mockito.any(MockedServerConfigDTO.class), Mockito.anyList());
-        Mockito.when(proxyForwardUserConfigDAO.findAll()).thenReturn(Arrays.asList());
+        Mockito.when(restServerManager.startRest(token)).thenThrow(new MockServerException("Startup Boom"));
 
         // Test & Assertions
         final MockServerException ex = Assertions.assertThrows(MockServerException.class,
@@ -327,6 +234,7 @@ class MockedServerEngineServiceTest {
     void shutdownRestTest() throws MockServerException, AuthException, RecordNotFoundException {
 
         mockedServerEngineService.shutdownRest(token);
+        Mockito.verify(restServerManager).shutdownRest(token);
 
     }
 
@@ -334,7 +242,7 @@ class MockedServerEngineServiceTest {
     void shutdownRest_GeneralFailure_Test() throws MockServerException, AuthException, RecordNotFoundException {
 
         // Setup
-        Mockito.doThrow(new MockServerException("Shutdown Boom")).when(mockedRestServerEngine).shutdown();
+        Mockito.doThrow(new MockServerException("Shutdown Boom")).when(restServerManager).shutdownRest(token);
 
         // Test & Assertions
         final MockServerException ex = Assertions.assertThrows(MockServerException.class,
@@ -344,36 +252,10 @@ class MockedServerEngineServiceTest {
     }
 
     @Test
-    void autoStartManagerTest() throws MockServerException {
-
-        // Setup
-        final ServerConfig serverConfig = Mockito.mock(ServerConfig.class);
-        Mockito.when(serverConfigDAO.findByServerType(Mockito.any(ServerTypeEnum.class))).thenReturn(serverConfig);
-        Mockito.when(proxyForwardUserConfigDAO.findAll()).thenReturn(Arrays.asList());
-
-        // Test
-        mockedServerEngineServiceImpl.autoStartManager(ServerTypeEnum.RESTFUL);
-
-        // Assertions
-        Mockito.verify(mockedRestServerEngine, Mockito.times(1)).start(Mockito.any(MockedServerConfigDTO.class), Mockito.anyList());
-
-    }
-
-    @Test
-    void autoStartManager_Null_Test() throws MockServerException {
-
-        // Test
-        mockedServerEngineServiceImpl.autoStartManager(null);
-
-        // Assertions
-        Mockito.verify(mockedRestServerEngine, Mockito.never()).start(Mockito.any(MockedServerConfigDTO.class), Mockito.anyList());
-    }
-
-    @Test
     void getRestServerStateTest() throws MockServerException {
 
         // Setup
-        Mockito.when(mockedRestServerEngine.getCurrentState()).thenReturn(new MockServerState(true, 8001));
+        Mockito.when(restServerManager.getRestServerState()).thenReturn(new MockServerState(true, 8001));
 
         // Test
         final MockServerState mockServerState = mockedServerEngineService.getRestServerState();
