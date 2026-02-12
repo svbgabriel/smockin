@@ -123,25 +123,16 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
             throw new ValidationException(String.format("No %s mocks are selected", serverTypeEnum.name()));
         }
 
-        final String exportContent;
-        final String exportFileName;
-
         final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
 
-        if (ServerTypeEnum.RESTFUL.equals(serverTypeEnum)) {
-            exportContent = loadHTTPExportContent(selectedExports, smockinUser);
-            exportFileName = restExportFileName + exportFileNameExt;
-        } else if (ServerTypeEnum.S3.equals(serverTypeEnum)) {
-            exportContent = loadS3ExportContent(selectedExports, smockinUser);
-            exportFileName = s3ExportFileName + exportFileNameExt;
-        } else if (ServerTypeEnum.MAIL.equals(serverTypeEnum)) {
-            // TODO
-            throw new MockExportException("Unsupported Server Type: " + serverTypeEnum);
-        } else {
-            throw new ValidationException("Unsupported Server Type: " + serverTypeEnum);
-        }
+        final ExportData exportData = switch (serverTypeEnum) {
+            case RESTFUL -> new ExportData(loadHTTPExportContent(selectedExports, smockinUser), restExportFileName + exportFileNameExt);
+            case S3 -> new ExportData(loadS3ExportContent(selectedExports, smockinUser), s3ExportFileName + exportFileNameExt);
+            case MAIL -> throw new MockExportException("Unsupported Server Type: " + serverTypeEnum);
+            default -> throw new ValidationException("Unsupported Server Type: " + serverTypeEnum);
+        };
 
-        final byte[] archiveBytes = GeneralUtils.createArchive(exportFileName, exportContent.getBytes());
+        final byte[] archiveBytes = GeneralUtils.createArchive(exportData.fileName(), exportData.content().getBytes());
 
         return GeneralUtils.base64Encode(archiveBytes);
     }
@@ -200,14 +191,22 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
             throw new ValidationException("Invalid file type. Expected archive .zip file type.");
         }
 
+        File tempDir = null;
+
         try {
 
-            final File tempDir = Files.createTempDirectory("smockin_tmp_import").toFile();
+            tempDir = Files.createTempDirectory("smockin_tmp_import").toFile();
             GeneralUtils.unpackArchive(zipFile.getAbsolutePath(), tempDir.getAbsolutePath());
 
-            return Stream.of(tempDir.listFiles()).collect(
+            final File[] files = tempDir.listFiles();
+
+            if (files == null) {
+                return Map.of();
+            }
+
+            return Stream.of(files).collect(
                     Collectors.toMap(
-                        f -> getServerTypeForFile(f),
+                        this::getServerTypeForFile,
                         f -> {
                             try {
                                 return FileUtils.readFileToString(f, Charset.defaultCharset());
@@ -219,6 +218,14 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
 
         } catch (IOException e) {
             throw new MockImportException("Error reading archive file " + zipFile.getName(), e);
+        } finally {
+            if (tempDir != null) {
+                try {
+                    FileUtils.deleteDirectory(tempDir);
+                } catch (IOException e) {
+                    logger.error("Error deleting temp directory used for mock def import", e);
+                }
+            }
         }
     }
 
@@ -245,16 +252,12 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                                     final SmockinUser currentUser,
                                     final String conflictCtxPath) {
 
-        if (ServerTypeEnum.RESTFUL.equals(serverType)) {
-            return handleRestImport(content, config, currentUser, conflictCtxPath);
-        } else if (ServerTypeEnum.S3.equals(serverType)) {
-            return handleS3Import(content, config, currentUser);
-        } else if (ServerTypeEnum.MAIL.equals(serverType)) {
-            // TODO
-            throw new MockExportException("Unsupported Server Type: " + serverType);
-        } else {
-            throw new MockExportException("Unsupported Server Type: " + serverType);
-        }
+        return switch (serverType) {
+            case RESTFUL -> handleRestImport(content, config, currentUser, conflictCtxPath);
+            case S3 -> handleS3Import(content, config, currentUser);
+            case MAIL -> throw new MockExportException("Unsupported Server Type: " + serverType);
+            default -> throw new MockExportException("Unsupported Server Type: " + serverType);
+        };
 
     }
 
@@ -314,12 +317,12 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
                 .map(Optional::get)
                 .toList();
 
-        // Update mock server with new imported buckets (if running)
+        // Update the mock server with new imported buckets (if running)
         final MockServerState s3MockServerState = mockedServerEngineService.getS3ServerState();
 
         if (s3MockServerState.isRunning()) {
             GeneralUtils.executeAfterTransactionCommits(() -> {
-                final S3Client s3Client = mockedS3ServerEngineUtils.buildS3Client(s3MockServerState.getPort());
+                final S3Client s3Client = MockedS3ServerEngineUtils.buildS3Client(s3MockServerState.getPort());
                 mockedS3ServerEngineUtils.loadAndInitBucketContentAsync(s3Client, newBuckets, currentUser.getId());
             });
         }
@@ -536,5 +539,7 @@ public class MockDefinitionImportExportServiceImpl implements MockDefinitionImpo
 
         return msg + GeneralUtils.CARRIAGE;
     }
+
+    private record ExportData(String content, String fileName) {}
 
 }

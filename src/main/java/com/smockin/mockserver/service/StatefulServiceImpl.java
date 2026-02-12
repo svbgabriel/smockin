@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 @Service
 @Transactional
@@ -301,10 +302,6 @@ public class StatefulServiceImpl implements StatefulService {
         return new StatefulResponse(HttpStatus.SC_NO_CONTENT);
     }
 
-    // https://sookocheff.com/post/api/understanding-json-patch/
-    // https://www.baeldung.com/spring-rest-json-patch
-
-    // Valid PATCH operations are add, remove, replace, move, copy and test. Any other operation is considered an error.
     StatefulResponse handlePatch(final String dataId,
                                  final String parentExtId,
                                  final String requestBody,
@@ -321,246 +318,17 @@ public class StatefulServiceImpl implements StatefulService {
         final Optional<Map<String, Object>> requestDataMapOpt = convertToJsonMap(requestBody);
 
         if (requestDataMapOpt.isEmpty()) {
-            return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                    "Invalid JSON in request body");
+            return new StatefulResponse(HttpStatus.SC_BAD_REQUEST, "Invalid JSON in request body");
         }
 
-        final Map<String, Object> requestDataMap = requestDataMapOpt.get();
-        final String op = (String) requestDataMap.get("op");
-        final String prefixedPath = (String) requestDataMap.get("path");
-        final String prefixedFrom = (String) requestDataMap.get("from");
-        final Object value = requestDataMap.get("value");
-
-        if (op == null || prefixedPath == null) {
-            return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                    "Invalid JSON in request body, required 'op' and 'path' fields are missing");
-        }
-
-        final PatchCommandEnum patchCommand;
-
-        try {
-            patchCommand = PatchCommandEnum.valueOf(op);
-        } catch (IllegalArgumentException ex) {
-            return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                    String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'op' is not a valid value"));
-        }
-
-        if (!prefixedPath.startsWith(GeneralUtils.URL_PATH_SEPARATOR)) {
-            return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                    String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "path should begin with '/' (e.g '/age'"));
-        }
-
-        final String path = prefixedPath.substring(1);
+        final PatchRequest patchRequest = parsePatchRequest(requestDataMapOpt.get());
         final String fieldIdPathPattern = restfulMockStatefulMeta.getIdFieldLocation();
 
         if (statefulJsonHandler.isComplexJsonStructure(fieldIdPathPattern)) {
-
-            final Optional<StatefulJsonHandler.StatefulPath> pathOpt =
-                    statefulJsonHandler.findDataStateRecordPath(currentStateContentForMock,
-                            StringUtils.split(fieldIdPathPattern, "."),
-                            dataId);
-
-            if (pathOpt.isEmpty()) {
-                return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
-            }
-
-            final Optional<Map<String, Object>> currentDataOpt = statefulJsonHandler.findDataStateRecordByPath(currentStateContentForMock, pathOpt.get().path());
-
-            if (currentDataOpt.isEmpty()) {
-                return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
-            }
-
-            // TODO
-
-            state.put(parentExtId, currentStateContentForMock); // TODO use merge
-
-        } else {
-
-            final String fieldId = restfulMockStatefulMeta.getIdFieldName();
-            final AtomicBoolean recordFound = new AtomicBoolean(false);
-
-            switch (patchCommand) {
-                case ADD:
-
-                    if (value == null) {
-                        return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                                String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'value' is required"));
-                    }
-
-                    state.merge(parentExtId, currentStateContentForMock, (currentValue, nu) ->
-                            currentValue
-                                    .stream()
-                                    .map(m -> {
-
-                                        final boolean matchOnIdMade = Strings.CS.equals(dataId, (String) m.get(fieldId));
-
-                                        if (matchOnIdMade) {
-                                            recordFound.set(true);
-                                        }
-
-                                        if (matchOnIdMade) {
-
-                                            statefulPatchHandler.patchAddOperation(path, m, value, false);
-
-                                            return m;
-                                        } else {
-                                            return m;
-                                        }
-                                    })
-                                    .toList()
-                    );
-
-                    break;
-                case REMOVE:
-
-                    state.merge(parentExtId, currentStateContentForMock, (currentValue, nu) ->
-                            currentValue
-                                    .stream()
-                                    .map(m -> {
-
-                                        final boolean matchOnIdMade = Strings.CS.equals(dataId, (String) m.get(fieldId));
-
-                                        if (matchOnIdMade) {
-                                            recordFound.set(true);
-                                        }
-
-                                        if (matchOnIdMade) {
-
-                                            statefulPatchHandler.patchRemoveOperation(path, m);
-
-                                            return m;
-                                        } else {
-                                            return m;
-                                        }
-                                    })
-                                    .toList()
-                    );
-
-                    break;
-                case REPLACE:
-
-                    if (value == null) {
-                        return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                                String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'value' is required"));
-                    }
-
-                    state.merge(parentExtId, currentStateContentForMock, (currentValue, nu) ->
-                            currentValue
-                                    .stream()
-                                    .map(m -> {
-
-                                        final boolean matchOnIdMade = Strings.CS.equals(dataId, (String) m.get(fieldId));
-
-                                        if (matchOnIdMade) {
-                                            recordFound.set(true);
-                                        }
-
-                                        if (matchOnIdMade) {
-
-                                            statefulPatchHandler.addReplaceOperation(path, m, value);
-
-                                            return m;
-                                        } else {
-                                            return m;
-                                        }
-                                    })
-                                    .toList()
-                    );
-
-                    break;
-                case COPY:
-
-                    if (prefixedFrom == null) {
-                        return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                                String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'from' is required"));
-                    }
-
-                    if (!prefixedFrom.startsWith(GeneralUtils.URL_PATH_SEPARATOR)) {
-                        return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                                String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'from' should begin with '/' (e.g '/age'"));
-                    }
-
-                    final String fromInCopyOp = prefixedFrom.substring(1);
-
-                    state.merge(parentExtId, currentStateContentForMock, (currentValue, nu) ->
-                            currentValue
-                                    .stream()
-                                    .map(m -> {
-
-                                        final boolean matchOnIdMade = Strings.CS.equals(dataId, (String) m.get(fieldId));
-
-                                        if (matchOnIdMade) {
-                                            recordFound.set(true);
-                                        }
-
-                                        if (matchOnIdMade) {
-
-                                            statefulPatchHandler.patchCopyOperation(fromInCopyOp, m, path);
-
-                                            return m;
-                                        } else {
-                                            return m;
-                                        }
-                                    })
-                                    .toList()
-                    );
-
-                    break;
-                case MOVE:
-
-                    if (prefixedFrom == null) {
-                        return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                                String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'from' is required"));
-                    }
-
-                    if (!prefixedFrom.startsWith(GeneralUtils.URL_PATH_SEPARATOR)) {
-                        return new StatefulResponse(HttpStatus.SC_BAD_REQUEST,
-                                String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'from' should begin with '/' (e.g '/age'"));
-                    }
-
-                    final String fromInMoveOp = prefixedFrom.substring(1);
-
-
-                    state.merge(parentExtId, currentStateContentForMock, (currentValue, nu) ->
-                            currentValue
-                                    .stream()
-                                    .map(m -> {
-
-                                        final boolean matchOnIdMade = Strings.CS.equals(dataId, (String) m.get(fieldId));
-
-                                        if (matchOnIdMade) {
-                                            recordFound.set(true);
-                                        }
-
-                                        if (matchOnIdMade) {
-
-                                            statefulPatchHandler.patchMoveOperation(fromInMoveOp, m, path);
-
-                                            return m;
-                                        } else {
-                                            return m;
-                                        }
-                                    })
-                                    .toList()
-                    );
-
-                    break;
-                case TEST:
-
-                    return new StatefulResponse(HttpStatus.SC_NOT_IMPLEMENTED, "PATCH 'TEST' operation is not supported");
-                default:
-
-                    return new StatefulResponse(HttpStatus.SC_NOT_IMPLEMENTED, "PATCH operation is not supported");
-            }
-
-
-            if (!recordFound.get()) {
-                return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
-            }
-
+            return handleComplexPatch(dataId, parentExtId, currentStateContentForMock, fieldIdPathPattern);
         }
 
-        return new StatefulResponse(HttpStatus.SC_NO_CONTENT);
+        return handleSimplePatch(dataId, parentExtId, patchRequest, currentStateContentForMock, restfulMockStatefulMeta.getIdFieldName());
     }
 
 
@@ -620,5 +388,146 @@ public class StatefulServiceImpl implements StatefulService {
         }
 
     }
+
+    private void applyPatch(final String parentExtId,
+                            final List<Map<String, Object>> currentStateContentForMock,
+                            final String dataId,
+                            final String fieldId,
+                            final AtomicBoolean recordFound,
+                            final Consumer<Map<String, Object>> patchAction) {
+
+        state.merge(parentExtId, currentStateContentForMock, (currentValue, nu) ->
+                currentValue
+                        .stream()
+                        .map(m -> {
+
+                            final boolean matchOnIdMade = Strings.CS.equals(dataId, (String) m.get(fieldId));
+
+                            if (matchOnIdMade) {
+                                recordFound.set(true);
+                                patchAction.accept(m);
+                            }
+
+                            return m;
+                        })
+                        .toList()
+        );
+    }
+
+    private PatchRequest parsePatchRequest(Map<String, Object> requestDataMap) {
+        final String op = (String) requestDataMap.get("op");
+        final String path = (String) requestDataMap.get("path");
+        final String from = (String) requestDataMap.get("from");
+        final Object value = requestDataMap.get("value");
+
+        if (op == null || path == null) {
+            throw new StatefulValidationException(HttpStatus.SC_BAD_REQUEST,
+                    "Invalid JSON in request body, required 'op' and 'path' fields are missing");
+        }
+
+        final PatchCommandEnum patchCommand;
+        try {
+            patchCommand = PatchCommandEnum.valueOf(op);
+        } catch (IllegalArgumentException ex) {
+            throw new StatefulValidationException(HttpStatus.SC_BAD_REQUEST,
+                    String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'op' is not a valid value"));
+        }
+
+        if (!path.startsWith(GeneralUtils.URL_PATH_SEPARATOR)) {
+            throw new StatefulValidationException(HttpStatus.SC_BAD_REQUEST,
+                    String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "path should begin with '/' (e.g '/age'"));
+        }
+
+        return new PatchRequest(patchCommand, path.substring(1), from, value);
+    }
+
+    private String validateFrom(String prefixedFrom) {
+        if (prefixedFrom == null) {
+            throw new StatefulValidationException(HttpStatus.SC_BAD_REQUEST, String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'from' is required"));
+        }
+        if (!prefixedFrom.startsWith(GeneralUtils.URL_PATH_SEPARATOR)) {
+            throw new StatefulValidationException(HttpStatus.SC_BAD_REQUEST, String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'from' should begin with '/' (e.g '/age'"));
+        }
+        return prefixedFrom.substring(1);
+    }
+
+    private StatefulResponse handleSimplePatch(final String dataId,
+                                               final String parentExtId,
+                                               final PatchRequest patchRequest,
+                                               final List<Map<String, Object>> currentStateContentForMock,
+                                               final String fieldId) {
+
+        final AtomicBoolean recordFound = new AtomicBoolean(false);
+
+        switch (patchRequest.op()) {
+            case ADD -> {
+                if (patchRequest.value() == null) {
+                    return new StatefulResponse(HttpStatus.SC_BAD_REQUEST, String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'value' is required"));
+                }
+                applyPatch(parentExtId, currentStateContentForMock, dataId, fieldId, recordFound,
+                        m -> statefulPatchHandler.patchAddOperation(patchRequest.path(), m, patchRequest.value(), false));
+            }
+            case REMOVE -> applyPatch(parentExtId, currentStateContentForMock, dataId, fieldId, recordFound,
+                    m -> statefulPatchHandler.patchRemoveOperation(patchRequest.path(), m));
+            case REPLACE -> {
+                if (patchRequest.value() == null) {
+                    return new StatefulResponse(HttpStatus.SC_BAD_REQUEST, String.format(StatefulValidationException.INVALID_PATCH_INSTRUCTION, "'value' is required"));
+                }
+                applyPatch(parentExtId, currentStateContentForMock, dataId, fieldId, recordFound,
+                        m -> statefulPatchHandler.addReplaceOperation(patchRequest.path(), m, patchRequest.value()));
+            }
+            case COPY -> {
+                final String from = validateFrom(patchRequest.from());
+                applyPatch(parentExtId, currentStateContentForMock, dataId, fieldId, recordFound,
+                        m -> statefulPatchHandler.patchCopyOperation(from, m, patchRequest.path()));
+            }
+            case MOVE -> {
+                final String from = validateFrom(patchRequest.from());
+                applyPatch(parentExtId, currentStateContentForMock, dataId, fieldId, recordFound,
+                        m -> statefulPatchHandler.patchMoveOperation(from, m, patchRequest.path()));
+            }
+            case TEST -> {
+                return new StatefulResponse(HttpStatus.SC_NOT_IMPLEMENTED, "PATCH 'TEST' operation is not supported");
+            }
+            default -> {
+                return new StatefulResponse(HttpStatus.SC_NOT_IMPLEMENTED, "PATCH operation is not supported");
+            }
+        }
+
+        if (!recordFound.get()) {
+            return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
+        }
+
+        return new StatefulResponse(HttpStatus.SC_NO_CONTENT);
+    }
+
+    private StatefulResponse handleComplexPatch(final String dataId,
+                                                final String parentExtId,
+                                                final List<Map<String, Object>> currentStateContentForMock,
+                                                final String fieldIdPathPattern) {
+
+        final Optional<StatefulJsonHandler.StatefulPath> pathOpt =
+                statefulJsonHandler.findDataStateRecordPath(currentStateContentForMock,
+                        StringUtils.split(fieldIdPathPattern, "."),
+                        dataId);
+
+        if (pathOpt.isEmpty()) {
+            return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
+        }
+
+        final Optional<Map<String, Object>> currentDataOpt = statefulJsonHandler.findDataStateRecordByPath(currentStateContentForMock, pathOpt.get().path());
+
+        if (currentDataOpt.isEmpty()) {
+            return new StatefulResponse(HttpStatus.SC_NOT_FOUND);
+        }
+
+        // TODO
+
+        state.put(parentExtId, currentStateContentForMock); // TODO use merge
+
+        return new StatefulResponse(HttpStatus.SC_NO_CONTENT);
+    }
+
+    private record PatchRequest(PatchCommandEnum op, String path, String from, Object value) {}
 
 }

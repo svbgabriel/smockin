@@ -157,86 +157,11 @@ public class S3MockServiceImpl implements S3MockService {
     public String uploadS3BucketFile(final String extId, final S3MockTypeEnum type, final MultipartFile file, final String token)
             throws RecordNotFoundException, ValidationException {
 
-
-        final S3Mock bucket;
-        final S3MockDir mockDir;
-
-        if (S3MockTypeEnum.BUCKET.equals(type)) {
-            bucket = findS3Mock(extId, token);
-            mockDir = null;
-        } else if (S3MockTypeEnum.DIR.equals(type)) {
-            mockDir = findS3MockDir(extId, token);
-            bucket = null;
-        } else {
-            throw new ValidationException("Invalid type " + type);
-        }
-
-        try {
-
-            final InputStream is = file.getInputStream();
-            final Optional<String> fileContent = GeneralUtils.convertInputStreamToString(is, true);
-
-            if (!fileContent.isPresent()) {
-                throw new FileUploadException("Error reading input stream for S3 file upload.");
-            }
-
-            final String originalFileName = file.getOriginalFilename();
-            final String contentType = file.getContentType();
-
-            if (bucket != null) {
-
-                final String bucketName = bucket.getBucketName();
-                final S3MockFile s3MockFile = new S3MockFile(originalFileName, contentType, bucket);
-                final S3MockFileContent s3MockFileContent = new S3MockFileContent(s3MockFile, GeneralUtils.base64Encode(fileContent.get()));
-                s3MockFile.setFileContent(s3MockFileContent);
-                final String newFileExtId = s3MockFileDAO.save(s3MockFile).getExtId();
-
-                if (RecordStatusEnum.ACTIVE.equals(bucket.getStatus())
-                        && !S3SyncModeEnum.NO_SYNC.equals(bucket.getSyncMode())) {
-
-                    applyUpdateToRunningServer(cli -> {
-                        cli.uploadObject(bucketName, originalFileName, IOUtils.toInputStream(fileContent.get(), Charset.defaultCharset()), contentType);
-                        final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
-                        mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' uploaded file '%s' to bucket '%s'", smockinUser.getUsername(), originalFileName, bucket),
-                                bucket.getCreatedBy().getExtId());
-                    });
-
-                }
-
-                return newFileExtId;
-            }
-
-            if (mockDir != null) {
-
-                final S3MockFile s3MockFile = new S3MockFile(originalFileName, contentType, mockDir);
-                final S3MockFileContent s3MockFileContent = new S3MockFileContent(s3MockFile, GeneralUtils.base64Encode(fileContent.get()));
-                s3MockFile.setFileContent(s3MockFileContent);
-                final String newFileExtId = s3MockFileDAO.save(s3MockFile).getExtId();
-
-                final S3Mock parentBucket = mockedS3ServerEngineUtils.locateParentBucket(mockDir);
-                final Pair<String, String> filePath = mockedS3ServerEngineUtils.extractBucketAndFilePath(s3MockFile);
-
-                if (RecordStatusEnum.ACTIVE.equals(parentBucket.getStatus())
-                        && !S3SyncModeEnum.NO_SYNC.equals(parentBucket.getSyncMode())) {
-
-                    applyUpdateToRunningServer(cli -> {
-                        cli.uploadObject(parentBucket.getBucketName(), filePath.getRight(), IOUtils.toInputStream(fileContent.get(), Charset.defaultCharset()), contentType);
-                        final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
-                        mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' uploaded file '%s' to bucket '%s'", smockinUser.getUsername(), filePath.getRight(), parentBucket.getBucketName()),
-                                parentBucket.getCreatedBy().getExtId());
-                    });
-
-                }
-
-                return newFileExtId;
-            }
-
-            throw new RecordNotFoundException();
-
-        } catch (IOException ex) {
-            logger.error("Error uploading file for S3 Mock", ex);
-            throw new FileUploadException("Error uploading file for S3 Mock", ex);
-        }
+        return switch (type) {
+            case BUCKET -> uploadFileToBucket(extId, file, token);
+            case DIR -> uploadFileToDir(extId, file, token);
+            default -> throw new ValidationException("Invalid type " + type);
+        };
 
     }
 
@@ -311,100 +236,13 @@ public class S3MockServiceImpl implements S3MockService {
 
         logger.debug("deleteS3BucketOrFile called (type: {})", type);
 
-        if (S3MockTypeEnum.BUCKET.equals(type)) {
-
-            final S3Mock s3Mock = findS3Mock(extId, token);
-            final String bucketName = s3Mock.getBucketName();
-            final RecordStatusEnum status = s3Mock.getStatus();
-            s3MockDAO.delete(s3Mock);
-
-            if (RecordStatusEnum.INACTIVE.equals(status)
-                    || S3SyncModeEnum.NO_SYNC.equals(s3Mock.getSyncMode())) {
-                return;
-            }
-
-            applyUpdateToRunningServer(cli -> {
-                cli.deleteBucket(bucketName, true);
-                final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
-                mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' deleted bucket '%s'", smockinUser.getUsername(), bucketName),
-                        s3Mock.getCreatedBy().getExtId());
-            });
-
-            return;
+        switch (type) {
+            case BUCKET -> deleteBucket(extId, token);
+            case DIR -> deleteDir(extId, token);
+            case FILE -> deleteFile(extId, token);
+            default -> throw new ValidationException("Invalid S3 type: " + type);
         }
 
-        if (S3MockTypeEnum.DIR.equals(type)) {
-
-            final S3MockDir dir = findS3MockDir(extId, token);
-            final long bucketId = mockedS3ServerEngineUtils.locateParentBucket(dir).getId();
-            final String directoryName = dir.getName();
-
-            s3MockDirDAO.delete(dir);
-            s3MockDirDAO.flush();
-
-            final S3Mock bucket = s3MockDAO.getById(bucketId);
-
-            if (RecordStatusEnum.INACTIVE.equals(bucket.getStatus())
-                    || S3SyncModeEnum.NO_SYNC.equals(bucket.getSyncMode())) {
-                return;
-            }
-
-            // Remove current bucket and re-create with latest content...
-            applyUpdateToRunningServer(
-                    cli -> cli.deleteBucket(bucket.getBucketName(), true),
-                    cli -> {
-                        mockedS3ServerEngineUtils.initBucketContent(cli, bucket);
-                        final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
-                        mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' deleted directory '%s' in bucket '%s'", smockinUser.getUsername(), directoryName, bucket.getBucketName()),
-                                bucket.getCreatedBy().getExtId());
-                    }
-            );
-
-            return;
-        }
-
-        if (S3MockTypeEnum.FILE.equals(type)) {
-
-            final S3MockFile s3MockFile = findS3MockFile(extId, token);
-
-            final String filePath;
-            final S3Mock bucket;
-
-            if (s3MockFile.getS3Mock() != null) {
-
-                filePath = s3MockFile.getName();
-                bucket = s3MockFile.getS3Mock();
-
-            } else {
-
-                filePath = mockedS3ServerEngineUtils.extractBucketAndFilePath(s3MockFile).getRight();
-                bucket = (s3MockFile.getS3Mock() != null)
-                        ? s3MockFile.getS3Mock()
-                        : mockedS3ServerEngineUtils.locateParentBucket(s3MockFile.getS3MockDir());
-
-            }
-
-            s3MockFileDAO.delete(s3MockFile);
-
-            if (bucket != null) {
-
-                if (RecordStatusEnum.INACTIVE.equals(bucket.getStatus())
-                        || S3SyncModeEnum.NO_SYNC.equals(bucket.getSyncMode())) {
-                    return;
-                }
-
-                applyUpdateToRunningServer(cli -> {
-                    cli.deleteObject(bucket.getBucketName(), filePath);
-                    final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
-                    mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' deleted file '%s' in bucket '%s'", smockinUser.getUsername(), filePath, bucket.getBucketName()),
-                            bucket.getCreatedBy().getExtId());
-                });
-            }
-
-            return;
-        }
-
-        throw new ValidationException("Invalid S3 type: " + type);
     }
 
     @Override
@@ -422,7 +260,7 @@ public class S3MockServiceImpl implements S3MockService {
                                 m.getSyncMode(),
                                 m.getDateCreated(),
                                 m.getCreatedBy().getUsername()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -535,7 +373,7 @@ public class S3MockServiceImpl implements S3MockService {
                                 (includeBase64EncodedFileContent)
                                         ? mf.getFileContent().getContent() // straight from DB so already base64 encoded
                                         : null))
-                .collect(Collectors.toList()));
+                .toList());
 
         s3Mock
             .getChildrenDirs()
@@ -572,7 +410,7 @@ public class S3MockServiceImpl implements S3MockService {
                                         (includeBase64EncodedFileContent)
                                                 ? mf.getFileContent().getContent() // straight from DB so already base64 encoded
                                                 : null))
-                        .collect(Collectors.toList()));
+                        .toList());
 
         s3MockDir
                 .getChildren()
@@ -608,6 +446,184 @@ public class S3MockServiceImpl implements S3MockService {
     @FunctionalInterface
     interface ApplyToMockServerAction {
         void execute(final S3Client s3Client);
+    }
+
+    private void deleteBucket(final String extId, final String token) throws RecordNotFoundException, ValidationException {
+
+        final S3Mock s3Mock = findS3Mock(extId, token);
+        final String bucketName = s3Mock.getBucketName();
+        final RecordStatusEnum status = s3Mock.getStatus();
+        s3MockDAO.delete(s3Mock);
+
+        if (RecordStatusEnum.INACTIVE.equals(status)
+                || S3SyncModeEnum.NO_SYNC.equals(s3Mock.getSyncMode())) {
+            return;
+        }
+
+        applyUpdateToRunningServer(cli -> {
+            cli.deleteBucket(bucketName, true);
+            final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
+            mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' deleted bucket '%s'", smockinUser.getUsername(), bucketName),
+                    s3Mock.getCreatedBy().getExtId());
+        });
+
+    }
+
+    private void deleteDir(final String extId, final String token) throws RecordNotFoundException, ValidationException {
+
+        final S3MockDir dir = findS3MockDir(extId, token);
+        final long bucketId = mockedS3ServerEngineUtils.locateParentBucket(dir).getId();
+        final String directoryName = dir.getName();
+
+        s3MockDirDAO.delete(dir);
+        s3MockDirDAO.flush();
+
+        final S3Mock bucket = s3MockDAO.getById(bucketId);
+
+        if (RecordStatusEnum.INACTIVE.equals(bucket.getStatus())
+                || S3SyncModeEnum.NO_SYNC.equals(bucket.getSyncMode())) {
+            return;
+        }
+
+        // Remove current bucket and re-create with the latest content...
+        applyUpdateToRunningServer(
+                cli -> cli.deleteBucket(bucket.getBucketName(), true),
+                cli -> {
+                    mockedS3ServerEngineUtils.initBucketContent(cli, bucket);
+                    final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
+                    mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' deleted directory '%s' in bucket '%s'", smockinUser.getUsername(), directoryName, bucket.getBucketName()),
+                            bucket.getCreatedBy().getExtId());
+                }
+        );
+
+    }
+
+    private void deleteFile(final String extId, final String token) throws RecordNotFoundException, ValidationException {
+
+        final S3MockFile s3MockFile = findS3MockFile(extId, token);
+
+        final String filePath;
+        final S3Mock bucket;
+
+        if (s3MockFile.getS3Mock() != null) {
+
+            filePath = s3MockFile.getName();
+            bucket = s3MockFile.getS3Mock();
+
+        } else {
+
+            filePath = mockedS3ServerEngineUtils.extractBucketAndFilePath(s3MockFile).getRight();
+            bucket = (s3MockFile.getS3Mock() != null)
+                    ? s3MockFile.getS3Mock()
+                    : mockedS3ServerEngineUtils.locateParentBucket(s3MockFile.getS3MockDir());
+
+        }
+
+        s3MockFileDAO.delete(s3MockFile);
+
+        if (bucket != null) {
+
+            if (RecordStatusEnum.INACTIVE.equals(bucket.getStatus())
+                    || S3SyncModeEnum.NO_SYNC.equals(bucket.getSyncMode())) {
+                return;
+            }
+
+            applyUpdateToRunningServer(cli -> {
+                cli.deleteObject(bucket.getBucketName(), filePath);
+                final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
+                mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' deleted file '%s' in bucket '%s'", smockinUser.getUsername(), filePath, bucket.getBucketName()),
+                        bucket.getCreatedBy().getExtId());
+            });
+        }
+
+    }
+
+    private String uploadFileToBucket(final String extId, final MultipartFile file, final String token) throws RecordNotFoundException, ValidationException {
+
+        final S3Mock bucket = findS3Mock(extId, token);
+
+        try {
+
+            final String fileContent = readFileContent(file);
+            final String originalFileName = file.getOriginalFilename();
+            final String contentType = file.getContentType();
+
+            final String bucketName = bucket.getBucketName();
+            final S3MockFile s3MockFile = new S3MockFile(originalFileName, contentType, bucket);
+            final S3MockFileContent s3MockFileContent = new S3MockFileContent(s3MockFile, GeneralUtils.base64Encode(fileContent));
+            s3MockFile.setFileContent(s3MockFileContent);
+            final String newFileExtId = s3MockFileDAO.save(s3MockFile).getExtId();
+
+            if (RecordStatusEnum.ACTIVE.equals(bucket.getStatus())
+                    && !S3SyncModeEnum.NO_SYNC.equals(bucket.getSyncMode())) {
+
+                applyUpdateToRunningServer(cli -> {
+                    cli.uploadObject(bucketName, originalFileName, IOUtils.toInputStream(fileContent, Charset.defaultCharset()), contentType);
+                    final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
+                    mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' uploaded file '%s' to bucket '%s'", smockinUser.getUsername(), originalFileName, bucket),
+                            bucket.getCreatedBy().getExtId());
+                });
+
+            }
+
+            return newFileExtId;
+
+        } catch (IOException ex) {
+            logger.error("Error uploading file for S3 Mock", ex);
+            throw new FileUploadException("Error uploading file for S3 Mock", ex);
+        }
+
+    }
+
+    private String uploadFileToDir(final String extId, final MultipartFile file, final String token) throws RecordNotFoundException, ValidationException {
+
+        final S3MockDir mockDir = findS3MockDir(extId, token);
+
+        try {
+
+            final String fileContent = readFileContent(file);
+            final String originalFileName = file.getOriginalFilename();
+            final String contentType = file.getContentType();
+
+            final S3MockFile s3MockFile = new S3MockFile(originalFileName, contentType, mockDir);
+            final S3MockFileContent s3MockFileContent = new S3MockFileContent(s3MockFile, GeneralUtils.base64Encode(fileContent));
+            s3MockFile.setFileContent(s3MockFileContent);
+            final String newFileExtId = s3MockFileDAO.save(s3MockFile).getExtId();
+
+            final S3Mock parentBucket = mockedS3ServerEngineUtils.locateParentBucket(mockDir);
+            final Pair<String, String> filePath = mockedS3ServerEngineUtils.extractBucketAndFilePath(s3MockFile);
+
+            if (RecordStatusEnum.ACTIVE.equals(parentBucket.getStatus())
+                    && !S3SyncModeEnum.NO_SYNC.equals(parentBucket.getSyncMode())) {
+
+                applyUpdateToRunningServer(cli -> {
+                    cli.uploadObject(parentBucket.getBucketName(), filePath.getRight(), IOUtils.toInputStream(fileContent, Charset.defaultCharset()), contentType);
+                    final SmockinUser smockinUser = userTokenServiceUtils.loadCurrentActiveUser(token);
+                    mockedS3ServerEngineUtils.handleS3Logging(String.format("User '%s' uploaded file '%s' to bucket '%s'", smockinUser.getUsername(), filePath.getRight(), parentBucket.getBucketName()),
+                            parentBucket.getCreatedBy().getExtId());
+                });
+
+            }
+
+            return newFileExtId;
+
+        } catch (IOException ex) {
+            logger.error("Error uploading file for S3 Mock", ex);
+            throw new FileUploadException("Error uploading file for S3 Mock", ex);
+        }
+
+    }
+
+    private String readFileContent(final MultipartFile file) throws IOException {
+
+        final InputStream is = file.getInputStream();
+        final Optional<String> fileContent = GeneralUtils.convertInputStreamToString(is, true);
+
+        if (fileContent.isEmpty()) {
+            throw new FileUploadException("Error reading input stream for S3 file upload.");
+        }
+
+        return fileContent.get();
     }
 
 }

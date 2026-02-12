@@ -23,4 +23,9 @@ public class StatefulValidationException extends RuntimeException {
         this.status = status;
     }
 
+    public StatefulValidationException(final Integer status, final String msg) {
+        super(msg);
+        this.status = status;
+    }
+
 }

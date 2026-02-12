@@ -6,15 +6,16 @@ import com.smockin.admin.service.UserKeyValueDataService;
 import com.smockin.mockserver.exception.InboundParamMatchException;
 import com.smockin.mockserver.service.enums.ParamMatchTypeEnum;
 import com.smockin.utils.GeneralUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 
 /**
@@ -97,56 +98,32 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         final ParamMatchTypeEnum paramMatchType = matchResult.getLeft();
         final int matchStartingPosition = matchResult.getRight();
 
-        // Determine the matching token type, is it a requestHeader, requestParameter, pathVar, etc...
-        if (ParamMatchTypeEnum.lookUpKvp.equals(paramMatchType)) {
-            return processKvp(matchStartingPosition, sanitizedUserCtxInboundPath, mockPath, req, responseBody, mockOwnerUserId);
-        }
-
-        if (ParamMatchTypeEnum.requestHeader.equals(paramMatchType)) {
-            return processRequestHeader(matchStartingPosition, req, responseBody);
-        }
-
-        if (ParamMatchTypeEnum.requestParameter.equals(paramMatchType)) {
-            return processRequestParameter(matchStartingPosition, req, responseBody);
-        }
-
-        if (ParamMatchTypeEnum.pathVar.equals(paramMatchType)) {
-            return processPathVariable(sanitizedUserCtxInboundPath, matchStartingPosition, mockPath, responseBody);
-        }
-
-        if (ParamMatchTypeEnum.requestBody.equals(paramMatchType)) {
-            return StringUtils.replaceIgnoreCase(responseBody,
+        return switch (paramMatchType) {
+            case lookUpKvp ->
+                    processKvp(matchStartingPosition, sanitizedUserCtxInboundPath, mockPath, req, responseBody, mockOwnerUserId);
+            case requestHeader -> processRequestHeader(matchStartingPosition, req, responseBody);
+            case requestParameter -> processRequestParameter(matchStartingPosition, req, responseBody);
+            case pathVar ->
+                    processPathVariable(sanitizedUserCtxInboundPath, matchStartingPosition, mockPath, responseBody);
+            case requestBody -> Strings.CI.replace(responseBody,
                     ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.requestBody,
                     GeneralUtils.extractRequestBody(req),
                     1);
-        }
-
-        if (ParamMatchTypeEnum.isoDate.equals(paramMatchType)) {
-            return StringUtils.replaceIgnoreCase(responseBody,
+            case isoDate -> Strings.CI.replace(responseBody,
                     ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.isoDate,
                     new SimpleDateFormat(GeneralUtils.ISO_DATE_FORMAT).format(GeneralUtils.getCurrentDate()),
                     1);
-        }
-
-        if (ParamMatchTypeEnum.isoDatetime.equals(paramMatchType)) {
-            return StringUtils.replaceIgnoreCase(responseBody,
+            case isoDatetime -> Strings.CI.replace(responseBody,
                     ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.isoDatetime,
                     new SimpleDateFormat(GeneralUtils.ISO_DATETIME_FORMAT).format(GeneralUtils.getCurrentDate()),
                     1);
-        }
-
-        if (ParamMatchTypeEnum.uuid.equals(paramMatchType)) {
-            return StringUtils.replaceIgnoreCase(responseBody,
+            case uuid -> Strings.CI.replace(responseBody,
                     ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.uuid,
                     GeneralUtils.generateUUID(),
                     1);
-        }
-
-        if (ParamMatchTypeEnum.randomNumber.equals(paramMatchType)) {
-            return processRandomNumber(matchStartingPosition, responseBody);
-        }
-
-        throw new IllegalArgumentException("Unsupported token : " + matchResult);
+            case randomNumber -> processRandomNumber(matchStartingPosition, responseBody);
+            default -> throw new IllegalArgumentException("Unsupported token : " + matchResult);
+        };
     }
 
     Pair<ParamMatchTypeEnum, Integer> findInboundParamMatch(final String responseBody) {
@@ -156,7 +133,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         }
 
         for (ParamMatchTypeEnum p : ParamMatchTypeEnum.values()) {
-            final int pos = StringUtils.indexOf(responseBody, ParamMatchTypeEnum.PARAM_PREFIX + p.name() + ((p.takesArg()) ? "(" : ""));
+            final int pos = Strings.CS.indexOf(responseBody, ParamMatchTypeEnum.PARAM_PREFIX + p.name() + ((p.takesArg()) ? "(" : ""));
             if (pos > -1) {
                 return Pair.of(p, pos + ((p.takesArg()) ? 1 : 0));
             }
@@ -168,16 +145,16 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
     String extractArgName(final int matchStartPos, final ParamMatchTypeEnum paramMatchType, final String responseBody, final boolean isNested) {
 
         final int start = matchStartPos + (ParamMatchTypeEnum.PARAM_PREFIX + paramMatchType).length();
-        final int closingPos = StringUtils.indexOf(responseBody, (isNested) ? "))" : ")", start);
+        final int closingPos = Strings.CS.indexOf(responseBody, (isNested) ? "))" : ")", start);
 
         return StringUtils.substring(responseBody, start, closingPos);
     }
 
     String sanitiseArgName(String argName) {
 
-        argName = StringUtils.remove(argName, "'");
+        argName = Strings.CS.remove(argName, "'");
 
-        return StringUtils.remove(argName, "\"");
+        return Strings.CS.remove(argName, "\"");
     }
 
     String processKvp(final int matchStartingPosition,
@@ -211,23 +188,14 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
 
             logger.debug("Nested KVP request key: {}", nestedRequestKey);
 
-            switch (kvpMatchResult.getLeft()) {
-                case requestHeader:
-                    sanitisedKvpKey = GeneralUtils.findHeaderIgnoreCase(req, sanitiseArgName(nestedRequestKey));
-                    break;
-                case requestParameter:
-                    sanitisedKvpKey = GeneralUtils.extractRequestParamByName(req, sanitiseArgName(nestedRequestKey));
-                    break;
-                case pathVar:
-                    sanitisedKvpKey = GeneralUtils.findPathVarIgnoreCase(sanitizedUserCtxInboundPath, mockPath, sanitiseArgName(nestedRequestKey));
-                    break;
-                case requestBody:
-                    sanitisedKvpKey = GeneralUtils.extractRequestBody(req);
-                    break;
-                default:
-                    sanitisedKvpKey = null;
-                    break;
-            }
+            sanitisedKvpKey = switch (kvpMatchResult.getLeft()) {
+                case requestHeader -> GeneralUtils.findHeaderIgnoreCase(req, sanitiseArgName(nestedRequestKey));
+                case requestParameter -> GeneralUtils.extractRequestParamByName(req, sanitiseArgName(nestedRequestKey));
+                case pathVar ->
+                        GeneralUtils.findPathVarIgnoreCase(sanitizedUserCtxInboundPath, mockPath, sanitiseArgName(nestedRequestKey));
+                case requestBody -> GeneralUtils.extractRequestBody(req);
+                default -> null;
+            };
         }
 
         final UserKeyValueDataDTO userKeyValueDataDTO = (sanitisedKvpKey != null)
@@ -236,7 +204,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
 
         logger.debug("KVP value: {}", ((userKeyValueDataDTO != null) ? userKeyValueDataDTO.getValue() : null));
 
-        return StringUtils.replaceIgnoreCase(responseBody,
+        return Strings.CI.replace(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.lookUpKvp + "(" + kvpKey + ((kvpKey.contains("(")) ? "))" : ")"),
                 (userKeyValueDataDTO != null) ? userKeyValueDataDTO.getValue() : "",
                 1);
@@ -252,7 +220,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         logger.debug("cleaned header: {}", sanitizedHeaderName);
         logger.debug("header value: {}", headerValue);
 
-        return StringUtils.replaceIgnoreCase(responseBody,
+        return Strings.CI.replace(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.requestHeader + "(" + headerName + ")",
                 (headerValue != null) ? headerValue : "",
                 1);
@@ -270,7 +238,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         logger.debug("Cleaned request param: {}", sanitizedRequestParamName);
         logger.debug("Request param value: {}", requestParamValue);
 
-        return StringUtils.replaceIgnoreCase(responseBody,
+        return Strings.CI.replace(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.requestParameter + "(" + requestParamName + ")",
                 (requestParamValue != null) ? requestParamValue : "",
                 1);
@@ -287,7 +255,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
         logger.debug("Cleaned path var : {}", sanitizedPathVariableName);
         logger.debug("Path var value: {}", pathVariableValue);
 
-        return StringUtils.replaceIgnoreCase(responseBody,
+        return Strings.CI.replace(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.pathVar + "(" + pathVariableName + ")",
                 (pathVariableValue != null) ? pathVariableValue : "",
                 1);
@@ -320,7 +288,7 @@ public class InboundParamMatchServiceImpl implements InboundParamMatchService {
 
         logger.debug("Random number value: {}", randomValue);
 
-        return StringUtils.replaceIgnoreCase(responseBody,
+        return Strings.CI.replace(responseBody,
                 ParamMatchTypeEnum.PARAM_PREFIX + ParamMatchTypeEnum.randomNumber + "(" + randomNumberContent + ")",
                 String.valueOf(randomValue),
                 1);
