@@ -6,10 +6,10 @@ import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
-import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.mockserver.service.bean.ProxiedKey;
 import com.smockin.mockserver.service.dto.HttpProxiedDTO;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
+import com.smockin.utils.MockUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +43,6 @@ public class HttpProxyServiceImpl implements HttpProxyService {
     @Autowired
     private UserTokenServiceUtils userTokenServiceUtils;
 
-    @Autowired
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
-
     @Override
     public RestfulResponseDTO waitForResponse(final String requestPath, final RestfulMock mock) {
 
@@ -75,9 +72,9 @@ public class HttpProxyServiceImpl implements HttpProxyService {
 
             } else {
 
-                // A matching path was found, so consume/remove the element from the synchronizedProxyResponsesMap, release the lock and return response.
+                // A matching path was found, so consume/remove the element from the synchronizedProxyResponsesMap, release the lock and return the response.
 
-                final HttpProxiedDTO proxiedResponse = responses.remove(0);
+                final HttpProxiedDTO proxiedResponse = responses.removeFirst();
                 return new RestfulResponseDTO(proxiedResponse.getHttpStatusCode(), proxiedResponse.getResponseContentType(), proxiedResponse.getBody(), new HashSet<>());
             }
 
@@ -97,7 +94,7 @@ public class HttpProxyServiceImpl implements HttpProxyService {
 
         userTokenServiceUtils.validateRecordOwner(mock.getCreatedBy(), token);
 
-        final String path = mockedRestServerEngineUtils.buildUserPath(mock);
+        final String path = MockUtils.buildUserPath(mock);
 
         try {
 
@@ -131,7 +128,7 @@ public class HttpProxyServiceImpl implements HttpProxyService {
             lock.lock();
 
             Arrays.stream(RestMethodEnum.values())
-                    .forEach( rm -> synchronizedProxyResponsesMap.remove(new ProxiedKey(mockedRestServerEngineUtils.buildUserPath(mock), rm)));
+                    .forEach( rm -> synchronizedProxyResponsesMap.remove(new ProxiedKey(MockUtils.buildUserPath(mock), rm)));
 
         } finally {
             lock.unlock();

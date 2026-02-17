@@ -43,9 +43,6 @@ class HttpProxyServiceQueueTest {
     @Mock
     private UserTokenServiceUtils userTokenServiceUtils;
 
-    @Mock
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
-
     @Spy
     @InjectMocks
     private HttpProxyService proxyService = new HttpProxyServiceImpl();
@@ -83,11 +80,6 @@ class HttpProxyServiceQueueTest {
         Mockito.when(restfulMockDAO.findByExtId(mockReqFooGet.getExtId())).thenReturn(mockReqFooGet);
 
         Mockito.doNothing().when(userTokenServiceUtils).validateRecordOwner(Mockito.any(SmockinUser.class), Mockito.anyString());
-
-        Mockito.when(mockedRestServerEngineUtils.buildUserPath(mockReqHelloGet)).thenReturn(File.separator + user.getCtxPath() + mockReqHelloGet.getPath());
-        Mockito.when(mockedRestServerEngineUtils.buildUserPath(mockReqHelloPost)).thenReturn(File.separator + user.getCtxPath() + mockReqHelloPost.getPath());
-        Mockito.when(mockedRestServerEngineUtils.buildUserPath(mockReqHelloDelete)).thenReturn(File.separator + user.getCtxPath() + mockReqHelloDelete.getPath());
-        Mockito.when(mockedRestServerEngineUtils.buildUserPath(mockReqFooGet)).thenReturn(File.separator + user.getCtxPath() + mockReqFooGet.getPath());
 
         proxyService.addResponse(mockReqHelloGet.getExtId(), helloGetDTO, user.getSessionToken());
         proxyService.addResponse(mockReqHelloPost.getExtId(), helloPostDTO, user.getSessionToken());

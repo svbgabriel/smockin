@@ -8,11 +8,11 @@ import com.smockin.admin.persistence.entity.RestfulMockDefinitionOrder;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
-import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.mockserver.service.dto.PushClientDTO;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.mockserver.service.dto.WebSocketDTO;
 import com.smockin.utils.GeneralUtils;
+import com.smockin.utils.MockUtils;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,9 +45,6 @@ public class WebSocketServiceImpl implements WebSocketService {
 
     @Autowired
     private RestfulMockDAO restfulMockDAO;
-
-    @Autowired
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
 
     @Autowired
     private UserTokenServiceUtils userTokenServiceUtils;
@@ -84,7 +81,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         }
 
         Duration timeout = (wsMock.getWebSocketTimeoutInMillis() > 0) ? Duration.of(wsMock.getWebSocketTimeoutInMillis(), ChronoUnit.MILLIS) : Duration.of(MAX_IDLE_TIMEOUT_MILLIS, ChronoUnit.MILLIS);
-        final String path = mockedRestServerEngineUtils.buildUserPath(wsMock);
+        final String path = MockUtils.buildUserPath(wsMock);
         session.setIdleTimeout(timeout);
 
         final Set<SessionIdWrapper> sessions = sessionMap.computeIfAbsent(path, k -> Collections.synchronizedSet(new HashSet<>()));
@@ -118,7 +115,7 @@ public class WebSocketServiceImpl implements WebSocketService {
                     RestMethodEnum.GET, wsPath, List.of(RestMockTypeEnum.RULE_WS));
 
             if (wsMock != null && !wsMock.getDefinitions().isEmpty()) {
-                RestfulMockDefinitionOrder order = wsMock.getDefinitions().get(0);
+                RestfulMockDefinitionOrder order = wsMock.getDefinitions().getFirst();
 
                 HttpServletRequest req = new sMockinRequest(message, wsPath);
                 RestfulResponseDTO response = ruleEngine.process(req, wsMock.getRules());
@@ -155,7 +152,7 @@ public class WebSocketServiceImpl implements WebSocketService {
                     .ifPresent(s -> {
                         s.getSession().sendText(dto.getBody(), Callback.from(
                                 () -> {},
-                                t -> logger.error("Error sending message to session " + id, t)
+                                t -> logger.error("Error sending message to session {}", id, t)
                         ));
                     });
         }
@@ -166,7 +163,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         if (mock == null) throw new RecordNotFoundException();
 
         userTokenServiceUtils.validateRecordOwner(mock.getCreatedBy(), token);
-        final String prefixedPath = mockedRestServerEngineUtils.buildUserPath(mock);
+        final String prefixedPath = MockUtils.buildUserPath(mock);
 
         List<PushClientDTO> connections = new ArrayList<>();
         Optional.ofNullable(sessionMap.get(prefixedPath))
@@ -187,16 +184,12 @@ public class WebSocketServiceImpl implements WebSocketService {
                 .orElse(null);
     }
 
-    /**
-     * Implementação simulada de HttpServletRequest para que a RuleEngine
-     * consiga processar mensagens WebSocket como se fossem corpos de requisição HTTP.
-     */
     private static class sMockinRequest extends HttpServletRequestWrapper {
         private final String body;
         private final String path;
 
         sMockinRequest(String value, String path) {
-            super(null); // Não precisamos de uma requisição real delegada aqui
+            super(null);
             this.body = value;
             this.path = path;
         }
@@ -236,7 +229,6 @@ public class WebSocketServiceImpl implements WebSocketService {
             };
         }
 
-        // Métodos obrigatórios por interface que não serão usados pela RuleEngine
         @Override
         public String getHeader(String name) {
             return null;

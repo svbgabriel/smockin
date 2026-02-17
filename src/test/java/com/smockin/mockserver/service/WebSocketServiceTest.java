@@ -2,10 +2,11 @@ package com.smockin.mockserver.service;
 
 import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.entity.RestfulMock;
+import com.smockin.admin.persistence.entity.SmockinUser;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
+import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
-import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.utils.GeneralUtils;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
@@ -26,9 +27,6 @@ class WebSocketServiceTest {
 
     @Mock
     private RestfulMockDAO restfulMockDAO;
-
-    @Mock
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
 
     @Mock
     private UserTokenServiceUtils userTokenServiceUtils;
@@ -54,16 +52,20 @@ class WebSocketServiceTest {
         Mockito.when(upgradeResponse.getHeader("Sec-WebSocket-Accept")).thenReturn("handshake-1");
         Mockito.doNothing().when(session).setIdleTimeout(Mockito.any(Duration.class));
 
+        final SmockinUser user = new SmockinUser();
+        user.setRole(SmockinUserRoleEnum.SYS_ADMIN);
+
         final RestfulMock wsMock = new RestfulMock();
+        wsMock.setPath("/ws");
         wsMock.setMockType(RestMockTypeEnum.PROXY_WS);
         wsMock.setProxyPushIdOnConnect(false);
         wsMock.setWebSocketTimeoutInMillis(0);
+        wsMock.setCreatedBy(user);
 
         Mockito.when(restfulMockDAO.findActiveByMethodAndPathPatternAndTypesForSingleUser(
                 Mockito.eq(RestMethodEnum.GET),
                 Mockito.eq("/ws"),
                 Mockito.anyList())).thenReturn(wsMock);
-        Mockito.when(mockedRestServerEngineUtils.buildUserPath(wsMock)).thenReturn("/ws");
 
         // Test
         webSocketService.registerSession(session, false);

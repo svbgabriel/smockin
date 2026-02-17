@@ -6,13 +6,14 @@ import com.smockin.admin.persistence.dao.RestfulMockDAO;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.admin.websocket.LiveLoggingHandler;
-import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
 import com.smockin.mockserver.service.dto.PushClientDTO;
 import com.smockin.mockserver.service.dto.SseMessageDTO;
 import com.smockin.utils.GeneralUtils;
 import com.smockin.utils.LiveLoggingUtils;
+import com.smockin.utils.MockUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,14 +40,8 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
 
     private final ConcurrentHashMap<String, ClientSseData> clients = new ConcurrentHashMap<>(0);
 
-    private final String messagePrefix = "data: ";
-    private final String messageSuffix = "\n\n";
-
     @Autowired
     private RestfulMockDAO restfulMockDAO;
-
-    @Autowired
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
 
     @Autowired
     private UserTokenServiceUtils userTokenServiceUtils;
@@ -86,7 +81,7 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
 
         userTokenServiceUtils.validateRecordOwner(mock.getCreatedBy(), token);
 
-        final String prefixedPath = mockedRestServerEngineUtils.buildUserPath(mock);
+        final String prefixedPath = MockUtils.buildUserPath(mock);
         final List<PushClientDTO> sessionIds = new ArrayList<>();
 
         clients.forEach( (id, data) -> {
@@ -143,6 +138,8 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
 
         final PrintWriter writer = response.getWriter();
 
+        String messagePrefix = "data: ";
+        String messageSuffix = "\n\n";
         if (proxyPushIdOnConnect) {
             writer.write(messagePrefix + "clientId: " + clientId + messageSuffix);
         }
@@ -190,6 +187,7 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
         }
     }
 
+    @Getter
     private static final class ClientSseData {
         private final String path;
         private final Thread thread;
@@ -201,9 +199,5 @@ public class ServerSideEventServiceImpl implements ServerSideEventService {
             this.thread = thread;
             this.dateJoined = dateJoined;
         }
-        public String getPath() { return path; }
-        public Thread getThread() { return thread; }
-        public Date getDateJoined() { return dateJoined; }
-        public List<String> getMessages() { return messages; }
     }
 }

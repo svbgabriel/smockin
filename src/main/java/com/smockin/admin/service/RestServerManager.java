@@ -36,6 +36,9 @@ public class RestServerManager {
     private MockedRestServerEngineUtils mockedRestServerEngineUtils;
 
     @Autowired
+    private com.smockin.admin.service.utils.MultiUserUtils multiUserUtils;
+
+    @Autowired
     private SmockinUserService smockinUserService;
 
     @Autowired
@@ -119,9 +122,9 @@ public class RestServerManager {
             if (SmockinUserRoleEnum.SYS_ADMIN.equals(user.getRole())) {
                 return path;
             }
-            final String userCtxPathSegment = mockedRestServerEngineUtils.extractMultiUserCtxPathSegment(path);
+            final String userCtxPathSegment = multiUserUtils.extractMultiUserCtxPathSegment(path);
             if (!Strings.CI.equals(user.getCtxPath(), userCtxPathSegment)
-                    && mockedRestServerEngineUtils.isInboundPathMultiUserPath(userCtxPathSegment)) {
+                    && multiUserUtils.isInboundPathMultiUserPath(userCtxPathSegment)) {
                 throw new ValidationException("You cannot block another user's mock");
             }
             final String userCtxPath = GeneralUtils.URL_PATH_SEPARATOR + user.getCtxPath();

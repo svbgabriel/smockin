@@ -36,7 +36,6 @@ class HttpProxyServiceVolumeTest {
 
     private RestfulMockDAO restfulMockDAO;
     private UserTokenServiceUtils userTokenServiceUtils;
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
     private HttpProxyService proxyService;
     private SmockinUser user;
 
@@ -64,11 +63,9 @@ class HttpProxyServiceVolumeTest {
         proxyService = new HttpProxyServiceImpl();
         restfulMockDAO = Mockito.mock(RestfulMockDAO.class);
         userTokenServiceUtils = Mockito.mock(UserTokenServiceUtils.class);
-        mockedRestServerEngineUtils = Mockito.mock(MockedRestServerEngineUtils.class);
 
         ReflectionTestUtils.setField(proxyService, "restfulMockDAO", restfulMockDAO);
         ReflectionTestUtils.setField(proxyService, "userTokenServiceUtils", userTokenServiceUtils);
-        ReflectionTestUtils.setField(proxyService, "mockedRestServerEngineUtils", mockedRestServerEngineUtils);
 
         Mockito.doNothing().when(userTokenServiceUtils).validateRecordOwner(Mockito.any(SmockinUser.class), Mockito.anyString());
 
@@ -83,7 +80,6 @@ class HttpProxyServiceVolumeTest {
             final RestfulMock rm = mocks[p];
 
             Mockito.when(restfulMockDAO.findByExtId(rm.getExtId())).thenReturn(rm);
-            Mockito.when(mockedRestServerEngineUtils.buildUserPath(rm)).thenReturn(File.separator + user.getCtxPath() + rm.getPath());
 
             producers[p] = () -> {
                 try {

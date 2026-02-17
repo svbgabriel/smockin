@@ -62,16 +62,13 @@ public class MockedRestServerEngine {
     private SmockinUserService smockinUserService;
     @Autowired
     private ProxyMappingCache proxyMappingCache;
+    @Autowired
+    private ResponseBlockingService responseBlockingService;
 
     private WebServer server;
     private final Object serverStateMonitor = new Object();
     private final MockServerState serverState = new MockServerState(false, 0);
 
-    private final Object responseBlockingMonitor = new Object();
-    private final Map<String, Optional<LiveLoggingUserOverrideResponse>> responseAmendments = new HashMap<>();
-    private final List<BlockedPathToRelease> userCallsToRelease = new ArrayList<>();
-    private final AtomicBoolean liveBlockingModeEnabled = new AtomicBoolean();
-    private final AtomicReference<List<LiveBlockPath>> liveBlockPathsRef = new AtomicReference<>(new ArrayList<>());
     private final AtomicBoolean proxyModeEnabled = new AtomicBoolean();
 
     public void start(final MockedServerConfigDTO config,
@@ -214,18 +211,18 @@ public class MockedRestServerEngine {
     private Optional<String> checkForAndHandleBlockSwapAndMock(HttpServletRequest request, HttpServletResponse response, String currentBody, boolean isMultiUserMode) throws InterruptedException {
 
         if (blockLoggingResponse(request, response, currentBody)) {
-            synchronized (responseBlockingMonitor) {
+            synchronized (responseBlockingService.getResponseBlockingMonitor()) {
                 while (true) {
-                    responseBlockingMonitor.wait();
+                    responseBlockingService.getResponseBlockingMonitor().wait();
                     String traceId = (String) request.getAttribute(GeneralUtils.LOG_REQ_ID);
 
-                    if (!liveBlockingModeEnabled.get()) break;
+                    if (!responseBlockingService.isLiveBlockingModeEnabled()) break;
 
-                    if (isMultiUserMode && shouldReleaseUserCall(request)) break;
+                    if (isMultiUserMode && responseBlockingService.shouldReleaseUserCall(request)) break;
 
-                    if (!responseAmendments.containsKey(traceId)) continue;
+                    if (!responseBlockingService.hasAmendment(traceId)) continue;
 
-                    Optional<LiveLoggingUserOverrideResponse> amendmentOpt = responseAmendments.remove(traceId);
+                    Optional<LiveLoggingUserOverrideResponse> amendmentOpt = responseBlockingService.getAndRemoveAmendment(traceId);
                     if (amendmentOpt.isPresent()) {
                         return Optional.of(amendResponse(amendmentOpt.get(), response));
                     }
@@ -243,10 +240,8 @@ public class MockedRestServerEngine {
     }
 
     private boolean blockLoggingResponse(HttpServletRequest request, HttpServletResponse response, String body) {
-        if (this.liveBlockingModeEnabled.get()) {
-            boolean match = liveBlockPathsRef.get().stream()
-                    .anyMatch(p -> p.getMethod().name().equalsIgnoreCase(request.getMethod())
-                            && GeneralUtils.matchPaths(p.getPath(), request.getPathInfo()));
+        if (responseBlockingService.isLiveBlockingModeEnabled()) {
+            boolean match = responseBlockingService.isPathBlocked(request.getMethod(), request.getPathInfo());
 
             if (match) {
                 liveLoggingHandler.broadcast(LiveLoggingUtils.buildLiveLogInterceptedResponseDTO(
@@ -260,16 +255,6 @@ public class MockedRestServerEngine {
             }
         }
         return false;
-    }
-
-    private boolean shouldReleaseUserCall(HttpServletRequest request) {
-        return userCallsToRelease.stream().anyMatch(p -> {
-            if (p.getMethod() != null) {
-                return request.getMethod().equalsIgnoreCase(p.getMethod().name())
-                        && Strings.CS.equals(request.getPathInfo(), p.getPathPattern());
-            }
-            return Strings.CS.startsWith(request.getPathInfo(), p.getPathPattern());
-        });
     }
 
     private void handleCORS(HttpServletRequest request, HttpServletResponse response, MockedServerConfigDTO config) {
@@ -311,70 +296,35 @@ public class MockedRestServerEngine {
     }
 
     public void releaseBlockedLiveLoggingResponse(final String traceId, final Optional<LiveLoggingUserOverrideResponse> responseAmendmentOpt) {
-        synchronized (responseBlockingMonitor) {
-            responseAmendments.put(traceId, responseAmendmentOpt);
-            responseBlockingMonitor.notifyAll();
-        }
+        responseBlockingService.releaseBlockedLiveLoggingResponse(traceId, responseAmendmentOpt);
     }
 
     public void updateLiveBlockingMode(final boolean liveBlockEnabled) {
-        liveBlockingModeEnabled.set(liveBlockEnabled);
-        if (!liveBlockingModeEnabled.get()) {
-            synchronized (responseBlockingMonitor) {
-                responseBlockingMonitor.notifyAll();
-            }
-        }
+        responseBlockingService.updateLiveBlockingMode(liveBlockEnabled);
     }
 
     public void notifyBlockedLiveLoggingCalls(final RestMethodEnum method, final String userCtxOrFullPath) {
-        final BlockedPathToRelease blockedPathToRelease = new BlockedPathToRelease(method, userCtxOrFullPath);
-        synchronized (responseBlockingMonitor) {
-            userCallsToRelease.add(blockedPathToRelease);
-            responseBlockingMonitor.notifyAll();
-        }
-        Executors.newScheduledThreadPool(1).schedule(() -> {
-            synchronized (responseBlockingMonitor) {
-                userCallsToRelease.remove(blockedPathToRelease);
-            }
-        }, 8000, TimeUnit.MILLISECONDS);
+        responseBlockingService.notifyBlockedLiveLoggingCalls(method, userCtxOrFullPath);
     }
 
     public void addPathToLiveBlocking(final RestMethodEnum method, final String path, final String ownerUserId) throws ValidationException {
-        if (liveBlockPathsRef.get().contains(new LiveBlockPath(method, path, ownerUserId))) {
-            throw new ValidationException("This endpoint is already being blocked");
-        }
-        liveBlockPathsRef.get().add(new LiveBlockPath(method, path, ownerUserId));
+        responseBlockingService.addPathToLiveBlocking(method, path, ownerUserId);
     }
 
     public void removePathFromLiveBlocking(final RestMethodEnum method, final String path, final String ownerUserId) {
-        liveBlockPathsRef.compareAndSet(liveBlockPathsRef.get(),
-                liveBlockPathsRef.get().stream()
-                        .filter(p -> !(Strings.CI.equals(p.getPath(), path)
-                                && p.getMethod().equals(method)
-                                && Strings.CI.equals(p.getOwnerUserId(), ownerUserId)))
-                        .toList());
+        responseBlockingService.removePathFromLiveBlocking(method, path, ownerUserId);
     }
 
     public long countLiveBlockingPathsForUser(final RestMethodEnum method, final String path, final String ownerUserId) {
-        return liveBlockPathsRef.get().stream()
-                .filter(p -> Strings.CI.equals(p.getPath(), path)
-                        && p.getMethod().equals(method)
-                        && Strings.CI.equals(p.getOwnerUserId(), ownerUserId))
-                .count();
+        return responseBlockingService.countLiveBlockingPathsForUser(method, path, ownerUserId);
     }
 
     public void clearAllPathsFromLiveBlocking() {
-        liveBlockPathsRef.get().clear();
+        responseBlockingService.clearAllPathsFromLiveBlocking();
     }
 
     public void clearAllPathsFromLiveBlockingForUser(final String ownerUserId) {
-        liveBlockPathsRef.compareAndSet(liveBlockPathsRef.get(),
-                liveBlockPathsRef.get().stream()
-                        .filter(p -> !Strings.CI.equals(p.getOwnerUserId(), ownerUserId))
-                        .toList());
-        if (liveBlockPathsRef.get().isEmpty()) {
-            updateLiveBlockingMode(false);
-        }
+        responseBlockingService.clearAllPathsFromLiveBlockingForUser(ownerUserId);
     }
 
     void clearState() {

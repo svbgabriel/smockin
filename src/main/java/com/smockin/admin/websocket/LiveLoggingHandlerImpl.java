@@ -11,9 +11,9 @@ import com.smockin.admin.enums.UserModeEnum;
 import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.admin.service.SmockinUserService;
+import com.smockin.admin.service.utils.MultiUserUtils;
 import com.smockin.mockserver.dto.LiveLoggingUserOverrideResponse;
-import com.smockin.mockserver.engine.MockedRestServerEngine;
-import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
+import com.smockin.mockserver.service.ResponseBlockingService;
 import com.smockin.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -42,14 +42,14 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
     private final AtomicReference<List<WebSocketSession>> liveSessionsRef = new AtomicReference<>(new ArrayList<>());
 
-    private final MockedRestServerEngine mockedRestServerEngine;
-    private final MockedRestServerEngineUtils mockedRestServerEngineUtils;
+    private final ResponseBlockingService responseBlockingService;
+    private final MultiUserUtils multiUserUtils;
     private final SmockinUserService smockinUserService;
     private final SmockinUserDAO smockinUserDAO;
 
-    public LiveLoggingHandlerImpl(MockedRestServerEngine mockedRestServerEngine, MockedRestServerEngineUtils mockedRestServerEngineUtils, SmockinUserService smockinUserService, SmockinUserDAO smockinUserDAO) {
-        this.mockedRestServerEngine = mockedRestServerEngine;
-        this.mockedRestServerEngineUtils = mockedRestServerEngineUtils;
+    public LiveLoggingHandlerImpl(ResponseBlockingService responseBlockingService, MultiUserUtils multiUserUtils, SmockinUserService smockinUserService, SmockinUserDAO smockinUserDAO) {
+        this.responseBlockingService = responseBlockingService;
+        this.multiUserUtils = multiUserUtils;
         this.smockinUserService = smockinUserService;
         this.smockinUserDAO = smockinUserDAO;
     }
@@ -79,7 +79,7 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
     protected void handleTextMessage(final WebSocketSession session,
                                      final TextMessage message) {
 
-        if (message == null || StringUtils.isBlank(message.getPayload())) {
+        if (StringUtils.isBlank(message.getPayload())) {
             return;
         }
 
@@ -94,7 +94,7 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
         final String type = clientAction.getType();
 
         if (Strings.CS.equals(ENABLE_LIVE_LOG_BLOCKING, type)) {
-            mockedRestServerEngine.updateLiveBlockingMode(true);
+            responseBlockingService.updateLiveBlockingMode(true);
         } else if (Strings.CS.equals(DISABLE_LIVE_LOG_BLOCKING, type)) {
             stopLiveBlockingMode(session);
         } else if (Strings.CS.equals(LIVE_LOGGING_AMENDMENT, type)) {
@@ -122,27 +122,26 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
         if (!UserModeEnum.ACTIVE.equals(smockinUserService.getUserMode())
                 || liveSessionsRef.get().isEmpty()) {
-            mockedRestServerEngine.clearAllPathsFromLiveBlocking();
-            mockedRestServerEngine.updateLiveBlockingMode(false);
+            responseBlockingService.clearAllPathsFromLiveBlocking();
+            responseBlockingService.updateLiveBlockingMode(false);
             return;
         }
 
         // Release blocked calls just for user
-        mockedRestServerEngine.notifyBlockedLiveLoggingCalls(null, GeneralUtils.URL_PATH_SEPARATOR + session.getAttributes().get(WS_CONNECTED_USER_CTX_PATH));
-        mockedRestServerEngine.clearAllPathsFromLiveBlockingForUser((String) session.getAttributes().get(WS_CONNECTED_USER_ID));
+        responseBlockingService.notifyBlockedLiveLoggingCalls(null, GeneralUtils.URL_PATH_SEPARATOR + session.getAttributes().get(WS_CONNECTED_USER_CTX_PATH));
+        responseBlockingService.clearAllPathsFromLiveBlockingForUser((String) session.getAttributes().get(WS_CONNECTED_USER_ID));
     }
 
     private void handleLiveLoggingResponseAmendment(final TextMessage message) {
 
-        final LiveLoggingAction liveLoggingAction
+        final LiveLoggingAction<LiveLoggingBlockedResponseAmendmentDTO> liveLoggingAction
                 = GeneralUtils.deserializeJson(message.getPayload(),
-                new TypeReference<LiveLoggingAction<LiveLoggingBlockedResponseAmendmentDTO>>() {
+                new TypeReference<>() {
                 });
 
-        final LiveLoggingBlockedResponseAmendmentDTO amendmentDTO
-                = (LiveLoggingBlockedResponseAmendmentDTO) liveLoggingAction.getPayload();
+        final LiveLoggingBlockedResponseAmendmentDTO amendmentDTO = liveLoggingAction.getPayload();
 
-        mockedRestServerEngine.releaseBlockedLiveLoggingResponse(
+        responseBlockingService.releaseBlockedLiveLoggingResponse(
                 amendmentDTO.getTraceId(),
                 Optional.of(new LiveLoggingUserOverrideResponse(
                         amendmentDTO.getStatus(),
@@ -183,12 +182,12 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
                         return;
                     }
 
-                    final String userCtxSegmentFromInboundPath = mockedRestServerEngineUtils.extractMultiUserCtxPathSegment(inboundPath);
+                    final String userCtxSegmentFromInboundPath = multiUserUtils.extractMultiUserCtxPathSegment(inboundPath);
 
                     // TODO
                     // This function will eventually move to using a cache, as at the moment we are making a DB call for EVERY SINGLE
                     // live logging broadcast where the admin user DOES NOT want to see calls from other users!
-                    if (!mockedRestServerEngineUtils.isInboundPathMultiUserPath(userCtxSegmentFromInboundPath)) {
+                    if (!multiUserUtils.isInboundPathMultiUserPath(userCtxSegmentFromInboundPath)) {
                         session.sendMessage(serialiseMessage(dto));
                     }
 

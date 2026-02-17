@@ -10,14 +10,15 @@ import com.smockin.admin.persistence.entity.RestfulMockDefinitionRule;
 import com.smockin.admin.persistence.enums.ProxyModeTypeEnum;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
-import com.smockin.admin.persistence.enums.SmockinUserRoleEnum;
 import com.smockin.admin.service.HttpClientService;
+import com.smockin.admin.service.utils.MultiUserUtils;
 import com.smockin.mockserver.dto.ProxyForwardConfigCacheDTO;
 import com.smockin.mockserver.dto.ProxyForwardMappingDTO;
 import com.smockin.mockserver.exception.InboundParamMatchException;
 import com.smockin.mockserver.service.*;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import com.smockin.utils.GeneralUtils;
+import com.smockin.utils.MockUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.RandomUtils;
@@ -65,6 +66,8 @@ public class MockedRestServerEngineUtils {
     private SmockinUserDAO smockinUserDAO;
     @Autowired
     private ProxyMappingCache proxyMappingCache;
+    @Autowired
+    private MultiUserUtils multiUserUtils;
 
     public Optional<String> loadMockedResponse(final HttpServletRequest request,
                                                final HttpServletResponse response,
@@ -123,20 +126,12 @@ public class MockedRestServerEngineUtils {
     private String amendPathForMultiUser(final HttpServletRequest request, final boolean isMultiUserMode) {
         String inboundPath = request.getPathInfo();
         if (isMultiUserMode) {
-            final String userCtxPathSegment = extractMultiUserCtxPathSegment(inboundPath);
-            if (isInboundPathMultiUserPath(userCtxPathSegment)) {
+            final String userCtxPathSegment = multiUserUtils.extractMultiUserCtxPathSegment(inboundPath);
+            if (multiUserUtils.isInboundPathMultiUserPath(userCtxPathSegment)) {
                 return Strings.CS.remove(inboundPath, GeneralUtils.URL_PATH_SEPARATOR + userCtxPathSegment);
             }
         }
         return inboundPath;
-    }
-
-    public String extractMultiUserCtxPathSegment(final String inboundPath) {
-        return StringUtils.split(inboundPath, GeneralUtils.URL_PATH_SEPARATOR)[0];
-    }
-
-    public boolean isInboundPathMultiUserPath(final String userCtxPathSegment) {
-        return smockinUserDAO.doesUserExistWithCtxPath(userCtxPathSegment);
     }
 
     Optional<String> handleProxyInterceptorMode(final boolean isMultiUserMode,
@@ -146,7 +141,7 @@ public class MockedRestServerEngineUtils {
             final String amendedInboundPath = amendPathForMultiUser(request, isMultiUserMode);
             final String inboundPath = request.getPathInfo();
             final String userCtxPath = (!Strings.CS.equals(inboundPath, amendedInboundPath))
-                    ? extractMultiUserCtxPathSegment(inboundPath) : "";
+                    ? multiUserUtils.extractMultiUserCtxPathSegment(inboundPath) : "";
 
             final Optional<ProxyForwardConfigCacheDTO> configOpt = proxyMappingCache.find(userCtxPath);
             String proxyDownstreamURL = configOpt.map(c -> lookUpProxyMappingDownstreamUrl(amendedInboundPath, c.getProxyForwardMappings())).orElse(null);
@@ -221,7 +216,7 @@ public class MockedRestServerEngineUtils {
         applyHeadersToResponse(httpClientResponse.getHeaders(), response);
         response.addHeader(GeneralUtils.PROXIED_DOWNSTREAM_URL_HEADER, proxyDownstreamURL);
 
-        return Optional.of(StringUtils.defaultIfBlank(httpClientResponse.getBody(),""));
+        return Optional.of(StringUtils.defaultIfBlank(httpClientResponse.getBody(), ""));
     }
 
     String processRequest(final RestfulMock mock,
@@ -262,7 +257,7 @@ public class MockedRestServerEngineUtils {
         if (RestMockTypeEnum.PROXY_HTTP.equals(restfulMock.getMockType())) {
             return new RestfulResponseDTO(HttpStatus.NOT_FOUND.value());
         }
-        final RestfulMockDefinitionOrder mockDefOrder = restfulMock.getDefinitions().get(0);
+        final RestfulMockDefinitionOrder mockDefOrder = restfulMock.getDefinitions().getFirst();
         return new RestfulResponseDTO(mockDefOrder.getHttpStatusCode(), mockDefOrder.getResponseContentType(), mockDefOrder.getResponseBody(), mockDefOrder.getResponseHeaders().entrySet());
     }
 
@@ -273,7 +268,7 @@ public class MockedRestServerEngineUtils {
 
     String processSSERequest(final RestfulMock mock, final HttpServletRequest req, final HttpServletResponse res) {
         try {
-            serverSideEventService.register(buildUserPath(mock), mock.getSseHeartBeatInMillis(), mock.isProxyPushIdOnConnect(), req, res);
+            serverSideEventService.register(MockUtils.buildUserPath(mock), mock.getSseHeartBeatInMillis(), mock.isProxyPushIdOnConnect(), req, res);
         } catch (IOException e) {
             logger.error("Error registering SSE client", e);
         }
@@ -291,20 +286,15 @@ public class MockedRestServerEngineUtils {
         }
     }
 
-    public String buildUserPath(final RestfulMock mock) {
-        if (!SmockinUserRoleEnum.SYS_ADMIN.equals(mock.getCreatedBy().getRole())) {
-            return GeneralUtils.URL_PATH_SEPARATOR + mock.getCreatedBy().getCtxPath() + mock.getPath();
-        }
-        return mock.getPath();
-    }
-
     Optional<String> handleFailure(final Exception ex, final HttpServletResponse response) {
         logger.error("Error processing mock", ex);
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         String msg = (ex instanceof IllegalArgumentException) ? ex.getMessage() : "Oops, looks like something went wrong!";
         try {
             response.getWriter().write(msg);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+            // Not needed
+        }
         return Optional.of("Oops");
     }
 
@@ -314,7 +304,7 @@ public class MockedRestServerEngineUtils {
 
     String lookUpProxyMappingDownstreamUrl(final String path, final List<ProxyForwardMappingDTO> mappings) {
         return mappings.stream()
-                .filter(p -> (Strings.CS.endsWith(p.getPath(), GeneralUtils.PATH_WILDCARD) && StringUtils.startsWith(path, StringUtils.removeEnd(p.getPath(), GeneralUtils.PATH_WILDCARD))) || StringUtils.equals(path, p.getPath()))
+                .filter(p -> (Strings.CS.endsWith(p.getPath(), GeneralUtils.PATH_WILDCARD) && Strings.CS.startsWith(path, Strings.CS.removeEnd(p.getPath(), GeneralUtils.PATH_WILDCARD))) || Strings.CS.equals(path, p.getPath()))
                 .map(ProxyForwardMappingDTO::getProxyForwardUrl)
                 .findFirst().orElse(null);
     }

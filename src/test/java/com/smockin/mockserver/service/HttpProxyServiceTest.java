@@ -41,7 +41,6 @@ class HttpProxyServiceTest {
 
     private RestfulMockDAO restfulMockDAO;
     private UserTokenServiceUtils userTokenServiceUtils;
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
     private HttpProxyService proxyService;
 
     @BeforeEach
@@ -58,7 +57,6 @@ class HttpProxyServiceTest {
         proxyService = new HttpProxyServiceImpl();
         restfulMockDAO = Mockito.mock(RestfulMockDAO.class);
         userTokenServiceUtils = Mockito.mock(UserTokenServiceUtils.class);
-        mockedRestServerEngineUtils = Mockito.mock(MockedRestServerEngineUtils.class);
 
         pxKey = new ProxiedKey("/helloworld", RestMethodEnum.GET);
         mockReq = new RestfulMock(pxKey.path(), pxKey.method(), RecordStatusEnum.ACTIVE, RestMockTypeEnum.PROXY_HTTP, 0, 0, 0, false, false, false, user, false, 0, 0, null);
@@ -68,11 +66,8 @@ class HttpProxyServiceTest {
         Mockito.when(restfulMockDAO.findByExtId(Mockito.anyString())).thenReturn(mockReq);
         Mockito.doNothing().when(userTokenServiceUtils).validateRecordOwner(Mockito.any(SmockinUser.class), Mockito.anyString());
 
-        Mockito.when(mockedRestServerEngineUtils.buildUserPath(mockReq)).thenReturn(File.separator + user.getCtxPath() + mockReq.getPath());
-
         ReflectionTestUtils.setField(proxyService, "restfulMockDAO", restfulMockDAO);
         ReflectionTestUtils.setField(proxyService, "userTokenServiceUtils", userTokenServiceUtils);
-        ReflectionTestUtils.setField(proxyService, "mockedRestServerEngineUtils", mockedRestServerEngineUtils);
 
         producer1 = () -> {
             try {

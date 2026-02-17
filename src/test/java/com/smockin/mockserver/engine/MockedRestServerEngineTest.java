@@ -2,17 +2,22 @@ package com.smockin.mockserver.engine;
 
 import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.enums.RestMethodEnum;
+import com.smockin.mockserver.service.ResponseBlockingService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class MockedRestServerEngineTest {
 
     private MockedRestServerEngine mockedRestServerEngine;
+    private ResponseBlockingService responseBlockingService;
 
     @BeforeEach
     void setUp() {
         mockedRestServerEngine = new MockedRestServerEngine();
+        responseBlockingService = new ResponseBlockingService();
+        ReflectionTestUtils.setField(mockedRestServerEngine, "responseBlockingService", responseBlockingService);
     }
 
     @Test

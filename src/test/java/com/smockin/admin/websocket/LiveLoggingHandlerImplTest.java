@@ -10,9 +10,9 @@ import com.smockin.admin.enums.LiveLoggingMessageTypeEnum;
 import com.smockin.admin.enums.UserModeEnum;
 import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.service.SmockinUserService;
+import com.smockin.admin.service.utils.MultiUserUtils;
 import com.smockin.mockserver.dto.LiveLoggingUserOverrideResponse;
-import com.smockin.mockserver.engine.MockedRestServerEngine;
-import com.smockin.mockserver.engine.MockedRestServerEngineUtils;
+import com.smockin.mockserver.service.ResponseBlockingService;
 import com.smockin.utils.GeneralUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,10 +31,10 @@ import java.util.Optional;
 class LiveLoggingHandlerImplTest {
 
     @Mock
-    private MockedRestServerEngine mockedRestServerEngine;
+    private ResponseBlockingService responseBlockingService;
 
     @Mock
-    private MockedRestServerEngineUtils mockedRestServerEngineUtils;
+    private MultiUserUtils multiUserUtils;
 
     @Mock
     private SmockinUserService smockinUserService;
@@ -77,7 +77,7 @@ class LiveLoggingHandlerImplTest {
         liveLoggingHandler.handleTextMessage(session, new TextMessage(GeneralUtils.serialiseJson(action)));
 
         // Assertions
-        Mockito.verify(mockedRestServerEngine).updateLiveBlockingMode(true);
+        Mockito.verify(responseBlockingService).updateLiveBlockingMode(true);
     }
 
     @Test
@@ -94,8 +94,8 @@ class LiveLoggingHandlerImplTest {
         liveLoggingHandler.handleTextMessage(session, new TextMessage(GeneralUtils.serialiseJson(action)));
 
         // Assertions
-        Mockito.verify(mockedRestServerEngine).clearAllPathsFromLiveBlocking();
-        Mockito.verify(mockedRestServerEngine).updateLiveBlockingMode(false);
+        Mockito.verify(responseBlockingService).clearAllPathsFromLiveBlocking();
+        Mockito.verify(responseBlockingService).updateLiveBlockingMode(false);
     }
 
     @Test
@@ -118,7 +118,7 @@ class LiveLoggingHandlerImplTest {
         liveLoggingHandler.handleTextMessage(session, new TextMessage(GeneralUtils.serialiseJson(action)));
 
         // Assertions
-        Mockito.verify(mockedRestServerEngine).releaseBlockedLiveLoggingResponse(
+        Mockito.verify(responseBlockingService).releaseBlockedLiveLoggingResponse(
                 Mockito.eq("trace-1"),
                 Mockito.argThat(opt ->
                         opt.isPresent()

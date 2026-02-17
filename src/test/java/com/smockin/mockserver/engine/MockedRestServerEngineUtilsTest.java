@@ -19,6 +19,8 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.NoSuchElementException;
+
 /**
  * Created by mgallina.
  */
@@ -70,7 +72,7 @@ class MockedRestServerEngineUtilsTest {
         restfulMock.getDefinitions().clear();
 
         // Test & Assertions
-        Assertions.assertThrows(IndexOutOfBoundsException.class, () -> engineUtils.getDefault(restfulMock));
+        Assertions.assertThrows(NoSuchElementException.class, () -> engineUtils.getDefault(restfulMock));
     }
 
     @Test
