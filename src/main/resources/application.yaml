@@ -2,7 +2,7 @@ server:
   port: 8000
 
 smockin:
-  auth.exclusions: '{"*.html":["GET"],"*.js":["GET"],"*.css":["GET"],"*.woff2":["GET"],"*.png":["GET"],"*.gif":["GET"],"*.ico":["GET"],"*.svg":["GET"],"/":["GET"],"/login":["GET"],"/dashboard":["GET"],"/tcp_endpoint":["GET"],"/s3_endpoint":["GET"],"/mail_endpoint":["GET"],"/manage_users":["GET"],"/manage_user_kvp_data":["GET"],"/auth":["POST"],"/user/mode":["GET"],"/mockedserver/rest/status":["GET"],"/mockedserver/jms/status":["GET"],"/mockedserver/ftp/status":["GET"],"/password/reset/token/*":["GET","POST"]}'
+  auth.exclusions: '{"*.html":["GET"],"*.js":["GET"],"*.css":["GET"],"*.woff2":["GET"],"*.png":["GET"],"*.gif":["GET"],"*.ico":["GET"],"*.svg":["GET"],"/":["GET"],"/login":["GET"],"/dashboard":["GET"],"/tcp_endpoint":["GET"],"/s3_endpoint":["GET"],"/mail_endpoint":["GET"],"/manage_users":["GET"],"/manage_user_kvp_data":["GET"],"/auth":["POST"],"/user/mode":["GET"],"/mockedserver/rest/status":["GET"],"/mockedserver/jms/status":["GET"],"/mockedserver/ftp/status":["GET"],"/password/reset/token/*":["GET","POST"],"/VAADIN/*":["GET","POST"]}'
 
 multi.user.mode: false
 
@@ -27,5 +27,5 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 10
   main:
-    allow-circular-references: true
+    allow-circular-references: false
     banner-mode: off

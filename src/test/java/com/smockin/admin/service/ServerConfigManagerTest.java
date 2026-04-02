@@ -5,13 +5,16 @@ import com.smockin.admin.exception.ValidationException;
 import com.smockin.admin.persistence.dao.ServerConfigDAO;
 import com.smockin.admin.persistence.entity.ServerConfig;
 import com.smockin.admin.persistence.enums.ServerTypeEnum;
+import com.smockin.admin.service.utils.UserTokenServiceUtils;
 import com.smockin.mockserver.dto.MockedServerConfigDTO;
 import com.smockin.mockserver.exception.MockServerException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.Arrays;
 
@@ -30,8 +33,26 @@ class ServerConfigManagerTest {
     @Mock
     private MailServerManager mailServerManager;
 
-    @InjectMocks
-    private ServerConfigManager serverConfigManager = new ServerConfigManager();
+    @Mock
+    private SmockinUserService smockinUserService;
+
+    @Mock
+    private UserTokenServiceUtils userTokenServiceUtils;
+
+    private ServerConfigManager serverConfigManager;
+
+    @BeforeEach
+    public void setUp() {
+        final ObjectProvider<RestServerManager> restServerManagerProvider = Mockito.mock(ObjectProvider.class);
+        final ObjectProvider<S3ServerManager> s3ServerManagerProvider = Mockito.mock(ObjectProvider.class);
+        final ObjectProvider<MailServerManager> mailServerManagerProvider = Mockito.mock(ObjectProvider.class);
+
+        Mockito.lenient().when(restServerManagerProvider.getObject()).thenReturn(restServerManager);
+        Mockito.lenient().when(s3ServerManagerProvider.getObject()).thenReturn(s3ServerManager);
+        Mockito.lenient().when(mailServerManagerProvider.getObject()).thenReturn(mailServerManager);
+
+        serverConfigManager = new ServerConfigManager(serverConfigDAO, smockinUserService, userTokenServiceUtils, restServerManagerProvider, s3ServerManagerProvider, mailServerManagerProvider);
+    }
 
     @Test
     void validateServerConfig_Null_Test() {

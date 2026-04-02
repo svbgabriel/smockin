@@ -29,6 +29,11 @@ sMockin.app
 debug.sh
 
 # Frontend
-src/main/frontend/node_modules
-src/main/frontend/dist
-src/main/frontend/.angular
+# The following files are generated/updated by vaadin-maven-plugin or vaadin-gradle-plugin
+node_modules/
+src/main/frontend/generated/
+src/main/frontend/index.html
+pnpmfile.js
+.npmrc
+vite.generated.ts
+

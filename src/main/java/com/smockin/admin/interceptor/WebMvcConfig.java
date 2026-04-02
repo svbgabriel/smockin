@@ -19,6 +19,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(authInterceptor);
     }
 
+    /*
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         final String viewName = "forward:/index.html";
@@ -37,5 +38,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addViewController("/ws_client").setViewName(viewName);
         registry.addViewController("/live_feed").setViewName(viewName);
     }
-
+    */
 }

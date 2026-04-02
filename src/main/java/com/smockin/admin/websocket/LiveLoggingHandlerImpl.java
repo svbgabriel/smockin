@@ -46,12 +46,14 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
     private final MultiUserUtils multiUserUtils;
     private final SmockinUserService smockinUserService;
     private final SmockinUserDAO smockinUserDAO;
+    private final com.smockin.admin.service.LiveFeedCacheService liveFeedCacheService;
 
-    public LiveLoggingHandlerImpl(ResponseBlockingService responseBlockingService, MultiUserUtils multiUserUtils, SmockinUserService smockinUserService, SmockinUserDAO smockinUserDAO) {
+    public LiveLoggingHandlerImpl(ResponseBlockingService responseBlockingService, MultiUserUtils multiUserUtils, SmockinUserService smockinUserService, SmockinUserDAO smockinUserDAO, com.smockin.admin.service.LiveFeedCacheService liveFeedCacheService) {
         this.responseBlockingService = responseBlockingService;
         this.multiUserUtils = multiUserUtils;
         this.smockinUserService = smockinUserService;
         this.smockinUserDAO = smockinUserDAO;
+        this.liveFeedCacheService = liveFeedCacheService;
     }
 
 
@@ -105,6 +107,8 @@ public class LiveLoggingHandlerImpl extends TextWebSocketHandler implements Live
 
     @Override
     public synchronized void broadcast(final LiveLoggingDTO dto) {
+
+        liveFeedCacheService.add(dto);
 
         final List<WebSocketSession> sessions = liveSessionsRef.get();
 

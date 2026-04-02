@@ -21,6 +21,10 @@
         <appender-ref ref="smockin_appender" />
     </logger>
 
+    <logger name="org.atmosphere" level="ERROR">
+        <appender-ref ref="smockin_appender" />
+    </logger>
+
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>

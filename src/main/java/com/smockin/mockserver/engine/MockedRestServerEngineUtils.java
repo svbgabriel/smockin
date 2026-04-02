@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -44,30 +45,45 @@ public class MockedRestServerEngineUtils {
 
     private final Logger logger = LoggerFactory.getLogger(MockedRestServerEngineUtils.class);
 
+    private final RestfulMockDAO restfulMockDAO;
+    private final MockOrderingCounterService mockOrderingCounterService;
+    private final RuleEngine ruleEngine;
+    private final HttpProxyService proxyService;
+    private final JavaScriptResponseHandler javaScriptResponseHandler;
+    private final InboundParamMatchService inboundParamMatchService;
+    private final ServerSideEventService serverSideEventService;
+    private final StatefulService statefulService;
+    private final ObjectProvider<HttpClientService> httpClientServiceProvider;
+    private final SmockinUserDAO smockinUserDAO;
+    private final ProxyMappingCache proxyMappingCache;
+    private final MultiUserUtils multiUserUtils;
+
     @Autowired
-    private RestfulMockDAO restfulMockDAO;
-    @Autowired
-    private MockOrderingCounterService mockOrderingCounterService;
-    @Autowired
-    private RuleEngine ruleEngine;
-    @Autowired
-    private HttpProxyService proxyService;
-    @Autowired
-    private JavaScriptResponseHandler javaScriptResponseHandler;
-    @Autowired
-    private InboundParamMatchService inboundParamMatchService;
-    @Autowired
-    private ServerSideEventService serverSideEventService;
-    @Autowired
-    private StatefulService statefulService;
-    @Autowired
-    private HttpClientService httpClientService;
-    @Autowired
-    private SmockinUserDAO smockinUserDAO;
-    @Autowired
-    private ProxyMappingCache proxyMappingCache;
-    @Autowired
-    private MultiUserUtils multiUserUtils;
+    public MockedRestServerEngineUtils(RestfulMockDAO restfulMockDAO,
+                                       MockOrderingCounterService mockOrderingCounterService,
+                                       RuleEngine ruleEngine,
+                                       HttpProxyService proxyService,
+                                       JavaScriptResponseHandler javaScriptResponseHandler,
+                                       InboundParamMatchService inboundParamMatchService,
+                                       ServerSideEventService serverSideEventService,
+                                       StatefulService statefulService,
+                                       ObjectProvider<HttpClientService> httpClientServiceProvider,
+                                       SmockinUserDAO smockinUserDAO,
+                                       ProxyMappingCache proxyMappingCache,
+                                       MultiUserUtils multiUserUtils) {
+        this.restfulMockDAO = restfulMockDAO;
+        this.mockOrderingCounterService = mockOrderingCounterService;
+        this.ruleEngine = ruleEngine;
+        this.proxyService = proxyService;
+        this.javaScriptResponseHandler = javaScriptResponseHandler;
+        this.inboundParamMatchService = inboundParamMatchService;
+        this.serverSideEventService = serverSideEventService;
+        this.statefulService = statefulService;
+        this.httpClientServiceProvider = httpClientServiceProvider;
+        this.smockinUserDAO = smockinUserDAO;
+        this.proxyMappingCache = proxyMappingCache;
+        this.multiUserUtils = multiUserUtils;
+    }
 
     public Optional<String> loadMockedResponse(final HttpServletRequest request,
                                                final HttpServletResponse response,
@@ -192,7 +208,7 @@ public class MockedRestServerEngineUtils {
         httpClientCallDTO.getHeaders().put(HttpHeaders.HOST, sanitizeHost(proxyDownstreamURL));
 
         try {
-            return Optional.of(httpClientService.handleExternalCall(httpClientCallDTO));
+            return Optional.of(httpClientServiceProvider.getObject().handleExternalCall(httpClientCallDTO));
         } catch (Throwable ex) {
             logger.error("Error making proxy downstream call: {}", ex.getMessage());
             return Optional.empty();

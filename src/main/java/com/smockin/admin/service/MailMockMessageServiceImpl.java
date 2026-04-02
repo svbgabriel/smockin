@@ -15,6 +15,7 @@ import com.smockin.mockserver.engine.MockedMailServerEngine;
 import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,20 +32,24 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
 
     private final Logger logger = LoggerFactory.getLogger(MailMockMessageServiceImpl.class);
 
-    @Autowired
-    private MailMockDAO mailMockDAO;
+    private final MailMockDAO mailMockDAO;
+    private final MailMockMessageDAO mailMockMessageDAO;
+    private final UserTokenServiceUtils userTokenServiceUtils;
+    private final ObjectProvider<MockedServerEngineService> mockedServerEngineServiceProvider;
+    private final ObjectProvider<MockedMailServerEngine> mockedMailServerEngineProvider;
 
     @Autowired
-    private MailMockMessageDAO mailMockMessageDAO;
-
-    @Autowired
-    private UserTokenServiceUtils userTokenServiceUtils;
-
-    @Autowired
-    private MockedServerEngineService mockedServerEngineService;
-
-    @Autowired
-    private MockedMailServerEngine mockedMailServerEngine;
+    public MailMockMessageServiceImpl(MailMockDAO mailMockDAO,
+                                       MailMockMessageDAO mailMockMessageDAO,
+                                       UserTokenServiceUtils userTokenServiceUtils,
+                                       ObjectProvider<MockedServerEngineService> mockedServerEngineServiceProvider,
+                                       ObjectProvider<MockedMailServerEngine> mockedMailServerEngineProvider) {
+        this.mailMockDAO = mailMockDAO;
+        this.mailMockMessageDAO = mailMockMessageDAO;
+        this.userTokenServiceUtils = userTokenServiceUtils;
+        this.mockedServerEngineServiceProvider = mockedServerEngineServiceProvider;
+        this.mockedMailServerEngineProvider = mockedMailServerEngineProvider;
+    }
 
 
     @Override
@@ -91,11 +96,11 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
         if (mailMockMessage == null) {
 
             // Check if mail exists on mail server...
-            if (mockedServerEngineService.getMailServerState().isRunning()) {
+            if (mockedServerEngineServiceProvider.getObject().getMailServerState().isRunning()) {
 
                 final MailMock mailMock = findMailMockById(mailExtId);
 
-                if (mockedMailServerEngine.purgeSingleMessageFromMailServerInbox(mailMock.getExtId(), mailMessageId)) {
+                if (mockedMailServerEngineProvider.getObject().purgeSingleMessageFromMailServerInbox(mailMock.getExtId(), mailMessageId)) {
                     return;
                 }
             }
@@ -127,11 +132,11 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
 
         userTokenServiceUtils.validateRecordOwner(mailMock.getCreatedBy(), token);
 
-        if (!mockedServerEngineService.getMailServerState().isRunning()) {
+        if (!mockedServerEngineServiceProvider.getObject().getMailServerState().isRunning()) {
             throw new ValidationException("Mail mock server is not currently running");
         }
 
-        mockedMailServerEngine.purgeAllMailServerInboxMessages(mailMock.getExtId());
+        mockedMailServerEngineProvider.getObject().purgeAllMailServerInboxMessages(mailMock.getExtId());
     }
 
     public void saveMailMessageAttachment(final String mailMockMessageExtId,
@@ -185,10 +190,10 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
                             new MailServerMessageInboxAttachmentLiteDTO(a.getExtId(), a.getName(), a.getMimeType()))
                     .collect(Collectors.toList());
 
-        } else if (mockedServerEngineService.getMailServerState().isRunning()) {
+        } else if (mockedServerEngineServiceProvider.getObject().getMailServerState().isRunning()) {
 
             // Find message and attachments from mail server...
-            return mockedMailServerEngine.getMessageAttachmentsFromMailServerInbox(mailMock.getExtId(), messageId)
+            return mockedMailServerEngineProvider.getObject().getMessageAttachmentsFromMailServerInbox(mailMock.getExtId(), messageId)
                     .stream()
                     .map(a ->
                             new MailServerMessageInboxAttachmentLiteDTO(a.getExtId(), a.getName(), a.getMimeType()))
@@ -230,11 +235,11 @@ public class MailMockMessageServiceImpl implements MailMockMessageService {
                     .orElseThrow(() ->
                             new RecordNotFoundException());
 
-        } else if (mockedServerEngineService.getMailServerState().isRunning()) {
+        } else if (mockedServerEngineServiceProvider.getObject().getMailServerState().isRunning()) {
 
             // Load message attachments from mail server and then look up attachment by name...
             final Optional<MailServerMessageInboxAttachmentDTO> attachmentDTO
-                    = mockedMailServerEngine.getMessageAttachmentsFromMailServerInbox(mailMock.getExtId(), messageId)
+                    = mockedMailServerEngineProvider.getObject().getMessageAttachmentsFromMailServerInbox(mailMock.getExtId(), messageId)
                         .stream()
                         .filter(a ->
                             Strings.CS.equals(a.getName(), attachmentIdOrName))

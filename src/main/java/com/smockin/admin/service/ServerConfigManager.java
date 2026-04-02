@@ -11,6 +11,7 @@ import com.smockin.mockserver.dto.MockedServerConfigDTO;
 import com.smockin.mockserver.exception.MockServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,23 +20,27 @@ public class ServerConfigManager {
 
     private final Logger logger = LoggerFactory.getLogger(ServerConfigManager.class);
 
-    @Autowired
-    private ServerConfigDAO serverConfigDAO;
+    private final ServerConfigDAO serverConfigDAO;
+    private final SmockinUserService smockinUserService;
+    private final UserTokenServiceUtils userTokenServiceUtils;
+    private final ObjectProvider<RestServerManager> restServerManagerProvider;
+    private final ObjectProvider<S3ServerManager> s3ServerManagerProvider;
+    private final ObjectProvider<MailServerManager> mailServerManagerProvider;
 
     @Autowired
-    private SmockinUserService smockinUserService;
-
-    @Autowired
-    private UserTokenServiceUtils userTokenServiceUtils;
-
-    @Autowired
-    private RestServerManager restServerManager;
-
-    @Autowired
-    private S3ServerManager s3ServerManager;
-
-    @Autowired
-    private MailServerManager mailServerManager;
+    public ServerConfigManager(ServerConfigDAO serverConfigDAO,
+                               SmockinUserService smockinUserService,
+                               UserTokenServiceUtils userTokenServiceUtils,
+                               ObjectProvider<RestServerManager> restServerManagerProvider,
+                               ObjectProvider<S3ServerManager> s3ServerManagerProvider,
+                               ObjectProvider<MailServerManager> mailServerManagerProvider) {
+        this.serverConfigDAO = serverConfigDAO;
+        this.smockinUserService = smockinUserService;
+        this.userTokenServiceUtils = userTokenServiceUtils;
+        this.restServerManagerProvider = restServerManagerProvider;
+        this.s3ServerManagerProvider = s3ServerManagerProvider;
+        this.mailServerManagerProvider = mailServerManagerProvider;
+    }
 
     public MockedServerConfigDTO loadServerConfig(final ServerTypeEnum serverType) throws RecordNotFoundException {
         final ServerConfig serverConfig = serverConfigDAO.findByServerType(serverType);
@@ -92,13 +97,13 @@ public class ServerConfigManager {
         }
         switch (serverType) {
             case RESTFUL:
-                restServerManager.startRest();
+                restServerManagerProvider.getObject().startRest();
                 break;
             case S3:
-                s3ServerManager.startS3();
+                s3ServerManagerProvider.getObject().startS3();
                 break;
             case MAIL:
-                mailServerManager.startMail();
+                mailServerManagerProvider.getObject().startMail();
                 break;
             default:
                 logger.warn("Found auto start instruction for discontinued server type: {}", serverType);

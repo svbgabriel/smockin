@@ -11,4 +11,6 @@ public interface AuthService {
     void checkTokenRoles(final String jwt, SmockinUserRoleEnum... roles) throws AuthException;
     void verifyToken(final String jwt) throws AuthException;
 
+    String autoLoginDefaultUser() throws AuthException;
+
 }

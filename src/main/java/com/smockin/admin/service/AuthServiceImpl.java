@@ -99,6 +99,25 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    public String autoLoginDefaultUser() throws AuthException {
+        
+        // Ensure this is only used when appropriate (e.g. checked by caller or check config here)
+        // For now, we assume the caller checks multiUserMode.
+        
+        final SmockinUser user = smockinUserDAO.findAllByRole(SmockinUserRoleEnum.SYS_ADMIN)
+                .stream()
+                .findFirst()
+                .orElseThrow(AuthException::new);
+
+        final String token = generateJWT(user);
+
+        user.setSessionToken(token);
+        smockinUserDAO.save(user);
+
+        return token;
+    }
+
     String generateJWT(final SmockinUser user) {
         return JWT.create()
                 .withIssuer(jwtConfig.getIssuer())

@@ -1,22 +1,24 @@
 package com.smockin.mockserver.engine;
 
 import com.smockin.admin.persistence.dao.RestfulMockDAO;
+import com.smockin.admin.persistence.dao.SmockinUserDAO;
 import com.smockin.admin.persistence.entity.RestfulMock;
 import com.smockin.admin.persistence.entity.RestfulMockDefinitionOrder;
 import com.smockin.admin.persistence.enums.RestMockTypeEnum;
+import com.smockin.admin.service.HttpClientService;
 import com.smockin.admin.service.SmockinUserService;
-import com.smockin.mockserver.service.MockOrderingCounterService;
-import com.smockin.mockserver.service.HttpProxyService;
-import com.smockin.mockserver.service.RuleEngine;
+import com.smockin.admin.service.utils.MultiUserUtils;
+import com.smockin.mockserver.service.*;
 import com.smockin.mockserver.service.dto.RestfulResponseDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 
 import java.util.NoSuchElementException;
@@ -40,17 +42,42 @@ class MockedRestServerEngineUtilsTest {
     private MockOrderingCounterService mockOrderingCounterService;
 
     @Mock
-    private SmockinUserService smockinUserService;
+    private MultiUserUtils multiUserUtils;
 
-    @Spy
-    @InjectMocks
-    private MockedRestServerEngineUtils engineUtils = new MockedRestServerEngineUtils();
+    @Mock
+    private JavaScriptResponseHandler javaScriptResponseHandler;
+
+    @Mock
+    private InboundParamMatchService inboundParamMatchService;
+
+    @Mock
+    private ServerSideEventService serverSideEventService;
+
+    @Mock
+    private StatefulService statefulService;
+
+    @Mock
+    private SmockinUserDAO smockinUserDAO;
+
+    @Mock
+    private ProxyMappingCache proxyMappingCache;
+
+    @Mock
+    private HttpClientService httpClientService;
+
+    private MockedRestServerEngineUtils engineUtils;
 
     private RestfulMock restfulMock;
     private RestfulMockDefinitionOrder order1, order2, order3;
 
     @BeforeEach
     void setUp() {
+
+        final ObjectProvider<HttpClientService> httpClientServiceProvider = Mockito.mock(ObjectProvider.class);
+        Mockito.lenient().when(httpClientServiceProvider.getObject()).thenReturn(httpClientService);
+
+        final MockedRestServerEngineUtils realEngineUtils = new MockedRestServerEngineUtils(restfulMockDAO, mockOrderingCounterService, ruleEngine, proxyService, javaScriptResponseHandler, inboundParamMatchService, serverSideEventService, statefulService, httpClientServiceProvider, smockinUserDAO, proxyMappingCache, multiUserUtils);
+        engineUtils = Mockito.spy(realEngineUtils);
 
         restfulMock = new RestfulMock();
         restfulMock.getDefinitions().add(order1 = new RestfulMockDefinitionOrder(restfulMock, 200, "text/html", "HelloWorld 1", 1, 0, false, 0, 0));

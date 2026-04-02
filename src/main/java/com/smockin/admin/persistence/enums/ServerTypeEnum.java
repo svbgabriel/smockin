@@ -8,9 +8,7 @@ import org.apache.commons.lang3.Strings;
 public enum ServerTypeEnum {
     RESTFUL,
     S3,
-    MAIL,
-    JMS,
-    FTP;
+    MAIL;
 
     public static ServerTypeEnum toServerType(final String value) {
 
