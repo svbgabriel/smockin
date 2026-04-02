@@ -1,5 +1,8 @@
 package com.smockin.admin.ui.views.http;
 
+import com.smockin.admin.dto.ApiImportDTO;
+import com.smockin.admin.enums.ApiImportTypeEnum;
+import com.smockin.admin.service.ApiImportRouter;
 import com.smockin.admin.service.MockedServerEngineService;
 import com.smockin.admin.dto.MockImportConfigDTO;
 import com.smockin.admin.persistence.enums.ServerTypeEnum;
@@ -17,6 +20,7 @@ import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
@@ -50,6 +54,7 @@ public class HttpMocksView extends VerticalLayout {
     private final RestfulMockService restfulMockService;
     private final MockedServerEngineService mockedServerEngineService;
     private final MockDefinitionImportExportService importExportService;
+    private final ApiImportRouter apiImportRouter;
     private final UserSession userSession;
     private final Logger logger = LoggerFactory.getLogger(HttpMocksView.class);
 
@@ -57,10 +62,11 @@ public class HttpMocksView extends VerticalLayout {
     private Button startStopButton;
     private Span serverStatus;
 
-    public HttpMocksView(RestfulMockService restfulMockService, MockedServerEngineService mockedServerEngineService, MockDefinitionImportExportService importExportService, UserSession userSession) {
+    public HttpMocksView(RestfulMockService restfulMockService, MockedServerEngineService mockedServerEngineService, MockDefinitionImportExportService importExportService, ApiImportRouter apiImportRouter, UserSession userSession) {
         this.restfulMockService = restfulMockService;
         this.mockedServerEngineService = mockedServerEngineService;
         this.importExportService = importExportService;
+        this.apiImportRouter = apiImportRouter;
         this.userSession = userSession;
 
         setSizeFull();
@@ -199,40 +205,68 @@ public class HttpMocksView extends VerticalLayout {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Import Mocks");
 
+        ComboBox<String> importTypeSelector = new ComboBox<>("Import Type");
+        importTypeSelector.setItems("sMockin (ZIP)", "OpenAPI (YAML/JSON)", "RAML (YAML)");
+        importTypeSelector.setValue("sMockin (ZIP)");
+        importTypeSelector.setAllowCustomValue(false);
+        importTypeSelector.setWidthFull();
+
         MemoryBuffer buffer = new MemoryBuffer();
         Upload upload = new Upload(buffer);
         upload.setAcceptedFileTypes(".zip");
-        
+        upload.setWidthFull();
+
+        importTypeSelector.addValueChangeListener(event -> {
+            if ("sMockin (ZIP)".equals(event.getValue())) {
+                upload.setAcceptedFileTypes(".zip");
+            } else if ("OpenAPI (YAML/JSON)".equals(event.getValue())) {
+                upload.setAcceptedFileTypes(".yaml", ".yml", ".json");
+            } else if ("RAML (YAML)".equals(event.getValue())) {
+                upload.setAcceptedFileTypes(".raml", ".yaml", ".yml");
+            }
+        });
+
         Checkbox keepExisting = new Checkbox("Keep Existing Mocks", true);
-        
+
         upload.addSucceededListener(event -> {
             try {
-                MockImportConfigDTO config = new MockImportConfigDTO();
-                config.setKeepExisting(keepExisting.getValue());
-                
-                // We need to pass MultipartFile. Since Vaadin Upload gives InputStream, 
-                // we might need a workaround if the service strictly demands MultipartFile interface.
-                // However, MockDefinitionImportExportServiceImpl implementation uses `file.getInputStream()` and `file.getOriginalFilename()`.
-                // We can create a simple wrapper or MockMultipartFile if we had spring-test, but here we are in runtime.
-                // Ideally, we should refactor the service to take InputStream, but I cannot change backend much.
-                // Let's see if we can instantiate a CommonsMultipartFile or similar if available, or just create an anonymous class.
-                
-                // Hack: Create an anonymous class implementing MultipartFile.
-                // This is ugly but necessary without changing the service signature which expects MultipartFile.
+                String selectedType = importTypeSelector.getValue();
+                String fileName = event.getFileName();
+                String mimeType = event.getMIMEType();
+                long contentLength = event.getContentLength();
+
                 org.springframework.web.multipart.MultipartFile multipartFile = new org.springframework.web.multipart.MultipartFile() {
                     @Override public String getName() { return "file"; }
-                    @Override public String getOriginalFilename() { return event.getFileName(); }
-                    @Override public String getContentType() { return event.getMIMEType(); }
-                    @Override public boolean isEmpty() { return event.getContentLength() == 0; }
-                    @Override public long getSize() { return event.getContentLength(); }
+                    @Override public String getOriginalFilename() { return fileName; }
+                    @Override public String getContentType() { return mimeType; }
+                    @Override public boolean isEmpty() { return contentLength == 0; }
+                    @Override public long getSize() { return contentLength; }
                     @Override public byte[] getBytes() throws java.io.IOException { return buffer.getInputStream().readAllBytes(); }
                     @Override public InputStream getInputStream() throws java.io.IOException { return buffer.getInputStream(); }
-                    @Override public void transferTo(java.io.File dest) throws java.io.IOException, IllegalStateException { 
-                        throw new UnsupportedOperationException("Not implemented"); 
+                    @Override public void transferTo(java.io.File dest) throws java.io.IOException, IllegalStateException {
+                        throw new UnsupportedOperationException("Not implemented");
                     }
                 };
 
-                String result = importExportService.importFile(multipartFile, config, userSession.getToken());
+                String result = "";
+                if ("sMockin (ZIP)".equals(selectedType)) {
+                    com.smockin.admin.dto.MockImportConfigDTO config = new com.smockin.admin.dto.MockImportConfigDTO();
+                    config.setKeepExisting(keepExisting.getValue());
+                    result = importExportService.importFile(multipartFile, config, userSession.getToken());
+                } else if ("OpenAPI (YAML/JSON)".equals(selectedType)) {
+                    com.smockin.admin.dto.MockImportConfigDTO config = new com.smockin.admin.dto.MockImportConfigDTO();
+                    config.setKeepExisting(keepExisting.getValue());
+                    ApiImportDTO apiImportDTO = new ApiImportDTO(multipartFile, config);
+                    apiImportRouter.route(ApiImportTypeEnum.OPENAPI.name(), apiImportDTO, userSession.getToken());
+                    result = "OpenAPI import processed";
+                } else if ("RAML (YAML)".equals(selectedType)) {
+                    com.smockin.admin.dto.MockImportConfigDTO config = new com.smockin.admin.dto.MockImportConfigDTO();
+                    config.setKeepExisting(keepExisting.getValue());
+                    ApiImportDTO apiImportDTO = new ApiImportDTO(multipartFile, config);
+                    apiImportRouter.route(ApiImportTypeEnum.RAML.name(), apiImportDTO, userSession.getToken());
+                    result = "RAML import processed";
+                }
+
                 Notification.show("Import complete: " + result).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 updateList();
                 dialog.close();
@@ -242,7 +276,7 @@ public class HttpMocksView extends VerticalLayout {
             }
         });
 
-        VerticalLayout layout = new VerticalLayout(upload, keepExisting);
+        VerticalLayout layout = new VerticalLayout(importTypeSelector, upload, keepExisting);
         dialog.add(layout);
         dialog.open();
     }
